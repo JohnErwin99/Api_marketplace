@@ -58,6 +58,14 @@
   pre.out{margin:0;font:12.5px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px;min-height:110px;max-height:50vh;overflow:auto}
   .railnote{padding:14px 12px;margin-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.55}
   .railnote code{font-family:var(--mono);font-size:11px}
+  .base{display:flex;align-items:center;gap:8px;font:12px var(--mono);color:var(--muted)}
+  .base b{font:11px var(--sans);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
+  .base code{color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:3px 7px;user-select:all}
+  .snippet{position:relative;margin:0}
+  .snippet pre{margin:0;font:12px/1.6 var(--mono);white-space:pre;overflow-x:auto;background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px 12px}
+  .snippet .cred{color:#7FD1B9}
+  .copy{position:absolute;top:8px;right:8px;background:#243029;color:#E6EDE9;border:1px solid #37473E;border-radius:4px;font:11px var(--sans);padding:4px 9px;cursor:pointer}
+  .copy:hover{background:#2F3D35}
   .empty{color:var(--muted);font-size:13px}
   .hint{font-size:12px;color:var(--muted)}
   .errcode{font-family:var(--mono);color:var(--warn);font-weight:600}
@@ -68,6 +76,7 @@
 <body>
 <header>
   <h1>Espresso DID <span>· provisioning console</span></h1>
+  <div class="base"><b>Base URL</b><code id="baseurl">—</code></div>
   <div class="grow"></div>
   <label>env
     <select id="env"><option value="test">test</option><option value="production">production</option></select>
@@ -97,6 +106,11 @@
   const DEFAULTS={ name:'ping', profile:'Profile 2542', id:'DID1205280200006',
     from:'2026-08-01 00:00:00', to:'2026-08-18 23:59:59' };
 
+  // Every path in the catalog is relative; prefix it with this to call the
+  // gateway from outside the console.
+  const BASE=location.origin;
+  $('#baseurl').textContent=BASE;
+
   let catalog;
   try{ catalog=(await (await fetch('/')).json()).endpoints; }
   catch(e){ nav.innerHTML='<div class="empty" style="padding:14px">Could not load <code>GET /</code>. Is the gateway running?</div>'; return; }
@@ -117,9 +131,12 @@
 
   const railnote=document.createElement('div');
   railnote.className='railnote';
-  railnote.innerHTML='This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.'
+  railnote.innerHTML='<strong>Base URL:</strong> <code>'+esc(BASE)+'</code><br>Every path below is relative to it — e.g. <code>'+esc(BASE)+'/api/catalog</code>.<br><br>'
+    +'This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.'
     +'<br><br><strong>Going live:</strong> the gateway defaults to the <code>test</code> environment, where orders are not real. For live traffic you must send <code>X-EDID-Env: production</code> on every request, with production credentials.';
   nav.appendChild(railnote);
+
+  $('#env').addEventListener('change',()=>{ if(current)renderUrl(); });
 
   let current=null;
   function select(e,btn){
@@ -149,6 +166,12 @@
 
     html+='<div class="row"><button class="btn" id="send">Send request</button><span class="url" id="url"></span></div>';
 
+    html+='<div class="doc"><h3>Call this from your own app</h3>'
+      +'<p class="hint" style="margin:0 0 8px">Send your Espresso login as the '
+      +'<code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers. '
+      +'Replace the highlighted values with your own credentials.</p>'
+      +'<div class="snippet"><button class="copy" id="copy">Copy</button><pre id="curl"></pre></div></div>';
+
     if(e.fields&&e.fields.length){
       html+='<div class="doc"><h3>Body fields</h3><table class="doc">';
       e.fields.forEach(f=>html+='<tr><td class="k">'+esc(f.name)+'</td><td class="req">'+(f.required?'required':'')+'</td><td>'+esc(f.description||'')+'</td></tr>');
@@ -163,8 +186,14 @@
 
     reqEl.innerHTML=html;
     reqEl.querySelectorAll('input[data-path],input[data-query]').forEach(i=>i.addEventListener('input',renderUrl));
+    const bodyTa=$('#body'); if(bodyTa)bodyTa.addEventListener('input',renderUrl);
     renderUrl();
     $('#send').onclick=send;
+    $('#copy').onclick=()=>{
+      navigator.clipboard.writeText(curlText()).then(()=>{
+        const b=$('#copy');b.textContent='Copied';setTimeout(()=>{b.textContent='Copy'},1400);
+      });
+    };
   }
 
   function buildUrl(){
@@ -174,7 +203,32 @@
     reqEl.querySelectorAll('[data-query]').forEach(i=>{if(i.value!=='')qs.set(i.dataset.query,i.value)});
     const s=qs.toString();return p+(s?'?'+s:'');
   }
-  function renderUrl(){ const u=$('#url'); if(u)u.textContent=current.method+' '+buildUrl(); }
+  // The curl the partner actually runs: absolute URL + their own credentials.
+  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD';
+  function curlLines(){
+    const L=["curl -s -X "+current.method+" '"+BASE+buildUrl()+"'",
+             "  -H 'X-EDID-Username: "+USER_PH+"'",
+             "  -H 'X-EDID-Password: "+PASS_PH+"'",
+             "  -H 'X-EDID-Env: "+$('#env').value+"'"];
+    const ta=$('#body');
+    if(ta){
+      let b=ta.value;
+      try{ b=JSON.stringify(JSON.parse(b)); }catch(_){ /* leave as typed */ }
+      L.push("  -H 'Content-Type: application/json'");
+      L.push("  -d '"+b+"'");
+    }
+    return L;
+  }
+  const curlText=()=>curlLines().join(" \\\n");
+  function renderUrl(){
+    const u=$('#url'); if(u)u.textContent=current.method+' '+buildUrl();
+    const c=$('#curl');
+    if(c){
+      c.innerHTML=esc(curlText())
+        .replace(USER_PH,'<span class="cred">'+USER_PH+'</span>')
+        .replace(PASS_PH,'<span class="cred">'+PASS_PH+'</span>');
+    }
+  }
 
   async function send(){
     const btn=$('#send');btn.disabled=true;btn.textContent='Sending…';
