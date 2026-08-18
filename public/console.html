@@ -79,7 +79,7 @@
   <div class="base"><b>Base URL</b><code id="baseurl">—</code></div>
   <div class="grow"></div>
   <label>env
-    <select id="env"><option value="test">test</option><option value="production">production</option></select>
+    <select id="env" title="This console is test-only. Send X-EDID-Env: production from your own app for live traffic."><option value="test">test</option></select>
   </label>
 </header>
 <main>
@@ -170,6 +170,9 @@
       +'<p class="hint" style="margin:0 0 8px">Send your Espresso login as the '
       +'<code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers. '
       +'Replace the highlighted values with your own credentials.</p>'
+      +'<div class="pre-note"><b>This console is test-only.</b> The snippet below targets the Espresso '
+      +'<code>test</code> system, where orders are simulated and no DIDs are provisioned. For live traffic, '
+      +'switch the last header to <code>X-EDID-Env: production</code> and use your production credentials.</div>'
       +'<div class="snippet"><button class="copy" id="copy">Copy</button><pre id="curl"></pre></div></div>';
 
     if(e.fields&&e.fields.length){
@@ -219,7 +222,10 @@
     }
     return L;
   }
-  const curlText=()=>curlLines().join(" \\\n");
+  // Leading comment lines, not trailing ones: a '#' after a '\' continuation
+  // would be passed to curl as an argument instead of being a shell comment.
+  const curlText=()=>"# Test environment. For live traffic, use X-EDID-Env: production\n"
+    +"# with your production Espresso credentials.\n"+curlLines().join(" \\\n");
   function renderUrl(){
     const u=$('#url'); if(u)u.textContent=current.method+' '+buildUrl();
     const c=$('#curl');
