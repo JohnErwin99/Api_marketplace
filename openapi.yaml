@@ -1,0 +1,158 @@
+openapi: 3.1.0
+info:
+  title: Espresso DID REST Gateway
+  version: 1.0.0
+  description: >
+    REST facade over the Espresso DID V3 SOAP provisioning API.
+    Exposes only the 13 methods documented in the V3 PDF (plus a health check).
+servers:
+  - url: http://localhost:3000
+    description: Local gateway
+security:
+  - basicAuth: []
+  - edidHeaders: []
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    edidHeaders:
+      type: apiKey
+      in: header
+      name: X-EDID-Username
+  parameters:
+    envHeader:
+      name: X-EDID-Env
+      in: header
+      required: false
+      schema: { type: string, enum: [test, production] }
+    orderId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, example: DID1205280200006 }
+  responses:
+    Err:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    DidRequest:
+      type: object
+      required: [ratecenter, npa, quantity]
+      properties:
+        ratecenter: { type: string, example: TORONTO }
+        npa: { type: string, example: "647" }
+        quantity: { type: integer, minimum: 1, example: 1 }
+        prefix: { type: string, deprecated: true }
+        country_prefix: { type: string, deprecated: true }
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+        code: { type: integer, description: Legacy Espresso app code }
+paths:
+  /:
+    get:
+      summary: Endpoint catalog
+      responses: { "200": { description: OK } }
+  /api/ping:
+    get:
+      summary: testConnection
+      parameters:
+        - { name: name, in: query, schema: { type: string } }
+      responses: { "200": { description: OK } }
+  /api/catalog:
+    get:
+      summary: didGetProductCatalog
+      responses: { "200": { description: OK }, "401": { $ref: "#/components/responses/Err" } }
+  /api/routing-profiles:
+    get:
+      summary: didGetRoutingProfiles
+      responses: { "200": { description: OK } }
+  /api/routing-profiles/full:
+    get:
+      summary: didGetRoutingProfilesDetailsFull
+      responses: { "200": { description: OK } }
+  /api/routing-profiles/{profile}:
+    get:
+      summary: didGetRoutingProfileDetails
+      parameters:
+        - { name: profile, in: path, required: true, schema: { type: string }, example: "Profile 2542" }
+      responses: { "200": { description: OK }, "404": { $ref: "#/components/responses/Err" } }
+  /api/orders:
+    get:
+      summary: didGetOrders
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string }, example: "2026-08-01 00:00:00" }
+        - { name: to, in: query, required: true, schema: { type: string }, example: "2026-08-18 23:59:59" }
+      responses: { "200": { description: OK }, "400": { $ref: "#/components/responses/Err" } }
+    post:
+      summary: didOrderDids (create order)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profiles]
+              properties:
+                profiles:
+                  type: array
+                  items:
+                    type: object
+                    required: [profile, requests]
+                    properties:
+                      profile: { type: string, example: "Profile 2542" }
+                      requests:
+                        type: array
+                        items: { $ref: "#/components/schemas/DidRequest" }
+      responses: { "201": { description: Created }, "400": { $ref: "#/components/responses/Err" } }
+  /api/orders/{id}:
+    get:
+      summary: didGetOrderInfo
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      responses: { "200": { description: OK }, "404": { $ref: "#/components/responses/Err" } }
+  /api/orders/{id}/status:
+    get:
+      summary: didGetOrderStatus
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      responses: { "200": { description: OK } }
+  /api/orders/{id}/details:
+    get:
+      summary: didGetOrderDetails (Completed only)
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      responses: { "200": { description: OK }, "409": { $ref: "#/components/responses/Err" } }
+  /api/orders/{id}/problems:
+    get:
+      summary: didGetOrderProblems (Rejected. Pending Update only)
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      responses: { "200": { description: OK }, "409": { $ref: "#/components/responses/Err" } }
+  /api/orders/{id}/requests:
+    post:
+      summary: didOrderEdit (append requests)
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requests]
+              properties:
+                requests:
+                  type: array
+                  items: { $ref: "#/components/schemas/DidRequest" }
+      responses: { "200": { description: OK }, "409": { $ref: "#/components/responses/Err" } }
+  /api/orders/{id}/discard-rejected:
+    post:
+      summary: didOrderDiscardRejected
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      responses: { "200": { description: OK }, "409": { $ref: "#/components/responses/Err" } }
+  /api/orders/{id}/cancel:
+    post:
+      summary: didOrderCancel
+      parameters: [ { $ref: "#/components/parameters/orderId" } ]
+      responses: { "200": { description: OK }, "409": { $ref: "#/components/responses/Err" } }
