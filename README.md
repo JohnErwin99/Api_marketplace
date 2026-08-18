@@ -28,15 +28,38 @@ auto-generating the console UI.
 
 ## Credentials & environment
 
-Credentials resolve per request, in this order:
+**Who is authenticating to Espresso?**
+
+- **The test console** (`/console`) always uses the **shared default account** —
+  the `EDID_USER` / `EDID_PASS` set on the server. Partners open it from inside
+  the (already login-protected) partner portal and don't enter Espresso
+  credentials. The console does not expose username/password fields.
+- **Calling the API directly** (your own app, scripts, server-to-server): a
+  caller with their **own Espresso account** should send their credentials as
+  headers `X-EDID-Username` / `X-EDID-Password` (or HTTP Basic auth). Anyone who
+  does **not** send credentials falls back to the shared default account
+  configured on the server.
+
+Resolution order, per request:
 
 1. Headers `X-EDID-Username` / `X-EDID-Password`
 2. HTTP Basic auth (`Authorization: Basic ...`)
-3. `.env` defaults (`EDID_USER` / `EDID_PASS`)
+3. Server defaults (`EDID_USER` / `EDID_PASS`)
 
-Environment (`test` vs `production`) resolves from `X-EDID-Env` header, `?env=`
-query param, or `EDID_ENV` in `.env` (defaults to `test`). This is what lets the
-console run a customer's own creds against either environment.
+So `EDID_USER` / `EDID_PASS` on the server are the **fallback / shared** account.
+Leave them set if you want a shared default; unset them if you require every
+caller to bring their own Espresso login.
+
+Direct call with your own Espresso account:
+
+```bash
+curl -s https://your-gateway.onrender.com/api/catalog \
+  -H 'X-EDID-Username: partner@example.com' \
+  -H 'X-EDID-Password: their-espresso-password'
+```
+
+Environment (`test` vs `production`) resolves from the `X-EDID-Env` header,
+`?env=` query param, or `EDID_ENV` on the server (defaults to `test`).
 
 ## Endpoints
 

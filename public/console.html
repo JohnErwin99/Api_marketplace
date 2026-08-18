@@ -56,6 +56,8 @@
   .status{font:12px var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
   .status.ok{color:var(--ok);border-color:var(--ok)} .status.warn{color:var(--warn);border-color:var(--warn)} .status.err{color:var(--err);border-color:var(--err)}
   pre.out{margin:0;font:12.5px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px;min-height:110px;max-height:50vh;overflow:auto}
+  .railnote{padding:14px 12px;margin-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.55}
+  .railnote code{font-family:var(--mono);font-size:11px}
   .empty{color:var(--muted);font-size:13px}
   .hint{font-size:12px;color:var(--muted)}
   .errcode{font-family:var(--mono);color:var(--warn);font-weight:600}
@@ -70,8 +72,6 @@
   <label>env
     <select id="env"><option value="test">test</option><option value="production">production</option></select>
   </label>
-  <label>user <input id="user" placeholder="server default"></label>
-  <label>pass <input id="pass" type="password" placeholder="server default"></label>
 </header>
 <main>
   <nav id="nav"><div class="empty" style="padding:14px">Loading endpoints…</div></nav>
@@ -114,6 +114,11 @@
       b.onclick=()=>select(e,b);nav.appendChild(b);
     });
   }
+
+  const railnote=document.createElement('div');
+  railnote.className='railnote';
+  railnote.innerHTML='This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.';
+  nav.appendChild(railnote);
 
   let current=null;
   function select(e,btn){
@@ -174,7 +179,6 @@
     const btn=$('#send');btn.disabled=true;btn.textContent='Sending…';
     statusEl.hidden=true;timeEl.textContent='';out.textContent='…';
     const headers={'X-EDID-Env':$('#env').value};
-    if($('#user').value){headers['X-EDID-Username']=$('#user').value;headers['X-EDID-Password']=$('#pass').value;}
     const opts={method:current.method,headers};
     const ta=$('#body');
     if(ta){
