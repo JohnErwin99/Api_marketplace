@@ -117,7 +117,8 @@
 
   const railnote=document.createElement('div');
   railnote.className='railnote';
-  railnote.innerHTML='This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.';
+  railnote.innerHTML='This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.'
+    +'<br><br><strong>Going live:</strong> the gateway defaults to the <code>test</code> environment, where orders are not real. For live traffic you must send <code>X-EDID-Env: production</code> on every request, with production credentials.';
   nav.appendChild(railnote);
 
   let current=null;

@@ -55,11 +55,19 @@ Direct call with your own Espresso account:
 ```bash
 curl -s https://your-gateway.onrender.com/api/catalog \
   -H 'X-EDID-Username: partner@example.com' \
-  -H 'X-EDID-Password: their-espresso-password'
+  -H 'X-EDID-Password: their-espresso-password' \
+  -H 'X-EDID-Env: production'
 ```
 
 Environment (`test` vs `production`) resolves from the `X-EDID-Env` header,
 `?env=` query param, or `EDID_ENV` on the server (defaults to `test`).
+
+> **The gateway defaults to `test`.** Calls without an environment go to the
+> Espresso test system — orders placed there are not real and no DIDs are
+> provisioned. When you move from trying things out to calling the API for real,
+> you must send `X-EDID-Env: production` (or `?env=production`) on **every**
+> request, alongside your own production Espresso credentials. Test credentials
+> do not work against production, and vice versa.
 
 ## Endpoints
 
