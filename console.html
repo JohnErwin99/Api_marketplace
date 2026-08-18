@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Espresso DID · Console</title>
+<style>
+  :root{
+    --bg:#F5F7F4; --panel:#FFFFFF; --ink:#16211C; --muted:#5E6B64;
+    --line:#D8DED9; --accent:#0E7C86; --accent-ink:#FFFFFF;
+    --ok:#1F7A4D; --warn:#B7791F; --err:#B23B3B; --doc:#FBFAF6;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
+  header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.2px}
+  header h1 span{color:var(--muted);font-weight:400}
+  header .grow{flex:1}
+  header label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  header input,header select{font:13px var(--mono);padding:5px 7px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)}
+  header input{width:150px}
+  main{display:grid;grid-template-columns:280px 1fr;height:calc(100% - 49px)}
+  nav{border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
+  nav .group{padding:10px 12px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  nav button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:7px 12px;font:13px var(--mono);cursor:pointer;color:var(--ink)}
+  nav button:hover{background:var(--bg)}
+  nav button.active{background:var(--bg);box-shadow:inset 3px 0 0 var(--accent)}
+  nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .m{font-size:11px;font-weight:700;width:38px;flex:none}
+  .m.GET{color:var(--ok)} .m.POST{color:var(--accent)}
+  section{overflow:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+  .card h2{margin:0 0 2px;font-size:15px;font-weight:600}
+  .card h2 .mono{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+  .soap{color:var(--muted);font-size:12px;margin:0 0 10px}
+  .soap code{font-family:var(--mono)}
+  .desc{font-size:13.5px;margin:0 0 10px;max-width:70ch}
+  .pre-note{font-size:12.5px;background:#FFF7E6;border:1px solid #F0DFB8;color:#7A5B12;border-radius:5px;padding:7px 10px;margin:0 0 12px}
+  .doc h3{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:14px 0 6px}
+  table.doc{border-collapse:collapse;width:100%;font-size:12.5px}
+  table.doc td{border-top:1px solid var(--line);padding:5px 8px;vertical-align:top}
+  table.doc td.k{font-family:var(--mono);white-space:nowrap;color:var(--ink)}
+  table.doc td.req{color:var(--err);font-size:11px;width:1%;white-space:nowrap}
+  .field{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;margin:6px 0}
+  .field label{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .field .fd{grid-column:2;font-size:11.5px;color:var(--muted);margin-top:-2px}
+  .field input,textarea{font:13px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;width:100%;background:#fff;color:var(--ink)}
+  textarea{min-height:170px;resize:vertical}
+  .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  .btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:8px 14px;font:13px var(--sans);font-weight:600;cursor:pointer}
+  .btn:disabled{opacity:.6;cursor:progress}
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .url{font:12px var(--mono);color:var(--muted);word-break:break-all}
+  .status{font:12px var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+  .status.ok{color:var(--ok);border-color:var(--ok)} .status.warn{color:var(--warn);border-color:var(--warn)} .status.err{color:var(--err);border-color:var(--err)}
+  pre.out{margin:0;font:12.5px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px;min-height:110px;max-height:50vh;overflow:auto}
+  .empty{color:var(--muted);font-size:13px}
+  .hint{font-size:12px;color:var(--muted)}
+  .errcode{font-family:var(--mono);color:var(--warn);font-weight:600}
+  @media (max-width:820px){main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}header{flex-wrap:wrap}.field{grid-template-columns:1fr}.field .fd{grid-column:1}}
+  @media (prefers-reduced-motion:no-preference){.btn{transition:filter .12s}.btn:hover{filter:brightness(1.08)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Espresso DID <span>· provisioning console</span></h1>
+  <div class="grow"></div>
+  <label>env
+    <select id="env"><option value="test">test</option><option value="production">production</option></select>
+  </label>
+  <label>user <input id="user" placeholder="server default"></label>
+  <label>pass <input id="pass" type="password" placeholder="server default"></label>
+</header>
+<main>
+  <nav id="nav"><div class="empty" style="padding:14px">Loading endpoints…</div></nav>
+  <section>
+    <div class="card" id="req"><div class="empty">Pick an endpoint on the left to see its docs and try it.</div></div>
+    <div class="card">
+      <div class="row" style="margin:0 0 8px">
+        <strong style="font-size:13px">Response</strong>
+        <span id="status" class="status" hidden></span>
+        <span id="time" class="hint"></span>
+      </div>
+      <pre class="out" id="out">—</pre>
+    </div>
+  </section>
+</main>
+
+<script>
+(async function(){
+  const $=s=>document.querySelector(s);
+  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const nav=$('#nav'), reqEl=$('#req'), out=$('#out'), statusEl=$('#status'), timeEl=$('#time');
+
+  const DEFAULTS={ name:'ping', profile:'Profile 2542', id:'DID1205280200006',
+    from:'2026-08-01 00:00:00', to:'2026-08-18 23:59:59' };
+
+  let catalog;
+  try{ catalog=(await (await fetch('/')).json()).endpoints; }
+  catch(e){ nav.innerHTML='<div class="empty" style="padding:14px">Could not load <code>GET /</code>. Is the gateway running?</div>'; return; }
+
+  const groupOf=p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System';
+  const groups={};
+  catalog.forEach(e=>{(groups[groupOf(e.path)]??=[]).push(e)});
+  nav.innerHTML='';
+  for(const g of ['System','Catalog','Routing profiles','Orders']){
+    if(!groups[g])continue;
+    const hd=document.createElement('div');hd.className='group';hd.textContent=g;nav.appendChild(hd);
+    groups[g].forEach(e=>{
+      const b=document.createElement('button');
+      b.innerHTML='<span class="m '+e.method+'">'+e.method+'</span><span>'+e.path+'</span>';
+      b.onclick=()=>select(e,b);nav.appendChild(b);
+    });
+  }
+
+  let current=null;
+  function select(e,btn){
+    current=e;
+    nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+    const pathParams=(e.params||[]).filter(p=>p.in==='path');
+    const queryParams=(e.params||[]).filter(p=>p.in==='query');
+
+    let html='<h2>'+esc(e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span></h2>';
+    html+='<p class="soap">Maps to SOAP <code>'+esc(e.soap)+'</code></p>';
+    if(e.description)html+='<p class="desc">'+esc(e.description)+'</p>';
+    if(e.precondition)html+='<div class="pre-note"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
+
+    pathParams.forEach(p=>{
+      html+='<div class="field"><label>:'+p.name+(p.required?' *':'')+'</label><input data-path="'+p.name+'" value="'+(DEFAULTS[p.name]||'')+'">';
+      if(p.description)html+='<div class="fd">'+esc(p.description)+'</div>';
+      html+='</div>';
+    });
+    queryParams.forEach(p=>{
+      html+='<div class="field"><label>?'+p.name+(p.required?' *':'')+'</label><input data-query="'+p.name+'" value="'+(DEFAULTS[p.name]||'')+'">';
+      if(p.description)html+='<div class="fd">'+esc(p.description)+'</div>';
+      html+='</div>';
+    });
+    if(e.body){
+      html+='<div class="field" style="align-items:start"><label>body (JSON) *</label><textarea id="body">'+esc(JSON.stringify(e.body,null,2))+'</textarea></div>';
+    }
+
+    html+='<div class="row"><button class="btn" id="send">Send request</button><span class="url" id="url"></span></div>';
+
+    if(e.fields&&e.fields.length){
+      html+='<div class="doc"><h3>Body fields</h3><table class="doc">';
+      e.fields.forEach(f=>html+='<tr><td class="k">'+esc(f.name)+'</td><td class="req">'+(f.required?'required':'')+'</td><td>'+esc(f.description||'')+'</td></tr>');
+      html+='</table></div>';
+    }
+    if(e.returns){ html+='<div class="doc"><h3>Returns</h3><p class="hint" style="margin:0">'+esc(e.returns)+'</p></div>'; }
+    if(e.errors&&e.errors.length){
+      html+='<div class="doc"><h3>Common errors</h3><table class="doc">';
+      e.errors.forEach(er=>html+='<tr><td class="k errcode">'+er.code+'</td><td>'+esc(er.when||'')+'</td></tr>');
+      html+='</table></div>';
+    }
+
+    reqEl.innerHTML=html;
+    reqEl.querySelectorAll('input[data-path],input[data-query]').forEach(i=>i.addEventListener('input',renderUrl));
+    renderUrl();
+    $('#send').onclick=send;
+  }
+
+  function buildUrl(){
+    let p=current.path;
+    reqEl.querySelectorAll('[data-path]').forEach(i=>{p=p.replace(':'+i.dataset.path,encodeURIComponent(i.value))});
+    const qs=new URLSearchParams();
+    reqEl.querySelectorAll('[data-query]').forEach(i=>{if(i.value!=='')qs.set(i.dataset.query,i.value)});
+    const s=qs.toString();return p+(s?'?'+s:'');
+  }
+  function renderUrl(){ const u=$('#url'); if(u)u.textContent=current.method+' '+buildUrl(); }
+
+  async function send(){
+    const btn=$('#send');btn.disabled=true;btn.textContent='Sending…';
+    statusEl.hidden=true;timeEl.textContent='';out.textContent='…';
+    const headers={'X-EDID-Env':$('#env').value};
+    if($('#user').value){headers['X-EDID-Username']=$('#user').value;headers['X-EDID-Password']=$('#pass').value;}
+    const opts={method:current.method,headers};
+    const ta=$('#body');
+    if(ta){
+      headers['Content-Type']='application/json';
+      try{JSON.parse(ta.value);opts.body=ta.value;}
+      catch(err){show(0,'Body is not valid JSON: '+err.message,0);btn.disabled=false;btn.textContent='Send request';return;}
+    }
+    const t0=performance.now();
+    try{
+      const r=await fetch(buildUrl(),opts);
+      const txt=await r.text();let body;
+      try{body=JSON.stringify(JSON.parse(txt),null,2)}catch(_){body=txt}
+      show(r.status,body,performance.now()-t0);
+    }catch(err){show(0,'Network error: '+err.message,performance.now()-t0);}
+    btn.disabled=false;btn.textContent='Send request';
+  }
+  function show(code,body,ms){
+    statusEl.hidden=false;statusEl.textContent=code||'ERR';
+    statusEl.className='status '+(code>=200&&code<300?'ok':code>=400&&code<500?'warn':'err');
+    timeEl.textContent=ms?Math.round(ms)+' ms':'';
+    out.textContent=body;
+  }
+})();
+</script>
+</body>
+</html>
