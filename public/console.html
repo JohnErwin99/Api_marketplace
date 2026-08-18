@@ -21,7 +21,33 @@
   header label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
   header input,header select{font:13px var(--mono);padding:5px 7px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)}
   header input{width:150px}
+  .tabs{display:flex;gap:2px;margin-left:4px}
+  .tab{border:0;background:none;font:13px var(--sans);font-weight:600;color:var(--muted);padding:8px 14px;border-radius:5px 5px 0 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-11px}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   main{display:grid;grid-template-columns:280px 1fr;height:calc(100% - 49px)}
+  main[hidden]{display:none}
+  .docs{height:calc(100% - 49px);overflow:auto;padding:26px 20px 60px}
+  .docs .wrap{max-width:900px;margin:0 auto}
+  .docs h2{font-size:20px;margin:0 0 6px}
+  .docs h3{font-size:15px;margin:26px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
+  .docs h4{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:14px 0 6px}
+  .docs p{max-width:74ch;font-size:13.5px}
+  .docs .lead{color:var(--muted);font-size:13.5px;margin-top:0}
+  .docs pre{font:12px/1.6 var(--mono);background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px;overflow-x:auto;white-space:pre}
+  .docs code{font-family:var(--mono);font-size:12.5px}
+  .docs p code,.docs td code,.docs li code{background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  .docs table{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0}
+  .docs table td,.docs table th{border-top:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+  .docs table th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-top:0}
+  .docs .ep{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:10px 0}
+  .docs .ep .sig{font:13px var(--mono);display:flex;gap:10px;align-items:baseline}
+  .docs .toc{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+  .docs .toc a{font:12px var(--mono);text-decoration:none;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--panel)}
+  .docs .toc a:hover{border-color:var(--accent)}
+  .callout{background:#FFF7E6;border:1px solid #F0DFB8;color:#7A5B12;border-radius:6px;padding:10px 12px;font-size:13px;margin:12px 0}
+  .callout code{background:#FBF1DA;border-color:#E7D3A6}
   nav{border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
   nav .group{padding:10px 12px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
   nav button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:7px 12px;font:13px var(--mono);cursor:pointer;color:var(--ink)}
@@ -75,14 +101,22 @@
 </head>
 <body>
 <header>
-  <h1>Espresso DID <span>· provisioning console</span></h1>
+  <h1>Espresso DID <span>· API</span></h1>
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-docs" role="tab" aria-selected="true" aria-controls="view-docs">Documentation</button>
+    <button class="tab" id="tab-console" role="tab" aria-selected="false" aria-controls="view-console">Console</button>
+  </div>
   <div class="base"><b>Base URL</b><code id="baseurl">—</code></div>
   <div class="grow"></div>
   <label>env
     <select id="env" title="This console is test-only. Send X-EDID-Env: production from your own app for live traffic."><option value="test">test</option></select>
   </label>
 </header>
-<main>
+<div class="docs" id="view-docs" role="tabpanel" aria-labelledby="tab-docs">
+  <div class="wrap" id="docs-body"><p class="lead">Loading reference…</p></div>
+</div>
+
+<main id="view-console" role="tabpanel" aria-labelledby="tab-console" hidden>
   <nav id="nav"><div class="empty" style="padding:14px">Loading endpoints…</div></nav>
   <section>
     <div class="card" id="req"><div class="empty">Pick an endpoint on the left to see its docs and try it.</div></div>
@@ -110,10 +144,16 @@
   // gateway from outside the console.
   const BASE=location.origin;
   $('#baseurl').textContent=BASE;
+  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD';
 
   let catalog;
   try{ catalog=(await (await fetch('/')).json()).endpoints; }
-  catch(e){ nav.innerHTML='<div class="empty" style="padding:14px">Could not load <code>GET /</code>. Is the gateway running?</div>'; return; }
+  catch(e){
+    const msg='Could not load <code>GET /</code>. Is the gateway running?';
+    nav.innerHTML='<div class="empty" style="padding:14px">'+msg+'</div>';
+    $('#docs-body').innerHTML='<p class="lead">'+msg+'</p>';
+    return;
+  }
 
   const groupOf=p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System';
   const groups={};
@@ -135,6 +175,124 @@
     +'This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.'
     +'<br><br><strong>Going live:</strong> the gateway defaults to the <code>test</code> environment, where orders are not real. For live traffic you must send <code>X-EDID-Env: production</code> on every request, with production credentials.';
   nav.appendChild(railnote);
+
+  // ---- tabs -----------------------------------------------------------
+  function showTab(which){
+    const docs=which==='docs';
+    $('#view-docs').hidden=!docs; $('#view-console').hidden=docs;
+    $('#tab-docs').setAttribute('aria-selected',String(docs));
+    $('#tab-console').setAttribute('aria-selected',String(!docs));
+  }
+  $('#tab-docs').onclick=()=>showTab('docs');
+  $('#tab-console').onclick=()=>showTab('console');
+  showTab(location.hash==='#console'?'console':'docs');
+
+  // ---- documentation tab, rendered from the same catalog ---------------
+  function renderDocs(){
+    const anchor=e=>(e.method+e.path).replace(/[^a-zA-Z0-9]/g,'-').toLowerCase();
+    let d='<h2>Espresso DID REST API</h2>'
+      +'<p class="lead">A REST/JSON wrapper over the Espresso DID V3 SOAP provisioning service. '
+      +'Every endpoint below returns JSON and accepts your own Espresso credentials, so you can order and '
+      +'track DIDs from your own application without building SOAP envelopes.</p>';
+
+    d+='<h3 style="border-top:0;padding-top:0">Base URL</h3><pre>'+esc(BASE)+'</pre>'
+      +'<p>All paths in this reference are relative to it — <code>/api/catalog</code> means '
+      +'<code>'+esc(BASE+'/api/catalog')+'</code>.</p>';
+
+    d+='<h3>Authentication</h3>'
+      +'<p>Send your Espresso username and password on <strong>every</strong> request, as headers:</p>'
+      +'<pre>'+esc("X-EDID-Username: YOUR_ESPRESSO_USERNAME\nX-EDID-Password: YOUR_ESPRESSO_PASSWORD")+'</pre>'
+      +'<p>HTTP Basic auth works too — <code>Authorization: Basic base64(user:pass)</code> — if that is easier '
+      +'for your HTTP client. Requests that carry no credentials fall back to a shared account, which is only '
+      +'intended for the console on this page; do not rely on it from your own code.</p>'
+      +'<table><tr><th>Header</th><th>Required</th><th>Description</th></tr>'
+      +'<tr><td><code>X-EDID-Username</code></td><td>yes</td><td>Your Espresso account username.</td></tr>'
+      +'<tr><td><code>X-EDID-Password</code></td><td>yes</td><td>Your Espresso account password.</td></tr>'
+      +'<tr><td><code>X-EDID-Env</code></td><td>no</td><td><code>test</code> (default) or <code>production</code>. See below.</td></tr>'
+      +'<tr><td><code>Content-Type</code></td><td>POST only</td><td><code>application/json</code>.</td></tr>'
+      +'</table>';
+
+    d+='<h3>Environments</h3>'
+      +'<p>Espresso runs two completely separate systems. <strong>They do not share data</strong> — an order '
+      +'created in production does not exist in test, and vice versa. Credentials are separate too.</p>'
+      +'<table><tr><th>Value</th><th>Meaning</th></tr>'
+      +'<tr><td><code>test</code></td><td>Default. Orders are simulated; no DIDs are actually provisioned.</td></tr>'
+      +'<tr><td><code>production</code></td><td>Live provisioning. Real DIDs, real billing.</td></tr></table>'
+      +'<div class="callout"><b>Going live:</b> the gateway defaults to <code>test</code>. Once you are ready for real '
+      +'traffic you must send <code>X-EDID-Env: production</code> on every request, together with your production '
+      +'credentials. Looking up a production order without that header returns '
+      +'<code>511 — The order id does not exist!</code>, because you are querying the test system.</div>'
+      +'<p>The environment can also be set with a <code>?env=production</code> query parameter if headers are awkward.</p>';
+
+    d+='<h3>Request &amp; response format</h3>'
+      +'<p>Responses are JSON. Successful reads wrap their payload in a key naming it '
+      +'(<code>items</code>, <code>order</code>, <code>dids</code>, <code>status</code>…). Errors use a consistent shape, '
+      +'with the original Espresso code preserved:</p>'
+      +'<pre>'+esc(JSON.stringify({error:'espresso_error',message:'The order id does not exist!',code:511,
+          errors:[{code:511,message:'The order id does not exist!',array_key:''}]},null,2))+'</pre>'
+      +'<p>The HTTP status reflects the Espresso code: <code>401</code> bad credentials, <code>404</code> not found, '
+      +'<code>409</code> wrong order state, <code>422</code> invalid values, <code>429</code> quota exceeded.</p>';
+
+    d+='<h3>Typical flow</h3><ol>'
+      +'<li>Call <code>/api/ping</code> to confirm your credentials work.</li>'
+      +'<li>Call <code>/api/catalog</code> for valid rate center + NPA pairs, and <code>/api/routing-profiles</code> for your profiles.</li>'
+      +'<li><code>POST /api/orders</code> using those exact values.</li>'
+      +'<li>Poll <code>/api/orders/{id}/status</code> until it reads <code>Completed</code>.</li>'
+      +'<li>Call <code>/api/orders/{id}/details</code> to read the provisioned DID numbers.</li>'
+      +'</ol>';
+
+    d+='<h3>Endpoints</h3><div class="toc">';
+    catalog.forEach(e=>{ d+='<a href="#'+anchor(e)+'">'+esc(e.path)+'</a>'; });
+    d+='</div>';
+
+    catalog.forEach(e=>{
+      d+='<div class="ep" id="'+anchor(e)+'">'
+        +'<div class="sig"><span class="m '+e.method+'">'+e.method+'</span><strong>'+esc(e.path)+'</strong></div>'
+        +'<p class="soap" style="margin:6px 0 0">Maps to SOAP <code>'+esc(e.soap)+'</code></p>';
+      if(e.description)d+='<p style="margin:8px 0 0">'+esc(e.description)+'</p>';
+      if(e.precondition)d+='<div class="pre-note" style="margin:10px 0 0"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
+      if(e.params&&e.params.length){
+        d+='<h4>Parameters</h4><table>';
+        e.params.forEach(p=>d+='<tr><td><code>'+esc(p.name)+'</code></td><td>'+esc(p.in)+'</td><td>'
+          +(p.required?'required':'optional')+'</td><td>'+esc(p.description||'')+'</td></tr>');
+        d+='</table>';
+      }
+      if(e.body){ d+='<h4>Body</h4><pre>'+esc(JSON.stringify(e.body,null,2))+'</pre>'; }
+      if(e.fields&&e.fields.length){
+        d+='<h4>Body fields</h4><table>';
+        e.fields.forEach(f=>d+='<tr><td><code>'+esc(f.name)+'</code></td><td>'+(f.required?'required':'optional')
+          +'</td><td>'+esc(f.description||'')+'</td></tr>');
+        d+='</table>';
+      }
+      if(e.returns)d+='<h4>Returns</h4><p style="margin:0">'+esc(e.returns)+'</p>';
+      if(e.errors&&e.errors.length){
+        d+='<h4>Common errors</h4><table>';
+        e.errors.forEach(er=>d+='<tr><td class="errcode">'+er.code+'</td><td>'+esc(er.when||'')+'</td></tr>');
+        d+='</table>';
+      }
+      d+='<h4>Example</h4><pre>'+esc(docCurl(e))+'</pre></div>';
+    });
+
+    $('#docs-body').innerHTML=d;
+  }
+
+  function docCurl(e){
+    let p=e.path.replace(/:([a-zA-Z]+)/g,(_,n)=>encodeURIComponent(DEFAULTS[n]||n));
+    const qs=(e.params||[]).filter(x=>x.in==='query'&&x.required)
+      .map(x=>encodeURIComponent(x.name)+'='+encodeURIComponent(DEFAULTS[x.name]||''));
+    if(qs.length)p+='?'+qs.join('&');
+    const L=["curl -s -X "+e.method+" '"+BASE+p+"'",
+             "  -H 'X-EDID-Username: "+USER_PH+"'",
+             "  -H 'X-EDID-Password: "+PASS_PH+"'",
+             "  -H 'X-EDID-Env: production'"];
+    if(e.body){
+      L.push("  -H 'Content-Type: application/json'");
+      L.push("  -d '"+JSON.stringify(e.body)+"'");
+    }
+    return L.join(" \\\n");
+  }
+
+  renderDocs();
 
   $('#env').addEventListener('change',()=>{ if(current)renderUrl(); });
 
@@ -207,7 +365,6 @@
     const s=qs.toString();return p+(s?'?'+s:'');
   }
   // The curl the partner actually runs: absolute URL + their own credentials.
-  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD';
   function curlLines(){
     const L=["curl -s -X "+current.method+" '"+BASE+buildUrl()+"'",
              "  -H 'X-EDID-Username: "+USER_PH+"'",
