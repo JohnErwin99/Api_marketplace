@@ -8,6 +8,17 @@ Only the **13 methods documented in the V3 PDF** are exposed (plus `testConnecti
 as a health check). The service hand-builds the rpc/encoded SOAP envelopes and the
 `Credentials` header, then parses the response back to JSON.
 
+## Base URL
+
+```
+https://api-marketplace-1im9.onrender.com
+```
+
+Every path in this document is relative to that host — `/api/catalog` means
+`https://api-marketplace-1im9.onrender.com/api/catalog`. The live console is at
+[`/console`](https://api-marketplace-1im9.onrender.com/console); it shows the
+base URL and a ready-to-run `curl` for each endpoint.
+
 ## Run
 
 ```bash
@@ -53,7 +64,7 @@ caller to bring their own Espresso login.
 Direct call with your own Espresso account:
 
 ```bash
-curl -s https://your-gateway.onrender.com/api/catalog \
+curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
   -H 'X-EDID-Username: partner@example.com' \
   -H 'X-EDID-Password: their-espresso-password' \
   -H 'X-EDID-Env: production'
