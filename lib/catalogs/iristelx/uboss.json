@@ -1,0 +1,157 @@
+[
+  {
+    "method": "GET",
+    "path": "/uboss-robot/all-trunk-provisioning",
+    "soap": "all-records-of-trunk-provisioning",
+    "summary": "All records of Trunk Provisioning",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/uboss-robot/email/:id",
+    "soap": "email",
+    "summary": "Email",
+    "description": "",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/uboss-robot/email/:id/welcome-letter.pdf",
+    "soap": "welcome-letter",
+    "summary": "Welcome letter",
+    "description": "",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/uboss-robot/email/welcome-letters",
+    "soap": "provisioning-record-with-email",
+    "summary": "Provisioning Record with Email",
+    "description": "",
+    "params": [
+      {
+        "name": "email",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/uboss-robot/trunk-provisioning",
+    "soap": "trunk-provisioning-1",
+    "summary": "Trunk Provisioning",
+    "description": "",
+    "params": [
+      {
+        "name": "id",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/uboss-robot/trunk-provisioning",
+    "soap": "trunk-provisioning",
+    "summary": "Trunk Provisioning",
+    "description": "",
+    "body": {
+      "phoneNumbers": [
+        0
+      ],
+      "resellerName": "RESELLERNAME",
+      "address": "ADDRESS",
+      "city": "CITY",
+      "postcode": "POSTCODE",
+      "notificationEmail": "NOTIFICATIONEMAIL",
+      "invoiceEmail": "INVOICEEMAIL",
+      "accountRef": "ACCOUNTREF",
+      "businessName": "BUSINESSNAME",
+      "channelCount": "CHANNELCOUNT"
+    },
+    "fields": [
+      {
+        "name": "phoneNumbers",
+        "required": false,
+        "description": "Enter the  number in the following format: +1-2045551370."
+      },
+      {
+        "name": "resellerName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "address",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "postcode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "notificationEmail",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "invoiceEmail",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "accountRef",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "businessName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "channelCount",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/uboss-robot/trunk-provisioning/:id/status",
+    "soap": "status-of-trunk-provisioning",
+    "summary": "Status of Trunk Provisioning",
+    "description": "",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": ""
+      }
+    ]
+  }
+]

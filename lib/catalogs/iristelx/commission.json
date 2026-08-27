@@ -1,0 +1,81 @@
+[
+  {
+    "method": "GET",
+    "path": "/agent-commissions",
+    "soap": "agent-commission",
+    "summary": "Agent Commission",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/commission/:agentId/:startDate/:endDate",
+    "soap": "commission",
+    "summary": "commission",
+    "description": "",
+    "params": [
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "agentId",
+        "in": "path",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "startDate",
+        "in": "path",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "endDate",
+        "in": "path",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/commission/agents",
+    "soap": "agents-commission",
+    "summary": "Agents Commission",
+    "description": "",
+    "params": [
+      {
+        "name": "startDate",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "endDate",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  }
+]

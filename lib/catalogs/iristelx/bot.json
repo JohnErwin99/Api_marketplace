@@ -1,0 +1,121 @@
+[
+  {
+    "method": "POST",
+    "path": "/bot/:accountId/payment",
+    "soap": "payment",
+    "summary": "Payment",
+    "description": "",
+    "body": {
+      "creditCard": {
+        "token": "TOKEN",
+        "code": "CODE",
+        "number": "NUMBER",
+        "expDate": {
+          "expMonth": "EXPMONTH",
+          "expYear": "EXPYEAR"
+        },
+        "holder": "HOLDER",
+        "adapterId": "ADAPTERID",
+        "startDate": {
+          "month": "MONTH",
+          "year": "YEAR"
+        },
+        "securityCode": "SECURITYCODE",
+        "issuer": "ISSUER",
+        "externalRefId": "EXTERNALREFID"
+      },
+      "remark": "REMARK",
+      "reference": "REFERENCE",
+      "taxesIncluded": "TAXESINCLUDED",
+      "currency": "CURRENCY",
+      "amount": "AMOUNT"
+    },
+    "fields": [
+      {
+        "name": "creditCard.token",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.code",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expDate.expMonth",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expDate.expYear",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.holder",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.adapterId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.startDate.month",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.startDate.year",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.securityCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.issuer",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.externalRefId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "remark",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "reference",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "taxesIncluded",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "currency",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "required": false,
+        "description": ""
+      }
+    ]
+  }
+]

@@ -1,0 +1,1076 @@
+[
+  {
+    "method": "GET",
+    "path": "/account-details",
+    "soap": "get-account-details",
+    "summary": "Get Account Details",
+    "description": "",
+    "params": [
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts",
+    "soap": "get-accounts",
+    "summary": "Get Accounts",
+    "description": "Use this endpoint to retrieve an array of accounts along with details specific to each account.",
+    "params": [
+      {
+        "name": "query",
+        "in": "query",
+        "required": false,
+        "description": "Search string."
+      },
+      {
+        "name": "agentId",
+        "in": "query",
+        "required": false,
+        "description": "Filter by agent id."
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "Status strings are used to represent multiple statuses within a single string, making it easier to manage and process different status values. To illustrate this better, let's consider an example with the status value \"active\".  if want to add more values instead of using separate strings we can use a comma-delimited status string to combine them into one, like this:  \"active,suspended\"."
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Specify a specific page in the results set. The default page is 1."
+      },
+      {
+        "name": "pageLimit",
+        "in": "query",
+        "required": false,
+        "description": "Specify the amount of data to return in each page. The default page limit is 10."
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "description": "Defaults to createdOnDesc. It can be either 'createdOnDesc', 'updatedOnDesc'."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts",
+    "soap": "create-an-account",
+    "summary": "Create Account",
+    "description": "Use this endpoint to create an account.",
+    "body": {
+      "contact": {
+        "fname": "FNAME",
+        "lname": "LNAME",
+        "address1": "ADDRESS1",
+        "address2": "ADDRESS2",
+        "address3": "ADDRESS3",
+        "city": "CITY",
+        "province": "PROVINCE",
+        "country": "COUNTRY",
+        "postalCode": "POSTALCODE",
+        "emailAddress": "EMAILADDRESS",
+        "phone": [
+          ""
+        ]
+      },
+      "agent": [
+        ""
+      ],
+      "name": "NAME",
+      "language": "EN"
+    },
+    "fields": [
+      {
+        "name": "contact.fname",
+        "required": true,
+        "description": "Provide the first name of the account holder."
+      },
+      {
+        "name": "contact.lname",
+        "required": true,
+        "description": "Provide the last name of the account holder."
+      },
+      {
+        "name": "contact.address1",
+        "required": true,
+        "description": "Provide the primary mailing addresss of the account holder's billing address."
+      },
+      {
+        "name": "contact.address2",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.address3",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.city",
+        "required": true,
+        "description": "Provide the city of the account holder's billing address."
+      },
+      {
+        "name": "contact.province",
+        "required": true,
+        "description": "Provide the province of the account holder's billing address, Accepts 2-character abbreviated code, for example ON (Ontario)."
+      },
+      {
+        "name": "contact.country",
+        "required": true,
+        "description": "Provide the country of the account holder's billing address, Accepts 2-character abbreviated code, for example US (United States)"
+      },
+      {
+        "name": "contact.postalCode",
+        "required": true,
+        "description": "Provide the postal code of the account holder's billing address, Should be: A1A 1A1 or A1A1A1."
+      },
+      {
+        "name": "contact.emailAddress",
+        "required": true,
+        "description": "Provide the primary email address of the account holder."
+      },
+      {
+        "name": "contact.phone",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "agent",
+        "required": false,
+        "description": "Provide the agent associated with the creation of this account."
+      },
+      {
+        "name": "name",
+        "required": false,
+        "description": "Provide the name of the account. Will default to 'fname lname'."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Specify the language preference for the account holder. Default is \"EN\""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId",
+    "soap": "get-an-account-1",
+    "summary": "Get Account",
+    "description": "Use this endpoint to retrieve all details associated with an account.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to retrieve."
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId",
+    "soap": "get-an-account",
+    "summary": "Update Account",
+    "description": "Use this endpoint to update an account.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to update."
+      }
+    ],
+    "body": {
+      "status": "ACTIVE",
+      "name": "NAME",
+      "language": "EN",
+      "agent": {},
+      "contact": {}
+    },
+    "fields": [
+      {
+        "name": "status",
+        "required": false,
+        "description": "The status associated with this account. By default status is \"new\" - status should only be changed to \"active\" when the billing period begins."
+      },
+      {
+        "name": "name",
+        "required": false,
+        "description": "Adjust the account name associated with this account."
+      },
+      {
+        "name": "language",
+        "required": false,
+        "description": "Adjust correspondence language for this account. Default is \"EN\""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/log",
+    "soap": "get-log",
+    "summary": "Get Account Journal",
+    "description": "Use this endpoint to get a list of journals for a specific account.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "The account id to retrieve journal."
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the starting date for the journal in the format of YYYY-MM-DD."
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the ending date for the journal in the format of YYYY-MM-DD."
+      },
+      {
+        "name": "category",
+        "in": "query",
+        "required": false,
+        "description": "Specify the category type for filtering purposes"
+      },
+      {
+        "name": "subCategory",
+        "in": "query",
+        "required": false,
+        "description": "Specify the subCategory type for filtering purposes"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/services",
+    "soap": "get-all-service-accounts-on-master-account",
+    "summary": "Get Account Services",
+    "description": "Use this endpoint to get a list of services associated with an account.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "The master account id to get all service account details for."
+      },
+      {
+        "name": "query",
+        "in": "query",
+        "required": false,
+        "description": "Search string."
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "Status strings are used to represent multiple statuses within a single string, making it easier to manage and process different status values. To illustrate this better, let's consider an example with the status value \"active\".  if want to add more values instead of using separate strings we can use a comma-delimited status string to combine them into one, like this:  \"active,suspended\"."
+      },
+      {
+        "name": "sim",
+        "in": "query",
+        "required": false,
+        "description": "Search string."
+      },
+      {
+        "name": "telephoneNumber",
+        "in": "query",
+        "required": false,
+        "description": "Search string."
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Specify a specific page in the results set. The default page is 1."
+      },
+      {
+        "name": "pageLimit",
+        "in": "query",
+        "required": false,
+        "description": "Specify the amount of data to return in each page. The default page limit is 10."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/:accountId/services",
+    "soap": "create-a-new-service-account",
+    "summary": "Add Service",
+    "description": "Use this endpoint to add a service to an account.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the master account id to add on a service."
+      }
+    ],
+    "body": {
+      "isLegacy": true,
+      "agent": [
+        ""
+      ],
+      "billing": [
+        ""
+      ],
+      "contact": {},
+      "planCode": "PLANCODE",
+      "isShared": false,
+      "name": "NAME",
+      "contract": {}
+    },
+    "fields": [
+      {
+        "name": "isLegacy",
+        "required": false,
+        "description": "A leagacy account was created in the past or through a legacy workflow. Accounts and/or services that were created using IRISTEL-X are not maeked as legacy."
+      },
+      {
+        "name": "agent",
+        "required": false,
+        "description": "Provide the agent associated with the creation of this account."
+      },
+      {
+        "name": "billing",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "planCode",
+        "required": true,
+        "description": "The code representing the plan or subscription associated with this account."
+      },
+      {
+        "name": "isShared",
+        "required": false,
+        "description": "Indicates whether this service is enabled for sharing of usage allotment with other services on the account. For example: A parent may want to share allotment from their service with their child's service on the same account."
+      },
+      {
+        "name": "name",
+        "required": false,
+        "description": "A name for this service account."
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/accounts/:accountId/services/:serviceId",
+    "soap": "delete-service",
+    "summary": "Delete Service",
+    "description": "Use this endpoint to delete a specific service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the master account id of the service account to delete."
+      },
+      {
+        "name": "serviceId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the service account id to delete."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/services/:serviceId",
+    "soap": "get-specified-service-account-on-master-account",
+    "summary": "Get Service",
+    "description": "Use this endpoint to get details of a specific service associated with an account.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the master account id to get service account details."
+      },
+      {
+        "name": "serviceId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the service account id to retrieve."
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId/services/:serviceId",
+    "soap": "update-service",
+    "summary": "Update Service",
+    "description": "Use this endpoint to add or replace the Plan associated with a service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the master account id to update service account details."
+      },
+      {
+        "name": "serviceId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the service account id to update."
+      }
+    ],
+    "body": {
+      "status": "ACTIVE",
+      "billing": {},
+      "contact": {},
+      "name": "NAME",
+      "contract": {},
+      "agent": {},
+      "isShared": true
+    },
+    "fields": [
+      {
+        "name": "status",
+        "required": false,
+        "description": "The status associated with this service. By default status is \"new\" - status should only be changed to \"active\" when the billing period begins."
+      },
+      {
+        "name": "name",
+        "required": false,
+        "description": "Adjust the name for this service account."
+      },
+      {
+        "name": "isShared",
+        "required": false,
+        "description": "Indicates whether this service is enabled for sharing of usage allotment with other services on the account. For example: A parent may want to share allotment from their service with their child's service on the same account."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/services/:serviceId/call-forwarding",
+    "soap": "update-call-forwarding",
+    "summary": "Update Call Forwarding",
+    "description": "",
+    "body": {
+      "always": {
+        "enabled": true,
+        "forwardToNumber": "FORWARDTONUMBER"
+      },
+      "busy": {
+        "enabled": true,
+        "forwardToNumber": "FORWARDTONUMBER"
+      },
+      "notReachable": {
+        "enabled": true,
+        "forwardToNumber": "FORWARDTONUMBER"
+      },
+      "noAnswer": {
+        "enabled": true,
+        "forwardToNumber": "FORWARDTONUMBER",
+        "numberOfRings": "NUMBEROFRINGS"
+      }
+    },
+    "fields": [
+      {
+        "name": "always.enabled",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "always.forwardToNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "busy.enabled",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "busy.forwardToNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "notReachable.enabled",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "notReachable.forwardToNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "noAnswer.enabled",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "noAnswer.forwardToNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "noAnswer.numberOfRings",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/services/:serviceId/log",
+    "soap": "get-service-account-journal",
+    "summary": "Get Service Account Journal",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/services/:serviceId/plan",
+    "soap": "update-plan",
+    "summary": "Update Plan",
+    "description": "",
+    "body": {
+      "planCode": "PLANCODE",
+      "isShared": true
+    },
+    "fields": [
+      {
+        "name": "planCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "isShared",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/:accountId/services/:serviceId/usage",
+    "soap": "update-plan-copy",
+    "summary": "Get Service Usage",
+    "description": "Use this endpoint to get the service usage.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id of the service to retrieve the payments."
+      },
+      {
+        "name": "serviceId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the service id to retrieve the usage."
+      },
+      {
+        "name": "type",
+        "in": "query",
+        "required": true,
+        "description": "Specify the type of service to retrieve usage information."
+      },
+      {
+        "name": "invoiceId",
+        "in": "query",
+        "required": false,
+        "description": "Provide the invoice number to get the usage."
+      },
+      {
+        "name": "date",
+        "in": "query",
+        "required": false,
+        "description": "Provide the starting date to get the usage. In format YYYY-MM."
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": "Provide the starting date to get the usage. In format YYYY-MM-DD."
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": "Provide the ending date to get the usage. In format YYYY-MM-DD."
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId/services/:serviceId/voicemail",
+    "soap": "update-voicemail",
+    "summary": "Update Voicemail",
+    "description": "",
+    "body": {
+      "autoLogin": {},
+      "voicemailToEmail": {},
+      "newPin": "NEWPIN"
+    },
+    "fields": [
+      {
+        "name": "newPin",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/authenticatePin/:accountId",
+    "soap": "authenticate-pin",
+    "summary": "Authenticate Pin",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/createPin/:accountId",
+    "soap": "create-pin",
+    "summary": "Create PIN",
+    "description": "",
+    "body": {
+      "pin": "PIN"
+    },
+    "fields": [
+      {
+        "name": "pin",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/freeBundleUnitSharing/:accountId",
+    "soap": "freebundleunitsharing-update-account",
+    "summary": "freeBundleUnitSharing Update Account",
+    "description": "",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": ""
+      }
+    ],
+    "body": {
+      "isShared": true
+    },
+    "fields": [
+      {
+        "name": "isShared",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/getPin/:accountId",
+    "soap": "get-pin",
+    "summary": "Get PIN",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/getSmsChoice/:accountId",
+    "soap": "update-sms-choice",
+    "summary": "Get SMS choice",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/resetPin/:accountId",
+    "soap": "reset-pin",
+    "summary": "Reset PIN",
+    "description": "",
+    "body": {
+      "oldPin": "OLDPIN",
+      "newPin": "NEWPIN"
+    },
+    "fields": [
+      {
+        "name": "oldPin",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "newPin",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/services",
+    "soap": "get-services",
+    "summary": "Get Services",
+    "description": "Use this endpoint to get a list of services associated with an Account.",
+    "params": [
+      {
+        "name": "query",
+        "in": "query",
+        "required": false,
+        "description": "Search string."
+      },
+      {
+        "name": "agentId",
+        "in": "query",
+        "required": false,
+        "description": "Filter by agent id."
+      },
+      {
+        "name": "serviceId",
+        "in": "query",
+        "required": false,
+        "description": "Filter by service id."
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "Status strings are used to represent multiple statuses within a single string, making it easier to manage and process different status values. To illustrate this better, let's consider an example with the status value \"active\".  if want to add more values instead of using separate strings we can use a comma-delimited status string to combine them into one, like this:  \"active,suspended\"."
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Specify a specific page in the results set. The default page is 1."
+      },
+      {
+        "name": "pageLimit",
+        "in": "query",
+        "required": false,
+        "description": "Specify the amount of data to return in each page. The default page limit is 10."
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "description": "Defaults to createdOnDesc. It can be either 'createdOnDesc', 'updatedOnDesc'."
+      },
+      {
+        "name": "planCode",
+        "in": "query",
+        "required": false,
+        "description": "planCode strings are used to represent multiple planCodes within a single string, making it easier to manage and process different planCode values. To illustrate this better, let's consider an example with the planCode value \"XXX\".  if want to add more values instead of using separate strings we can use a comma-delimited planCode string to combine them into one, like this:  \"XXX,XXX1\"."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/updateSmsChoice/:accountId",
+    "soap": "update-sms-choice-1",
+    "summary": "Update SMS Choice",
+    "description": "",
+    "body": {
+      "smsChoice": 0
+    },
+    "fields": [
+      {
+        "name": "smsChoice",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/canada-post/find",
+    "soap": "find-address",
+    "summary": "Find Address",
+    "description": "",
+    "params": [
+      {
+        "name": "address",
+        "in": "query",
+        "required": false,
+        "description": "Enter the keyword of the address"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/canada-post/retrieve",
+    "soap": "get-full-address-by-id",
+    "summary": "Get Full Address By Id",
+    "description": "",
+    "params": [
+      {
+        "name": "id",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/plans",
+    "soap": "getting-started-with-your-api-2",
+    "summary": "Get plans",
+    "description": "Use this endpoint to retrieve a list of available plans for Ice Wireless accounts. The planCode parameter is to be specified in Create Account and Update Account requests.",
+    "params": [
+      {
+        "name": "billingTypes",
+        "in": "query",
+        "required": false,
+        "description": "Choose your prefererd billing type."
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "Plan status. 1 means active, 0 means inactive"
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/plans",
+    "soap": "create-plan",
+    "summary": "Create Plan",
+    "description": "",
+    "body": {
+      "planCode": "PLANCODE",
+      "billingType": "BILLINGTYPE",
+      "planName": "PLANNAME",
+      "billable": true,
+      "active": true,
+      "flatRateTariff": "FLATRATETARIFF",
+      "planType": "PLANTYPE",
+      "allotment": "ALLOTMENT",
+      "broadsoft": "BROADSOFT",
+      "ipswitch": "IPSWITCH",
+      "huawei": "HUAWEI",
+      "nextologies": "NEXTOLOGIES",
+      "netnumber": "NETNUMBER",
+      "billingCycle": "BILLINGCYCLE",
+      "billingTypeLabel": "BILLINGTYPELABEL",
+      "recurringCharge": [
+        0
+      ]
+    },
+    "fields": [
+      {
+        "name": "planCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "billingType",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "planName",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "billable",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "active",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "flatRateTariff",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "planType",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "allotment",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "broadsoft",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "ipswitch",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "huawei",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "nextologies",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "netnumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billingCycle",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "billingTypeLabel",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "recurringCharge",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/plans/:planCode",
+    "soap": "delete-plan",
+    "summary": "Delete Plan",
+    "description": ""
+  },
+  {
+    "method": "PATCH",
+    "path": "/plans/:planCode",
+    "soap": "update-plan-1",
+    "summary": "Update Plan",
+    "description": "",
+    "body": {
+      "billingType": "BILLINGTYPE",
+      "planName": "PLANNAME",
+      "billable": true,
+      "active": true,
+      "flatRateTariff": "FLATRATETARIFF",
+      "planType": "PLANTYPE",
+      "allotment": {
+        "minutes": "MINUTES",
+        "sms": "SMS"
+      },
+      "broadsoft": {
+        "enabled": "ENABLED"
+      },
+      "ipswitch": {
+        "enabled": "ENABLED"
+      },
+      "huawei": "HUAWEI",
+      "nextologies": "NEXTOLOGIES",
+      "netnumber": "NETNUMBER",
+      "billingCycle": "BILLINGCYCLE",
+      "billingTypeLabel": "BILLINGTYPELABEL",
+      "recurringCharge": 0
+    },
+    "fields": [
+      {
+        "name": "billingType",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "planName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billable",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "active",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "flatRateTariff",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "planType",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "allotment.minutes",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "allotment.sms",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "broadsoft.enabled",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "ipswitch.enabled",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "huawei",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "nextologies",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "netnumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billingCycle",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billingTypeLabel",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "recurringCharge",
+        "required": false,
+        "description": ""
+      }
+    ]
+  }
+]

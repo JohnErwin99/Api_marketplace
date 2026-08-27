@@ -3,115 +3,230 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Espresso DID · Console</title>
+<title>Iristel · API Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F5F7F4; --panel:#FFFFFF; --ink:#16211C; --muted:#5E6B64;
-    --line:#D8DED9; --accent:#0E7C86; --accent-ink:#FFFFFF;
-    --ok:#1F7A4D; --warn:#B7791F; --err:#B23B3B; --doc:#FBFAF6;
+    --bg:#01111E; --bg2:#050d16; --panel:#0a1628; --panel2:#0d1f3c;
+    --ink:#E8F1F8; --muted:#9fb8cc;
+    --line:rgba(62,140,203,.18); --line-strong:rgba(62,140,203,.38);
+    --accent:#3E8CCB; --accent2:#2a6a9a; --accent-ink:#FFFFFF;
+    --gold:#c9a44c; --gold-soft:#e5c76b;
+    --ok:#a5d6a7; --ok-deep:#2e7d32; --warn:#f5d98a; --err:#ef9a9a; --err-deep:#d32f2f;
+    --grad:linear-gradient(135deg,#3E8CCB,#2a6a9a);
+    --shadow:0 10px 30px rgba(62,140,203,.15);
+    --glow:0 8px 22px rgba(62,140,203,.4);
+    --r:14px; --r-sm:10px;
     --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --sans:'Heebo',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --head:'Plus Jakarta Sans','Heebo',system-ui,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans)}
-  header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
-  header h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.2px}
-  header h1 span{color:var(--muted);font-weight:400}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  ::selection{background:rgba(62,140,203,.35)}
+  *::-webkit-scrollbar{width:10px;height:10px}
+  *::-webkit-scrollbar-thumb{background:rgba(62,140,203,.25);border-radius:99px}
+  *::-webkit-scrollbar-thumb:hover{background:rgba(62,140,203,.45)}
+  *::-webkit-scrollbar-track{background:transparent}
+
+  /* ---- header ---- */
+  header{position:relative;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#020c15;flex-wrap:wrap}
+  header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,#3E8CCB,transparent)}
+  header .logo{height:26px;width:auto;display:block}
+  header h1{font:700 15px/1 var(--head);margin:0;letter-spacing:.3px;white-space:nowrap}
+  header h1 span{color:var(--muted);font-weight:500}
   header .grow{flex:1}
   header label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-  header input,header select{font:13px var(--mono);padding:5px 7px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)}
-  header input{width:150px}
-  .tabs{display:flex;gap:2px;margin-left:4px}
-  .tab{border:0;background:none;font:13px var(--sans);font-weight:600;color:var(--muted);padding:8px 14px;border-radius:5px 5px 0 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-11px}
+  header select,header input{font:13px var(--mono);padding:6px 9px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink);max-width:210px}
+  header select:focus-visible,header input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  #xkey-clear{border:1px solid var(--line);background:none;color:var(--muted);border-radius:7px;font:12px var(--sans);padding:5px 8px;cursor:pointer}
+  #xkey-clear:hover{color:var(--err);border-color:rgba(239,154,154,.5)}
+  .tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+  .tab{border:0;background:none;font:600 13px var(--head);color:var(--muted);padding:7px 16px;border-radius:999px;cursor:pointer;transition:color .15s,background .15s}
   .tab:hover{color:var(--ink)}
-  .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-  main{display:grid;grid-template-columns:280px 1fr;height:calc(100% - 49px)}
+  .tab[aria-selected="true"]{color:#fff;background:var(--grad);box-shadow:0 3px 10px rgba(62,140,203,.35)}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .badge{font:600 11px var(--head);padding:3px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);background:var(--panel);white-space:nowrap}
+  .badge.tier{color:var(--gold-soft);border-color:rgba(201,164,76,.5);background:rgba(201,164,76,.08)}
+  .badge.planned{color:var(--warn);border-color:rgba(245,217,138,.4)}
+
+  /* ---- product bar ---- */
+  .products{display:flex;gap:8px;align-items:center;padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto}
+  .pchip{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 12.5px var(--head);padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;gap:7px;align-items:center}
+  .pchip:hover{color:var(--ink);border-color:var(--line-strong);transform:translateY(-1px)}
+  .pchip.active{color:#fff;background:var(--grad);border-color:transparent;box-shadow:0 4px 14px rgba(62,140,203,.35)}
+  .pchip .soon{font:600 10px var(--head);color:var(--gold-soft);background:rgba(201,164,76,.14);border-radius:999px;padding:1px 7px}
+  .pchip.active .soon{color:#fff;background:rgba(255,255,255,.18)}
+  .pchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  main{display:grid;grid-template-columns:310px 1fr;height:calc(100% - 108px)}
   main[hidden]{display:none}
-  .docs{height:calc(100% - 49px);overflow:auto;padding:26px 20px 60px}
-  .docs .wrap{max-width:900px;margin:0 auto}
-  .docs h2{font-size:20px;margin:0 0 6px}
-  .docs h3{font-size:15px;margin:26px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
-  .docs h4{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:14px 0 6px}
-  .docs p{max-width:74ch;font-size:13.5px}
-  .docs .lead{color:var(--muted);font-size:13.5px;margin-top:0}
-  .docs pre{font:12px/1.6 var(--mono);background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px;overflow-x:auto;white-space:pre}
+
+  /* ---- docs ---- */
+  .docs{height:calc(100% - 108px);overflow:auto;padding:30px 24px 70px}
+  .docs .wrap{max-width:920px;margin:0 auto;animation:fadein .2s ease}
+  .docs h2{font:800 24px/1.2 var(--head);margin:0 0 8px}
+  .docs h3{font:700 16px var(--head);margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--line)}
+  .docs h4{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin:16px 0 6px}
+  .docs p{max-width:74ch;font-size:13.5px;color:var(--ink)}
+  .docs .lead{color:var(--muted);font-size:14.5px;margin-top:0}
+  .docs pre{font:12px/1.65 var(--mono);background:var(--bg2);color:#DDE9F2;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;overflow-x:auto;white-space:pre}
   .docs code{font-family:var(--mono);font-size:12.5px}
-  .docs p code,.docs td code,.docs li code{background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  .docs p code,.docs td code,.docs li code,.docs ol code{background:rgba(62,140,203,.12);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:#9CCBEF}
   .docs table{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0}
-  .docs table td,.docs table th{border-top:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
-  .docs table th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-top:0}
-  .docs .ep{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:10px 0}
+  .docs table td,.docs table th{border-top:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
+  .docs table th{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-top:0}
+  .docs .ep{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:14px 0;transition:transform .15s,box-shadow .15s,border-color .15s}
+  .docs .ep:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-strong)}
   .docs .ep .sig{font:13px var(--mono);display:flex;gap:10px;align-items:baseline}
-  .docs .toc{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
-  .docs .toc a{font:12px var(--mono);text-decoration:none;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--panel)}
-  .docs .toc a:hover{border-color:var(--accent)}
-  .callout{background:#FFF7E6;border:1px solid #F0DFB8;color:#7A5B12;border-radius:6px;padding:10px 12px;font-size:13px;margin:12px 0}
-  .callout code{background:#FBF1DA;border-color:#E7D3A6}
-  nav{border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
-  nav .group{padding:10px 12px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
-  nav button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:7px 12px;font:13px var(--mono);cursor:pointer;color:var(--ink)}
-  nav button:hover{background:var(--bg)}
-  nav button.active{background:var(--bg);box-shadow:inset 3px 0 0 var(--accent)}
+  .docs .toc{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 4px}
+  .docs .toc a{font:12px var(--mono);text-decoration:none;color:#9CCBEF;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel);transition:all .15s}
+  .docs .toc a:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 3px 10px rgba(62,140,203,.25)}
+  .callout{background:rgba(201,164,76,.09);border:1px solid rgba(201,164,76,.35);color:#EBD9A8;border-radius:var(--r-sm);padding:12px 14px;font-size:13px;margin:14px 0}
+  .callout code{background:rgba(201,164,76,.15);border-color:rgba(201,164,76,.3);color:#F1E3B8}
+  .callout b{color:var(--gold-soft)}
+
+  /* ---- flow diagram ---- */
+  .flow{margin:18px 0 6px}
+  .flow-head{margin-bottom:14px}
+  .flow-head h3{border-top:0;padding-top:0;margin:0 0 4px;font:700 17px var(--head)}
+  .flow-head p{margin:0;color:var(--muted);font-size:13px}
+  .flow-scroll{overflow-x:auto;padding-bottom:8px}
+  .flow-grid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);gap:0;min-width:min-content}
+  .flow-col{display:flex;flex-direction:column;gap:10px;padding-right:34px;position:relative}
+  .flow-col:last-child{padding-right:0}
+  /* arrow between steps */
+  .flow-col:not(:last-child)::after{content:'';position:absolute;top:52px;right:11px;width:12px;height:12px;
+    border-top:2px solid var(--line-strong);border-right:2px solid var(--line-strong);transform:rotate(45deg)}
+  .fstep{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--tone,var(--accent));
+    border-radius:var(--r);padding:16px 14px;flex:1;transition:transform .15s,box-shadow .15s}
+  .fstep:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .fnum{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font:800 12px var(--head);color:#fff;background:var(--tone,var(--accent));margin-bottom:10px}
+  .fstep h4{margin:0 0 6px;font:700 14px var(--head);color:var(--tone,var(--accent));
+    text-transform:none;letter-spacing:0}
+  .fstep p{margin:0;font-size:12.5px;color:var(--ink);max-width:none;line-height:1.5}
+  .fdetail{background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--tone,var(--accent));
+    border-radius:var(--r-sm);padding:11px 12px}
+  .fdetail .fep{font:600 11.5px var(--mono);color:var(--tone,var(--accent));word-break:break-all;display:block;margin-bottom:6px}
+  .fdetail dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
+  .fdetail dt{font:700 10px var(--head);text-transform:uppercase;letter-spacing:.6px;color:var(--muted);white-space:nowrap}
+  .fdetail dd{margin:0;font:11px var(--mono);color:#C9DCEC;word-break:break-word}
+  .flow-notes{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-top:16px}
+  .flow-notes .ni{color:var(--accent);font-size:16px;line-height:1.2;flex:none}
+  .flow-notes ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .flow-notes li::marker{color:var(--accent)}
+  .flow-img{margin:16px 0}
+  .flow-img img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:var(--r);display:block}
+  .flow-img figcaption{margin-top:6px;font-size:12px;color:var(--muted)}
+  @media (max-width:760px){
+    .flow-grid{grid-auto-flow:row;grid-auto-columns:auto}
+    .flow-col{padding-right:0;padding-bottom:26px}
+    .flow-col:not(:last-child)::after{top:auto;bottom:8px;right:auto;left:50%;transform:rotate(135deg)}
+  }
+
+  /* ---- console nav ---- */
+  nav{border-right:1px solid var(--line);overflow:auto;background:var(--bg2)}
+  nav .group{padding:14px 14px 6px;font:700 10.5px var(--head);text-transform:uppercase;letter-spacing:1px;color:var(--gold-soft)}
+  nav button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:8px 14px;font:12.5px var(--mono);cursor:pointer;color:var(--ink);border-left:3px solid transparent;transition:background .12s}
+  nav button:hover{background:rgba(62,140,203,.08)}
+  nav button.active{background:rgba(62,140,203,.14);border-left-color:var(--accent)}
   nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-  .m{font-size:11px;font-weight:700;width:38px;flex:none}
-  .m.GET{color:var(--ok)} .m.POST{color:var(--accent)}
-  section{overflow:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
-  .card h2{margin:0 0 2px;font-size:15px;font-weight:600}
-  .card h2 .mono{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+  .m{font-size:10.5px;font-weight:700;width:44px;flex:none;font-family:var(--head)}
+  .m.GET{color:var(--ok)} .m.POST{color:#7FB8E8} .m.PUT{color:var(--warn)} .m.DELETE{color:var(--err)}
+
+  /* ---- console main ---- */
+  section{overflow:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:0 4px 20px rgba(1,17,30,.35)}
+  .card h2{margin:0 0 2px;font:700 16px var(--head)}
+  .card h2 .mono{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-weight:400;margin-left:8px}
   .soap{color:var(--muted);font-size:12px;margin:0 0 10px}
   .soap code{font-family:var(--mono)}
   .desc{font-size:13.5px;margin:0 0 10px;max-width:70ch}
-  .pre-note{font-size:12.5px;background:#FFF7E6;border:1px solid #F0DFB8;color:#7A5B12;border-radius:5px;padding:7px 10px;margin:0 0 12px}
-  .doc h3{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:14px 0 6px}
+  .pre-note{font-size:12.5px;background:rgba(201,164,76,.09);border:1px solid rgba(201,164,76,.35);color:#EBD9A8;border-radius:var(--r-sm);padding:9px 12px;margin:0 0 12px}
+  .pre-note b{color:var(--gold-soft)}
+  .doc h3{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin:16px 0 6px}
   table.doc{border-collapse:collapse;width:100%;font-size:12.5px}
-  table.doc td{border-top:1px solid var(--line);padding:5px 8px;vertical-align:top}
-  table.doc td.k{font-family:var(--mono);white-space:nowrap;color:var(--ink)}
+  table.doc td{border-top:1px solid var(--line);padding:6px 9px;vertical-align:top}
+  table.doc td.k{font-family:var(--mono);white-space:nowrap;color:#9CCBEF}
   table.doc td.req{color:var(--err);font-size:11px;width:1%;white-space:nowrap}
-  .field{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center;margin:6px 0}
+  .field{display:grid;grid-template-columns:160px 1fr;gap:8px;align-items:center;margin:7px 0}
   .field label{font-size:12px;color:var(--muted);font-family:var(--mono)}
   .field .fd{grid-column:2;font-size:11.5px;color:var(--muted);margin-top:-2px}
-  .field input,textarea{font:13px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;width:100%;background:#fff;color:var(--ink)}
+  .field input,textarea{font:13px var(--mono);padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;width:100%;background:var(--bg2);color:var(--ink);transition:border-color .15s,box-shadow .15s}
+  .field input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(62,140,203,.18)}
   textarea{min-height:170px;resize:vertical}
-  .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-  .btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:8px 14px;font:13px var(--sans);font-weight:600;cursor:pointer}
-  .btn:disabled{opacity:.6;cursor:progress}
-  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .row{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .btn{background:var(--grad);color:var(--accent-ink);border:0;border-radius:var(--r-sm);padding:10px 18px;font:700 13px var(--head);cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--glow)}
+  .btn:disabled{opacity:.6;cursor:progress;transform:none;box-shadow:none}
+  .btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
   .url{font:12px var(--mono);color:var(--muted);word-break:break-all}
-  .status{font:12px var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
-  .status.ok{color:var(--ok);border-color:var(--ok)} .status.warn{color:var(--warn);border-color:var(--warn)} .status.err{color:var(--err);border-color:var(--err)}
-  pre.out{margin:0;font:12.5px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px;min-height:110px;max-height:50vh;overflow:auto}
-  .railnote{padding:14px 12px;margin-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.55}
-  .railnote code{font-family:var(--mono);font-size:11px}
+  .status{font:600 12px var(--mono);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+  .status.ok{color:var(--ok);border-color:rgba(165,214,167,.5);background:rgba(46,125,50,.15)}
+  .status.warn{color:var(--warn);border-color:rgba(245,217,138,.45);background:rgba(245,217,138,.08)}
+  .status.err{color:var(--err);border-color:rgba(239,154,154,.5);background:rgba(211,47,47,.15)}
+
+  /* ---- response ---- */
+  .resp-banner{display:flex;gap:10px;align-items:center;border-radius:var(--r-sm);padding:10px 14px;margin:10px 0 12px;font:700 13.5px var(--head);animation:fadein .18s ease}
+  .resp-banner .icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;color:#fff}
+  .resp-banner.good{background:rgba(46,125,50,.16);border:1px solid rgba(165,214,167,.35);color:var(--ok)}
+  .resp-banner.good .icon{background:var(--ok-deep)}
+  .resp-banner.bad{background:rgba(211,47,47,.14);border:1px solid rgba(239,154,154,.35);color:var(--err)}
+  .resp-banner.bad .icon{background:var(--err-deep)}
+  .listing-table{border-collapse:collapse;width:100%;font-size:12.5px;margin:4px 0;animation:fadein .18s ease}
+  .listing-table td{border-top:1px solid var(--line);padding:7px 9px;vertical-align:top}
+  .listing-table td:first-child{color:var(--muted);white-space:nowrap;font-family:var(--head);font-weight:600;width:1%;padding-right:22px}
+  .listing-table tr:first-child td{border-top:0}
+  details.raw{margin-top:12px}
+  details.raw summary{cursor:pointer;font:600 12px var(--head);color:var(--muted);padding:4px 0;list-style:none}
+  details.raw summary::before{content:'▸ ';color:var(--accent)}
+  details.raw[open] summary::before{content:'▾ '}
+  details.raw summary:hover{color:var(--ink)}
+  pre.out{margin:8px 0 0;font:12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;background:var(--bg2);color:#DDE9F2;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;max-height:50vh;overflow:auto}
+  .resp-empty{color:var(--muted);font-size:13px;padding:10px 0}
+
+  /* ---- misc ---- */
+  .railnote{padding:16px 14px;margin-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}
+  .railnote code{font-family:var(--mono);font-size:11px;color:#9CCBEF}
+  .railnote strong{color:var(--gold-soft)}
   .base{display:flex;align-items:center;gap:8px;font:12px var(--mono);color:var(--muted)}
-  .base b{font:11px var(--sans);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
-  .base code{color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:3px 7px;user-select:all}
+  .base b{font:700 10.5px var(--head);text-transform:uppercase;letter-spacing:.8px}
+  .base code{color:#9CCBEF;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 9px;user-select:all}
   .snippet{position:relative;margin:0}
-  .snippet pre{margin:0;font:12px/1.6 var(--mono);white-space:pre;overflow-x:auto;background:#0F1613;color:#E6EDE9;border-radius:6px;padding:12px 12px}
-  .snippet .cred{color:#7FD1B9}
-  .copy{position:absolute;top:8px;right:8px;background:#243029;color:#E6EDE9;border:1px solid #37473E;border-radius:4px;font:11px var(--sans);padding:4px 9px;cursor:pointer}
-  .copy:hover{background:#2F3D35}
+  .snippet pre{margin:0;font:12px/1.65 var(--mono);white-space:pre;overflow-x:auto;background:var(--bg2);color:#DDE9F2;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px}
+  .snippet .cred{color:var(--gold-soft)}
+  .copy{position:absolute;top:9px;right:9px;background:var(--panel2);color:var(--ink);border:1px solid var(--line-strong);border-radius:7px;font:600 11px var(--head);padding:5px 11px;cursor:pointer;transition:all .15s}
+  .copy:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .copy.ok{color:var(--ok);border-color:rgba(165,214,167,.5)}
   .empty{color:var(--muted);font-size:13px}
   .hint{font-size:12px;color:var(--muted)}
   .errcode{font-family:var(--mono);color:var(--warn);font-weight:600}
-  @media (max-width:820px){main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}header{flex-wrap:wrap}.field{grid-template-columns:1fr}.field .fd{grid-column:1}}
-  @media (prefers-reduced-motion:no-preference){.btn{transition:filter .12s}.btn:hover{filter:brightness(1.08)}}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}.field{grid-template-columns:1fr}.field .fd{grid-column:1}header{gap:10px}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Espresso DID <span>· API</span></h1>
+  <img class="logo" src="https://cdn.prod.website-files.com/67ae3dc9346b175361116c60/67ae3dc9346b175361116ceb_iristel-logo.png" alt="Iristel">
+  <h1>API <span>Marketplace</span></h1>
   <div class="tabs" role="tablist">
     <button class="tab" id="tab-docs" role="tab" aria-selected="true" aria-controls="view-docs">Documentation</button>
     <button class="tab" id="tab-console" role="tab" aria-selected="false" aria-controls="view-console">Console</button>
   </div>
   <div class="base"><b>Base URL</b><code id="baseurl">—</code></div>
   <div class="grow"></div>
-  <label>env
-    <select id="env" title="This console is test-only. Send X-EDID-Env: production from your own app for live traffic."><option value="test">test</option></select>
+  <span class="badge tier" id="partner-badge" hidden></span>
+  <label id="xkey-wrap" hidden>API key
+    <input id="xkey" type="password" placeholder="x-api-key" autocomplete="off"
+      title="Your IristelX API key. Stored only in this browser (localStorage), sent as the x-api-key header.">
+    <button id="xkey-clear" type="button" title="Forget the stored key" aria-label="Clear API key">✕</button>
   </label>
 </header>
+<div class="products" id="product-bar" role="tablist" aria-label="Products"></div>
 <div class="docs" id="view-docs" role="tabpanel" aria-labelledby="tab-docs">
   <div class="wrap" id="docs-body"><p class="lead">Loading reference…</p></div>
 </div>
@@ -121,12 +236,12 @@
   <section>
     <div class="card" id="req"><div class="empty">Pick an endpoint on the left to see its docs and try it.</div></div>
     <div class="card">
-      <div class="row" style="margin:0 0 8px">
-        <strong style="font-size:13px">Response</strong>
+      <div class="row" style="margin:0 0 4px">
+        <strong style="font:700 14px var(--head)">Response</strong>
         <span id="status" class="status" hidden></span>
         <span id="time" class="hint"></span>
       </div>
-      <pre class="out" id="out">—</pre>
+      <div id="resp-body"><div class="resp-empty">Send a request to see the result here.</div></div>
     </div>
   </section>
 </main>
@@ -135,19 +250,51 @@
 (async function(){
   const $=s=>document.querySelector(s);
   const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-  const nav=$('#nav'), reqEl=$('#req'), out=$('#out'), statusEl=$('#status'), timeEl=$('#time');
+  const nav=$('#nav'), reqEl=$('#req'), respBody=$('#resp-body'), statusEl=$('#status'), timeEl=$('#time');
+  const ORIGIN=location.origin;
+  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD', KEY_PH='YOUR_API_KEY';
+  // 911 API key. Users of this page are already logged-in Iristel customers,
+  // so the shared key ships with the console.
+  const E911_API_KEY='b1582d78d369685683e090ad37489937';
+
+  function getCookie(name){
+    const m=document.cookie.match(new RegExp('(?:^|; )'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'=([^;]*)'));
+    return m?decodeURIComponent(m[1]):null;
+  }
+
+  // ---- per-product behaviour -------------------------------------------
+  // auth: 'edid'  -> Espresso creds via X-EDID-* headers, env switch applies
+  //       'proxy' -> gateway injects the upstream key; caller sends nothing
+  //       'apikey'-> caller sends x-api-key (public 911 API, direct base URL)
+  const IX='https://api.iristelx.com';
+  // The console only ever talks to the Espresso test system; production is
+  // reached from the caller's own app by sending X-EDID-Env: production.
+  const CONSOLE_ENV='test';
+  const PRODUCT_CFG={
+    'dids':           {auth:'edid',  base:ORIGIN, group:p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System'},
+    'lnp-enterprise': {auth:'edid',  base:ORIGIN, group:p=>p.includes('/pons')||p.includes('/numbers')?'Porting requests (PONs)':'Reference'},
+    'lnp-wireless':   {auth:'proxy', base:ORIGIN, group:p=>p.includes('/portin')?'Port In':p.includes('/portout')?'Port Out':p.includes('/cancel-svc')?'Cancel Service':'Grids & health'},
+    'e911':           {auth:'apikey',base:IX, group:()=>'Listings'},
+    'provisioning':   {auth:'xkey', base:IX, group:p=>/email|welcome/.test(p)?'Welcome letters':'Trunk provisioning'},
+    'iristelx-accounts':{auth:'xkey',base:IX, group:p=>/\/plans?(\/|$)/.test(p)?'Plans':/canada-post|address/.test(p)?'Addresses':/siptrunk/.test(p)?'SIP trunks':/service/.test(p)?'Services':'Accounts'},
+    'iristelx-sim':     {auth:'xkey',base:IX, group:p=>/esim/i.test(p)?'eSIM':'SIM cards'},
+    'iristelx-addon':   {auth:'xkey',base:IX, group:()=>'Add-ons'},
+    'iristelx-commission':{auth:'xkey',base:IX, group:()=>'Commissions'},
+    'iristelx-mobile':  {auth:'xkey',base:IX, group:p=>/service-now/.test(p)?'Support tickets':/esim|qr/.test(p)?'eSIM':/port-in/.test(p)?'Port in':/notification/.test(p)?'Notifications':/payment/.test(p)?'Payment':'Plans & usage'},
+    'iristelx-bot':     {auth:'xkey',base:IX, group:()=>'Bot'},
+  };
+  const cfg=()=>PRODUCT_CFG[productId]||{auth:'proxy',base:ORIGIN,group:()=>'Endpoints'};
 
   const DEFAULTS={ name:'ping', profile:'Profile 2542', id:'DID1205280200006',
-    from:'2026-08-01 00:00:00', to:'2026-08-18 23:59:59' };
+    from:'2026-08-01 00:00:00', to:'2026-08-18 23:59:59',
+    npanxx:'250999', pon:'IRIS102002170008', number:'2509991212',
+    date:'2026-08-01 00:00:00', status:'Confirmed',
+    requestNumber:'', RequestNumber:'', PortType:'', HomeSpid:'', PortedTn:'',
+    code:'', };
 
-  // Every path in the catalog is relative; prefix it with this to call the
-  // gateway from outside the console.
-  const BASE=location.origin;
-  $('#baseurl').textContent=BASE;
-  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD';
-
-  let catalog;
-  try{ catalog=(await (await fetch('/')).json()).endpoints; }
+  // ---- load registry ----------------------------------------------------
+  let products;
+  try{ products=(await (await fetch('/')).json()).products; }
   catch(e){
     const msg='Could not load <code>GET /</code>. Is the gateway running?';
     nav.innerHTML='<div class="empty" style="padding:14px">'+msg+'</div>';
@@ -155,28 +302,40 @@
     return;
   }
 
-  const groupOf=p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System';
-  const groups={};
-  catalog.forEach(e=>{(groups[groupOf(e.path)]??=[]).push(e)});
-  nav.innerHTML='';
-  for(const g of ['System','Catalog','Routing profiles','Orders']){
-    if(!groups[g])continue;
-    const hd=document.createElement('div');hd.className='group';hd.textContent=g;nav.appendChild(hd);
-    groups[g].forEach(e=>{
-      const b=document.createElement('button');
-      b.innerHTML='<span class="m '+e.method+'">'+e.method+'</span><span>'+e.path+'</span>';
-      b.onclick=()=>select(e,b);nav.appendChild(b);
-    });
+  // ---- partner tier badge (label only — nothing is gated yet) -----------
+  const partnerType=(getCookie('partnerType')||'').trim();
+  if(partnerType){
+    const b=$('#partner-badge'); b.hidden=false; b.textContent=partnerType;
+    b.title='Partner type from your portal login. Used for labelling only for now.';
   }
 
-  const railnote=document.createElement('div');
-  railnote.className='railnote';
-  railnote.innerHTML='<strong>Base URL:</strong> <code>'+esc(BASE)+'</code><br>Every path below is relative to it — e.g. <code>'+esc(BASE)+'/api/catalog</code>.<br><br>'
-    +'This console runs on the shared Iristel Espresso account. To call these endpoints directly from your own application, send your own <code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers — otherwise the shared account is used.'
-    +'<br><br><strong>Going live:</strong> the gateway defaults to the <code>test</code> environment, where orders are not real. For live traffic you must send <code>X-EDID-Env: production</code> on every request, with production credentials.';
-  nav.appendChild(railnote);
+  // ---- product menu -----------------------------------------------------
+  const bar=$('#product-bar');
+  const hashProduct=(location.hash.match(/#([a-z0-9-]+)/)||[])[1];
+  let productId=products.some(p=>p.id===hashProduct)?hashProduct
+    :(products.find(p=>p.status==='live')||products[0]).id;
 
-  // ---- tabs -----------------------------------------------------------
+  products.forEach(p=>{
+    const b=document.createElement('button');
+    b.className='pchip'; b.dataset.id=p.id; b.setAttribute('role','tab');
+    b.innerHTML=esc(p.name)+(p.status==='planned'?'<span class="soon">soon</span>':'');
+    b.title=p.summary||'';
+    b.onclick=()=>{ productId=p.id; location.hash='#'+p.id; markProduct(); renderProduct(); };
+    bar.appendChild(b);
+  });
+  function markProduct(){
+    bar.querySelectorAll('.pchip').forEach(b=>{
+      const on=b.dataset.id===productId;
+      b.classList.toggle('active',on);
+      b.setAttribute('aria-selected',String(on));
+    });
+  }
+  markProduct();
+
+  const product=()=>products.find(p=>p.id===productId);
+  const catalog=()=>product().endpoints||[];
+
+  // ---- tabs -------------------------------------------------------------
   function showTab(which){
     const docs=which==='docs';
     $('#view-docs').hidden=!docs; $('#view-console').hidden=docs;
@@ -185,117 +344,276 @@
   }
   $('#tab-docs').onclick=()=>showTab('docs');
   $('#tab-console').onclick=()=>showTab('console');
-  showTab(location.hash==='#console'?'console':'docs');
+  showTab(location.hash.includes('console')?'console':'docs');
 
-  // ---- documentation tab, rendered from the same catalog ---------------
-  function renderDocs(){
-    const anchor=e=>(e.method+e.path).replace(/[^a-zA-Z0-9]/g,'-').toLowerCase();
-    let d='<h2>Espresso DID REST API</h2>'
-      +'<p class="lead">A REST/JSON wrapper over the Espresso DID V3 SOAP provisioning service. '
-      +'Every endpoint below returns JSON and accepts your own Espresso credentials, so you can order and '
-      +'track DIDs from your own application without building SOAP envelopes.</p>';
-
-    d+='<h3 style="border-top:0;padding-top:0">Base URL</h3><pre>'+esc(BASE)+'</pre>'
-      +'<p>All paths in this reference are relative to it — <code>/api/catalog</code> means '
-      +'<code>'+esc(BASE+'/api/catalog')+'</code>.</p>';
-
-    d+='<h3>Authentication</h3>'
-      +'<p>Send your Espresso username and password on <strong>every</strong> request, as headers:</p>'
-      +'<pre>'+esc("X-EDID-Username: YOUR_ESPRESSO_USERNAME\nX-EDID-Password: YOUR_ESPRESSO_PASSWORD")+'</pre>'
-      +'<p>HTTP Basic auth works too — <code>Authorization: Basic base64(user:pass)</code> — if that is easier '
-      +'for your HTTP client. Requests that carry no credentials fall back to a shared account, which is only '
-      +'intended for the console on this page; do not rely on it from your own code.</p>'
-      +'<table><tr><th>Header</th><th>Required</th><th>Description</th></tr>'
-      +'<tr><td><code>X-EDID-Username</code></td><td>yes</td><td>Your Espresso account username.</td></tr>'
-      +'<tr><td><code>X-EDID-Password</code></td><td>yes</td><td>Your Espresso account password.</td></tr>'
-      +'<tr><td><code>X-EDID-Env</code></td><td>no</td><td><code>test</code> (default) or <code>production</code>. See below.</td></tr>'
-      +'<tr><td><code>Content-Type</code></td><td>POST only</td><td><code>application/json</code>.</td></tr>'
-      +'</table>';
-
-    d+='<h3>Environments</h3>'
-      +'<p>Espresso runs two completely separate systems. <strong>They do not share data</strong> — an order '
-      +'created in production does not exist in test, and vice versa. Credentials are separate too.</p>'
-      +'<table><tr><th>Value</th><th>Meaning</th></tr>'
-      +'<tr><td><code>test</code></td><td>Default. Orders are simulated; no DIDs are actually provisioned.</td></tr>'
-      +'<tr><td><code>production</code></td><td>Live provisioning. Real DIDs, real billing.</td></tr></table>'
-      +'<div class="callout"><b>Going live:</b> the gateway defaults to <code>test</code>. Once you are ready for real '
-      +'traffic you must send <code>X-EDID-Env: production</code> on every request, together with your production '
-      +'credentials. Looking up a production order without that header returns '
-      +'<code>511 — The order id does not exist!</code>, because you are querying the test system.</div>'
-      +'<p>The environment can also be set with a <code>?env=production</code> query parameter if headers are awkward.</p>';
-
-    d+='<h3>Request &amp; response format</h3>'
-      +'<p>Responses are JSON. Successful reads wrap their payload in a key naming it '
-      +'(<code>items</code>, <code>order</code>, <code>dids</code>, <code>status</code>…). Errors use a consistent shape, '
-      +'with the original Espresso code preserved:</p>'
-      +'<pre>'+esc(JSON.stringify({error:'espresso_error',message:'The order id does not exist!',code:511,
-          errors:[{code:511,message:'The order id does not exist!',array_key:''}]},null,2))+'</pre>'
-      +'<p>The HTTP status reflects the Espresso code: <code>401</code> bad credentials, <code>404</code> not found, '
-      +'<code>409</code> wrong order state, <code>422</code> invalid values, <code>429</code> quota exceeded.</p>';
-
-    d+='<h3>Typical flow</h3><ol>'
-      +'<li>Call <code>/api/ping</code> to confirm your credentials work.</li>'
-      +'<li>Call <code>/api/catalog</code> for valid rate center + NPA pairs, and <code>/api/routing-profiles</code> for your profiles.</li>'
-      +'<li><code>POST /api/orders</code> using those exact values.</li>'
-      +'<li>Poll <code>/api/orders/{id}/status</code> until it reads <code>Completed</code>.</li>'
-      +'<li>Call <code>/api/orders/{id}/details</code> to read the provisioned DID numbers.</li>'
-      +'</ol>';
-
-    d+='<h3>Endpoints</h3><div class="toc">';
-    catalog.forEach(e=>{ d+='<a href="#'+anchor(e)+'">'+esc(e.path)+'</a>'; });
-    d+='</div>';
-
-    catalog.forEach(e=>{
-      d+='<div class="ep" id="'+anchor(e)+'">'
-        +'<div class="sig"><span class="m '+e.method+'">'+e.method+'</span><strong>'+esc(e.path)+'</strong></div>'
-        +'<p class="soap" style="margin:6px 0 0">Maps to SOAP <code>'+esc(e.soap)+'</code></p>';
-      if(e.description)d+='<p style="margin:8px 0 0">'+esc(e.description)+'</p>';
-      if(e.precondition)d+='<div class="pre-note" style="margin:10px 0 0"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
-      if(e.params&&e.params.length){
-        d+='<h4>Parameters</h4><table>';
-        e.params.forEach(p=>d+='<tr><td><code>'+esc(p.name)+'</code></td><td>'+esc(p.in)+'</td><td>'
-          +(p.required?'required':'optional')+'</td><td>'+esc(p.description||'')+'</td></tr>');
-        d+='</table>';
-      }
-      if(e.body){ d+='<h4>Body</h4><pre>'+esc(JSON.stringify(e.body,null,2))+'</pre>'; }
-      if(e.fields&&e.fields.length){
-        d+='<h4>Body fields</h4><table>';
-        e.fields.forEach(f=>d+='<tr><td><code>'+esc(f.name)+'</code></td><td>'+(f.required?'required':'optional')
-          +'</td><td>'+esc(f.description||'')+'</td></tr>');
-        d+='</table>';
-      }
-      if(e.returns)d+='<h4>Returns</h4><p style="margin:0">'+esc(e.returns)+'</p>';
-      if(e.errors&&e.errors.length){
-        d+='<h4>Common errors</h4><table>';
-        e.errors.forEach(er=>d+='<tr><td class="errcode">'+er.code+'</td><td>'+esc(er.when||'')+'</td></tr>');
-        d+='</table>';
-      }
-      d+='<h4>Example</h4><pre>'+esc(docCurl(e))+'</pre></div>';
-    });
-
-    $('#docs-body').innerHTML=d;
+  // ---- auth snippet helpers --------------------------------------------
+  function authHeaderLines(env){
+    const a=cfg().auth;
+    if(a==='edid')return["  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'"];
+    if(a==='apikey')return["  -H 'x-api-key: "+E911_API_KEY+"'"];
+    if(a==='xkey')return["  -H 'x-api-key: "+KEY_PH+"'"];
+    return [];
   }
 
-  function docCurl(e){
+  // IristelX key: user-entered, kept in this browser only.
+  const xkeyEl=$('#xkey');
+  xkeyEl.value=localStorage.getItem('iristelx-api-key')||'';
+  xkeyEl.addEventListener('input',()=>localStorage.setItem('iristelx-api-key',xkeyEl.value.trim()));
+  $('#xkey-clear').onclick=()=>{
+    xkeyEl.value='';
+    localStorage.removeItem('iristelx-api-key');
+    xkeyEl.focus();
+  };
+  function highlight(t){
+    return esc(t)
+      .replace(USER_PH,'<span class="cred">'+USER_PH+'</span>')
+      .replace(PASS_PH,'<span class="cred">'+PASS_PH+'</span>')
+      .replace(KEY_PH,'<span class="cred">'+KEY_PH+'</span>');
+  }
+
+  // ---- flow diagrams ----------------------------------------------------
+  // Rendered from the authored specs in lib/catalogs/flows.js as HTML/CSS
+  // rather than images, so they inherit the theme and stay readable on mobile.
+  const TONES={blue:'#3E8CCB',green:'#2e9e5b',purple:'#8b6fd4',amber:'#c9a44c',teal:'#2aa198',red:'#d9636b'};
+  function renderFlow(flow){
+    if(!flow||!flow.steps||!flow.steps.length)return '';
+    let h='<div class="flow"><div class="flow-head"><h3>'+esc(flow.title||'How it works')+'</h3>';
+    if(flow.subtitle)h+='<p>'+esc(flow.subtitle)+'</p>';
+    h+='</div><div class="flow-scroll"><div class="flow-grid">';
+    flow.steps.forEach((s,i)=>{
+      const tone=TONES[s.tone]||TONES.blue;
+      h+='<div class="flow-col" style="--tone:'+tone+'">'
+        +'<div class="fstep"><div class="fnum">'+(i+1)+'</div>'
+        +'<h4>'+esc(s.title||'')+'</h4><p>'+esc(s.text||'')+'</p></div>';
+      if(s.detail){
+        h+='<div class="fdetail">';
+        if(s.detail.endpoint)h+='<code class="fep">'+esc(s.detail.endpoint)+'</code>';
+        if(s.detail.rows&&s.detail.rows.length){
+          h+='<dl>';
+          s.detail.rows.forEach(r=>{h+='<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>'});
+          h+='</dl>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+    h+='</div></div>';
+    if(flow.notes&&flow.notes.length){
+      h+='<div class="flow-notes"><span class="ni" aria-hidden="true">ⓘ</span><ul>'
+        +flow.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul></div>';
+    }
+    return h+'</div>';
+  }
+  function renderImages(images){
+    if(!images||!images.length)return '';
+    return images.map(im=>'<figure class="flow-img"><img src="'+esc(im.src)+'" alt="'+esc(im.alt||'')+'" loading="lazy">'
+      +(im.caption?'<figcaption>'+esc(im.caption)+'</figcaption>':'')+'</figure>').join('');
+  }
+
+  // ---- documentation ----------------------------------------------------
+  function introDocs(p){
+    const c=cfg();
+    let d='<h2>'+esc(p.name)+'</h2>'
+      +'<p class="lead">'+esc(p.summary)+'</p>'
+      +'<p>Intended for partner tiers: '+p.tiers.map(t=>'<code>'+esc(t)+'</code>').join(' ')+'.</p>';
+    if(p.status==='planned'){
+      d+='<div class="callout"><b>Coming soon.</b> This product is on the marketplace roadmap; its endpoints have not been published yet.</div>';
+      return d;
+    }
+    d+=renderFlow(p.flow)+renderImages(p.images);
+
+    d+='<h3>Base URL</h3><pre>'+esc(c.base)+'</pre>'
+      +'<p>All paths in this reference are relative to it.</p>';
+
+    if(c.auth==='edid'){
+      d+='<h3>Authentication</h3>'
+        +'<p>Send your Espresso username and password on <strong>every</strong> request, as headers:</p>'
+        +'<pre>'+esc('X-EDID-Username: '+USER_PH+'\nX-EDID-Password: '+PASS_PH)+'</pre>'
+        +'<p>HTTP Basic auth works too. Requests with no credentials fall back to a shared account intended '
+        +'only for this console — do not rely on it from your own code.</p>'
+        +'<h3>Environments</h3>'
+        +'<p>Espresso runs two completely separate systems — test and production share no data and have separate credentials.</p>'
+        +'<div class="callout"><b>Going live:</b> the gateway defaults to <code>test</code>. For real traffic send '
+        +'<code>X-EDID-Env: production</code> on every request with your production credentials. Looking up a '
+        +'production record without it returns "does not exist", because you are querying the test system.</div>';
+    }else if(c.auth==='xkey'){
+      d+='<h3>Authentication</h3>'
+        +'<p>Every request carries your IristelX API key in a header:</p>'
+        +'<pre>'+esc('x-api-key: '+KEY_PH)+'</pre>'
+        +'<p class="hint">Iristel\'s ReadMe reference names this header <code>iristelx-api-key</code>, but the '
+        +'live API currently only accepts <code>x-api-key</code> — use <code>x-api-key</code>.</p>'
+        +'<p>Keys are issued per account by Iristel. The key scopes what you can see and change, so the same '
+        +'endpoint returns different data for different partners.</p>'
+        +'<div class="callout"><b>Using the console:</b> paste your key into the <b>API key</b> box in the header bar. '
+        +'It is stored only in this browser (localStorage) and sent directly to <code>'+esc(c.base)+'</code> — it never '
+        +'reaches the marketplace gateway, and it is never written into the examples on this page.</div>';
+    }else if(c.auth==='apikey'){
+      d+='<h3>Authentication</h3>'
+        +'<p>Every request carries two things:</p>'
+        +'<table><tr><th>Where</th><th>Name</th><th>Description</th></tr>'
+        +'<tr><td>header</td><td><code>x-api-key</code></td><td>The shared customer API key (already in every example below).</td></tr>'
+        +'<tr><td>query</td><td><code>code</code></td><td>The account code the listing belongs to. In the partner portal this is read from the <code>code</code> cookie.</td></tr></table>'
+        +'<div class="callout"><b>Note:</b> this API may answer <code>200</code> even on failures, with the detail in an '
+        +'<code>errors</code> array or a null <code>data</code> field — check the body, not just the HTTP status. '
+        +'These are live emergency records: a wrong address here is what dispatch sees on a 911 call.</div>';
+    }else{
+      d+='<h3>Authentication</h3>'
+        +'<p>None from the caller. The gateway holds the upstream API key server-side and injects it on every '
+        +'proxied request — the upstream service and its key are never exposed to the client.</p>'
+        +'<div class="callout"><b>Private upstream.</b> The WLNP Workflow API runs on a private network. The gateway '
+        +'republishes it under <code>'+esc(c.base)+'/api/wlnp/…</code>; if the gateway itself has no route to that '
+        +'network you will get a <code>504 upstream_unreachable</code>.</div>';
+    }
+
+    if(p.id==='lnp-enterprise'){
+      d+='<h3>How porting works</h3>'
+        +'<p>A porting request (<strong>PON</strong>) is sent to the losing carrier, who confirms or rejects it. '
+        +'Confirmed numbers are activated on the due date; rejected requests must be corrected and re-submitted.</p>'
+        +'<h4>PON statuses</h4><table><tr><th>Status</th><th>Meaning</th></tr>'
+        +[['New','Request was created'],['Pending','Waiting to be received by the losing carrier'],
+          ['Processed','Sent to the losing carrier'],['Rejected. Pending Update','Rejected — correction required'],
+          ['Confirmed','Confirmed for the specified due date'],['Closed','Final — successfully ported'],
+          ['Pending Cancellation','Waiting for cancellation'],['Canceled','Final — request was canceled']]
+          .map(r=>'<tr><td><code>'+r[0]+'</code></td><td>'+r[1]+'</td></tr>').join('')
+        +'</table>'
+        +'<h3>Typical flow</h3><ol>'
+        +'<li><code>GET /api/lnp/portability/{npanxx}</code> — check the numbers can port at all.</li>'
+        +'<li><code>GET /api/lnp/routing-profiles</code> — pick the routing profile id.</li>'
+        +'<li><code>POST /api/lnp/pons</code> — create the porting request.</li>'
+        +'<li><code>GET /api/lnp/pons/{pon}</code> — poll status; read <code>status_reason</code> on rejection.</li>'
+        +'<li>On rejection: fix and <code>POST /api/lnp/pons/{pon}/edit</code>.</li>'
+        +'<li>Once Confirmed, on the due date: <code>POST /api/lnp/pons/{pon}/activate</code>.</li></ol>'
+        +'<p>On the sandbox, <code>POST /api/lnp/pons/{pon}/status</code> lets you force statuses to walk the whole flow without a real losing carrier.</p>';
+    }
+    if(p.id==='lnp-wireless'){
+      d+='<h3>Rules that trip people up</h3><table><tr><th>Rule</th><th>Detail</th></tr>'
+        +[['CHC + auto-activate','A request with chc=Y cannot also have autoAct=Y.'],
+          ['Modify remarks','Always required for a Modify (SUP=3), even when nothing else changes.'],
+          ['Port Out ownership','You enter the NEW local / reseller / network; the old network is your home SPID.'],
+          ['Delay responses','responseType=D sends lines: [] plus a delay code (6G, 6H, 6J, 6L, 8J).'],
+          ['Cancel Service vs Port cancel','Cancel Service is its own request/response pair; a Port In cancel is SPR SUP=1 on an existing Port In.']]
+          .map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')
+        +'</table>';
+    }
+    if(p.id==='e911'){
+      d+='<h3>Bulk CSV format</h3>'
+        +'<p>The upload endpoint takes one CSV where each row is its own operation:</p>'
+        +'<pre>'+esc('OperationType,accountCode,Id,Language,First_name,Last_name,Street_address,City,State,Zip,Country,Primary_addresss_validated\nA,5046353,1212121212,EN,Test,Subscriber,456 Abc,Brampton,ON,L6Y2H6,CA,N')+'</pre>'
+        +'<p><code>OperationType</code>: A = add, U = update, D = delete. The response is one row per input row — check each one, since partial success is normal.</p>';
+    }
+    return d;
+  }
+
+  function docCurl(e,env){
     let p=e.path.replace(/:([a-zA-Z]+)/g,(_,n)=>encodeURIComponent(DEFAULTS[n]||n));
     const qs=(e.params||[]).filter(x=>x.in==='query'&&x.required)
-      .map(x=>encodeURIComponent(x.name)+'='+encodeURIComponent(DEFAULTS[x.name]||''));
+      .map(x=>encodeURIComponent(x.name)+'='+encodeURIComponent(DEFAULTS[x.name]||x.name.toUpperCase()));
     if(qs.length)p+='?'+qs.join('&');
-    const L=["curl -s -X "+e.method+" '"+BASE+p+"'",
-             "  -H 'X-EDID-Username: "+USER_PH+"'",
-             "  -H 'X-EDID-Password: "+PASS_PH+"'",
-             "  -H 'X-EDID-Env: production'"];
-    if(e.body){
+    const L=["curl -s -X "+e.method+" '"+cfg().base+p+"'",...authHeaderLines(env)];
+    if(e.upload){
+      L.push("  -F 'file=@listings.csv'");
+    }else if(e.body){
       L.push("  -H 'Content-Type: application/json'");
       L.push("  -d '"+JSON.stringify(e.body)+"'");
     }
     return L.join(" \\\n");
   }
 
-  renderDocs();
+  function renderDocs(){
+    const p=product();
+    const anchor=e=>(e.method+e.path).replace(/[^a-zA-Z0-9]/g,'-').toLowerCase();
+    let d=introDocs(p);
+    const cat=catalog();
+    if(cat.length){
+      d+='<h3>Endpoints</h3><div class="toc">';
+      cat.forEach(e=>{ d+='<a href="#'+anchor(e)+'">'+esc(e.path)+'</a>'; });
+      d+='</div>';
+      cat.forEach(e=>{
+        d+='<div class="ep" id="'+anchor(e)+'">'
+          +'<div class="sig"><span class="m '+e.method+'">'+e.method+'</span><strong>'+esc(e.path)+'</strong></div>'
+          +'<p class="soap" style="margin:6px 0 0">Maps to <code>'+esc(e.soap)+'</code></p>';
+        if(e.description)d+='<p style="margin:8px 0 0">'+esc(e.description)+'</p>';
+        if(e.precondition)d+='<div class="pre-note" style="margin:10px 0 0"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
+        if(e.params&&e.params.length){
+          d+='<h4>Parameters</h4><table>';
+          e.params.forEach(x=>d+='<tr><td><code>'+esc(x.name)+'</code></td><td>'+esc(x.in)+'</td><td>'
+            +(x.required?'required':'optional')+'</td><td>'+esc(x.description||'')+'</td></tr>');
+          d+='</table>';
+        }
+        if(e.body){ d+='<h4>Body</h4><pre>'+esc(JSON.stringify(e.body,null,2))+'</pre>'; }
+        if(e.fields&&e.fields.length){
+          d+='<h4>Body fields</h4><table>';
+          e.fields.forEach(f=>d+='<tr><td><code>'+esc(f.name)+'</code></td><td>'+(f.required?'required':'optional')
+            +'</td><td>'+esc(f.description||'')+'</td></tr>');
+          d+='</table>';
+        }
+        if(e.returns)d+='<h4>Returns</h4><p style="margin:0">'+esc(e.returns)+'</p>';
+        if(e.errors&&e.errors.length){
+          d+='<h4>Common errors</h4><table>';
+          e.errors.forEach(er=>d+='<tr><td class="errcode">'+er.code+'</td><td>'+esc(er.when||'')+'</td></tr>');
+          d+='</table>';
+        }
+        d+='<h4>Example</h4><pre>'+highlight(docCurl(e,'production'))+'</pre></div>';
+      });
+    }
+    $('#docs-body').innerHTML=d;
+  }
 
-  $('#env').addEventListener('change',()=>{ if(current)renderUrl(); });
+  // ---- console nav ------------------------------------------------------
+  function renderNav(){
+    const cat=catalog(), c=cfg();
+    nav.innerHTML='';
+    if(!cat.length){
+      nav.innerHTML='<div class="empty" style="padding:14px">No endpoints published for this product yet.</div>';
+      reqEl.innerHTML='<div class="empty">This product is coming soon.</div>';
+      return;
+    }
+    const groups={},order=[];
+    cat.forEach(e=>{const g=c.group(e.path);if(!groups[g]){groups[g]=[];order.push(g)}groups[g].push(e)});
+    order.forEach(g=>{
+      const hd=document.createElement('div');hd.className='group';hd.textContent=g;nav.appendChild(hd);
+      groups[g].forEach(e=>{
+        const b=document.createElement('button');
+        b.innerHTML='<span class="m '+e.method+'">'+e.method+'</span><span>'+esc(e.path)+'</span>';
+        b.onclick=()=>select(e,b);nav.appendChild(b);
+      });
+    });
+    const rail=document.createElement('div');
+    rail.className='railnote';
+    let t='<strong>Base URL:</strong> <code>'+esc(c.base)+'</code><br>Every path above is relative to it.';
+    if(c.auth==='edid'){
+      t+='<br><br>This console runs on the shared Iristel Espresso account. From your own application, send your '
+        +'own <code>X-EDID-Username</code> / <code>X-EDID-Password</code> headers.'
+        +'<br><br><strong>Going live:</strong> the console is test-only. Live traffic needs '
+        +'<code>X-EDID-Env: production</code> with production credentials.';
+    }else if(c.auth==='xkey'){
+      t+='<br><br>Calls go directly to the IristelX API with the key from the <strong>API key</strong> box in the header bar. '
+        +'The key stays in this browser and never reaches the marketplace gateway.';
+    }else if(c.auth==='apikey'){
+      t+='<br><br>Calls go directly to the public 911 API using the shared customer API key. '
+        +'These are live emergency records — dispatch sees what you save here.';
+    }else{
+      t+='<br><br>Requests are proxied to the private WLNP Workflow API; the gateway injects the upstream key, so no '
+        +'credentials are needed from you.';
+    }
+    rail.innerHTML=t;
+    nav.appendChild(rail);
+  }
 
+  // ---- per-product chrome ----------------------------------------------
+  function renderProduct(){
+    const c=cfg();
+    $('#baseurl').textContent=c.base;
+    $('#xkey-wrap').hidden=c.auth!=='xkey';
+    current=null;
+    reqEl.innerHTML='<div class="empty">Pick an endpoint on the left to see its docs and try it.</div>';
+    statusEl.hidden=true;timeEl.textContent='';
+    respBody.innerHTML='<div class="resp-empty">Send a request to see the result here.</div>';
+    renderDocs();
+    renderNav();
+  }
+
+  // ---- endpoint form ----------------------------------------------------
   let current=null;
   function select(e,btn){
     current=e;
@@ -304,34 +622,45 @@
     const queryParams=(e.params||[]).filter(p=>p.in==='query');
 
     let html='<h2>'+esc(e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span></h2>';
-    html+='<p class="soap">Maps to SOAP <code>'+esc(e.soap)+'</code></p>';
+    html+='<p class="soap">Maps to <code>'+esc(e.soap)+'</code></p>';
     if(e.description)html+='<p class="desc">'+esc(e.description)+'</p>';
     if(e.precondition)html+='<div class="pre-note"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
 
     pathParams.forEach(p=>{
-      html+='<div class="field"><label>:'+p.name+(p.required?' *':'')+'</label><input data-path="'+p.name+'" value="'+(DEFAULTS[p.name]||'')+'">';
+      html+='<div class="field"><label>:'+p.name+(p.required?' *':'')+'</label><input data-path="'+p.name+'" value="'+esc(DEFAULTS[p.name]||'')+'">';
       if(p.description)html+='<div class="fd">'+esc(p.description)+'</div>';
       html+='</div>';
     });
     queryParams.forEach(p=>{
-      html+='<div class="field"><label>?'+p.name+(p.required?' *':'')+'</label><input data-query="'+p.name+'" value="'+(DEFAULTS[p.name]||'')+'">';
+      html+='<div class="field"><label>?'+p.name+(p.required?' *':'')+'</label><input data-query="'+p.name+'" value="'+esc(DEFAULTS[p.name]||'')+'">';
       if(p.description)html+='<div class="fd">'+esc(p.description)+'</div>';
       html+='</div>';
     });
-    if(e.body){
+    if(e.upload){
+      html+='<div class="field"><label>file *</label><input type="file" id="upfile" accept="'+esc(e.upload.accept||'')+'">'
+        +'<div class="fd">CSV file sent as multipart/form-data field "'+esc(e.upload.field)+'".</div></div>';
+    }else if(e.body){
       html+='<div class="field" style="align-items:start"><label>body (JSON) *</label><textarea id="body">'+esc(JSON.stringify(e.body,null,2))+'</textarea></div>';
     }
 
     html+='<div class="row"><button class="btn" id="send">Send request</button><span class="url" id="url"></span></div>';
 
-    html+='<div class="doc"><h3>Call this from your own app</h3>'
-      +'<p class="hint" style="margin:0 0 8px">Send your Espresso login as the '
-      +'<code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers. '
-      +'Replace the highlighted values with your own credentials.</p>'
-      +'<div class="pre-note"><b>This console is test-only.</b> The snippet below targets the Espresso '
-      +'<code>test</code> system, where orders are simulated and no DIDs are provisioned. For live traffic, '
-      +'switch the last header to <code>X-EDID-Env: production</code> and use your production credentials.</div>'
-      +'<div class="snippet"><button class="copy" id="copy">Copy</button><pre id="curl"></pre></div></div>';
+    const a=cfg().auth;
+    html+='<div class="doc"><h3>Call this from your own app</h3>';
+    if(a==='edid'){
+      html+='<p class="hint" style="margin:0 0 8px">Send your Espresso login as the '
+        +'<code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers.</p>'
+        +'<div class="pre-note"><b>This console is test-only.</b> For live traffic switch the env header to '
+        +'<code>X-EDID-Env: production</code> and use production credentials.</div>';
+    }else if(a==='xkey'){
+      html+='<p class="hint" style="margin:0 0 8px">Send your IristelX key as the <code>x-api-key</code> header. '
+        +'Replace the highlighted placeholder with your own key.</p>';
+    }else if(a==='apikey'){
+      html+='<p class="hint" style="margin:0 0 8px">The snippet carries the shared customer API key; the account code in <code>?code=</code> selects whose listings you touch.</p>';
+    }else{
+      html+='<p class="hint" style="margin:0 0 8px">No credentials needed — the gateway injects the upstream key.</p>';
+    }
+    html+='<div class="snippet"><button class="copy" id="copy">Copy</button><pre id="curl"></pre></div></div>';
 
     if(e.fields&&e.fields.length){
       html+='<div class="doc"><h3>Body fields</h3><table class="doc">';
@@ -352,73 +681,158 @@
     $('#send').onclick=send;
     $('#copy').onclick=()=>{
       navigator.clipboard.writeText(curlText()).then(()=>{
-        const b=$('#copy');b.textContent='Copied';setTimeout(()=>{b.textContent='Copy'},1400);
+        const b=$('#copy');b.textContent='✓ Copied';b.classList.add('ok');
+        setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok')},1400);
       });
     };
   }
 
-  function buildUrl(){
+  function buildPath(){
     let p=current.path;
     reqEl.querySelectorAll('[data-path]').forEach(i=>{p=p.replace(':'+i.dataset.path,encodeURIComponent(i.value))});
     const qs=new URLSearchParams();
     reqEl.querySelectorAll('[data-query]').forEach(i=>{if(i.value!=='')qs.set(i.dataset.query,i.value)});
     const s=qs.toString();return p+(s?'?'+s:'');
   }
-  // The curl the partner actually runs: absolute URL + their own credentials.
   function curlLines(){
-    const L=["curl -s -X "+current.method+" '"+BASE+buildUrl()+"'",
-             "  -H 'X-EDID-Username: "+USER_PH+"'",
-             "  -H 'X-EDID-Password: "+PASS_PH+"'",
-             "  -H 'X-EDID-Env: "+$('#env').value+"'"];
-    const ta=$('#body');
-    if(ta){
-      let b=ta.value;
-      try{ b=JSON.stringify(JSON.parse(b)); }catch(_){ /* leave as typed */ }
-      L.push("  -H 'Content-Type: application/json'");
-      L.push("  -d '"+b+"'");
+    const L=["curl -s -X "+current.method+" '"+cfg().base+buildPath()+"'",
+             ...authHeaderLines(cfg().auth==='edid'?CONSOLE_ENV:null)];
+    if(current.upload){
+      L.push("  -F 'file=@listings.csv'");
+    }else{
+      const ta=$('#body');
+      if(ta){
+        let b=ta.value;
+        try{ b=JSON.stringify(JSON.parse(b)); }catch(_){ /* leave as typed */ }
+        L.push("  -H 'Content-Type: application/json'");
+        L.push("  -d '"+b+"'");
+      }
     }
     return L;
   }
-  // Leading comment lines, not trailing ones: a '#' after a '\' continuation
-  // would be passed to curl as an argument instead of being a shell comment.
-  const curlText=()=>"# Test environment. For live traffic, use X-EDID-Env: production\n"
-    +"# with your production Espresso credentials.\n"+curlLines().join(" \\\n");
+  // Comments lead the snippet: after a '\' continuation a trailing '#' line
+  // would reach curl as an argument, not a comment.
+  function curlText(){
+    const head=cfg().auth==='edid'
+      ?"# Test environment. For live traffic, use X-EDID-Env: production\n# with your production Espresso credentials.\n"
+      :"";
+    return head+curlLines().join(" \\\n");
+  }
   function renderUrl(){
-    const u=$('#url'); if(u)u.textContent=current.method+' '+buildUrl();
-    const c=$('#curl');
-    if(c){
-      c.innerHTML=esc(curlText())
-        .replace(USER_PH,'<span class="cred">'+USER_PH+'</span>')
-        .replace(PASS_PH,'<span class="cred">'+PASS_PH+'</span>');
-    }
+    const u=$('#url'); if(u)u.textContent=current.method+' '+buildPath();
+    const c=$('#curl'); if(c)c.innerHTML=highlight(curlText());
   }
 
   async function send(){
     const btn=$('#send');btn.disabled=true;btn.textContent='Sending…';
-    statusEl.hidden=true;timeEl.textContent='';out.textContent='…';
-    const headers={'X-EDID-Env':$('#env').value};
+    statusEl.hidden=true;timeEl.textContent='';
+    respBody.innerHTML='<div class="resp-empty">Waiting for the response…</div>';
+    const c=cfg();
+    const headers={};
+    if(c.auth==='edid')headers['X-EDID-Env']=CONSOLE_ENV;
+    if(c.auth==='apikey')headers['x-api-key']=E911_API_KEY;
+    if(c.auth==='xkey'){
+      const k=xkeyEl.value.trim();
+      if(!k){
+        show(0,'Enter your IristelX API key in the header bar first — it is sent as the x-api-key header and stored only in this browser.',0);
+        btn.disabled=false;btn.textContent='Send request';return;
+      }
+      // The ReadMe docs declare iristelx-api-key, but the live gateway only
+      // accepts x-api-key. Send both so we keep working if they fix the docs
+      // mismatch on their side.
+      headers['x-api-key']=k;
+      headers['iristelx-api-key']=k;
+    }
     const opts={method:current.method,headers};
-    const ta=$('#body');
-    if(ta){
-      headers['Content-Type']='application/json';
-      try{JSON.parse(ta.value);opts.body=ta.value;}
-      catch(err){show(0,'Body is not valid JSON: '+err.message,0);btn.disabled=false;btn.textContent='Send request';return;}
+    if(current.upload){
+      const f=$('#upfile')&&$('#upfile').files[0];
+      if(!f){show(0,'Choose a CSV file first.',0);btn.disabled=false;btn.textContent='Send request';return;}
+      const fd=new FormData();fd.append(current.upload.field,f);opts.body=fd;
+    }else{
+      const ta=$('#body');
+      if(ta){
+        headers['Content-Type']='application/json';
+        try{JSON.parse(ta.value);opts.body=ta.value;}
+        catch(err){show(0,'Body is not valid JSON: '+err.message,0);btn.disabled=false;btn.textContent='Send request';return;}
+      }
     }
     const t0=performance.now();
     try{
-      const r=await fetch(buildUrl(),opts);
+      const r=await fetch(c.base+buildPath(),opts);
       const txt=await r.text();let body;
       try{body=JSON.stringify(JSON.parse(txt),null,2)}catch(_){body=txt}
       show(r.status,body,performance.now()-t0);
     }catch(err){show(0,'Network error: '+err.message,performance.now()-t0);}
     btn.disabled=false;btn.textContent='Send request';
   }
+  // ---- friendly response rendering -------------------------------------
+  function humanize(k){
+    return String(k).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  }
+  function fmtValue(k,v){
+    if(v===null||v===undefined||v==='')return '—';
+    if(typeof v==='boolean')return v?'Yes':'No';
+    if(/(_on|_date|datetime|_at|^date)/i.test(k)&&typeof v==='string'){
+      const d=new Date(v);
+      if(!isNaN(d))return esc(d.toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'}));
+    }
+    return null; // caller falls through to recursive render
+  }
+  function friendly(data,depth=0){
+    if(data===null||data===undefined)return '<span class="hint">—</span>';
+    if(typeof data!=='object')return esc(String(data));
+    if(Array.isArray(data)){
+      if(!data.length)return '<span class="hint">Empty list — no records.</span>';
+      return data.map(it=>friendly(it,depth+1)).join('');
+    }
+    let rows='';
+    for(const [k,v] of Object.entries(data)){
+      const simple=fmtValue(k,v);
+      const cell=simple!==null?simple
+        :(typeof v==='object'&&v!==null)?friendly(v,depth+1)
+        :esc(String(v));
+      rows+='<tr><td>'+esc(humanize(k))+'</td><td>'+cell+'</td></tr>';
+    }
+    return '<table class="listing-table">'+rows+'</table>';
+  }
+  function respTitle(code,parsed){
+    if(code===0)return 'Connection error';
+    if(code>=200&&code<300)return 'Success';
+    if(parsed&&parsed.message)return String(parsed.message);
+    if(code===401)return 'Not authorized';
+    if(code===404)return 'Not found';
+    if(code===409)return 'Wrong state';
+    if(code===422||code===400)return 'Invalid request';
+    if(code>=500)return 'Service error';
+    return 'Request failed';
+  }
   function show(code,body,ms){
     statusEl.hidden=false;statusEl.textContent=code||'ERR';
     statusEl.className='status '+(code>=200&&code<300?'ok':code>=400&&code<500?'warn':'err');
     timeEl.textContent=ms?Math.round(ms)+' ms':'';
-    out.textContent=body;
+    let parsed=null;
+    try{ parsed=JSON.parse(body); }catch(_){ /* plain text */ }
+    const good=code>=200&&code<300;
+    let h='<div class="resp-banner '+(good?'good':'bad')+'">'
+      +'<span class="icon">'+(good?'✓':'✕')+'</span>'
+      +'<span>'+esc(respTitle(code,parsed))+'</span></div>';
+    if(parsed&&typeof parsed==='object'){
+      if(!good&&parsed.code!==undefined){
+        h+='<p class="hint" style="margin:0 0 8px">Espresso error code <span class="errcode">'+esc(String(parsed.code))+'</span>'
+          +(parsed.error?' · '+esc(String(parsed.error)):'')+'</p>';
+        if(parsed.errors)h+=friendly(parsed.errors);
+      }else{
+        h+=friendly(parsed);
+      }
+      h+='<details class="raw"><summary>View raw JSON</summary><pre class="out">'
+        +esc(JSON.stringify(parsed,null,2))+'</pre></details>';
+    }else{
+      h+='<pre class="out">'+esc(String(body))+'</pre>';
+    }
+    respBody.innerHTML=h;
   }
+
+  renderProduct();
 })();
 </script>
 </body>

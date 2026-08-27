@@ -1,0 +1,2437 @@
+[
+  {
+    "method": "GET",
+    "path": "/_healthcheck",
+    "soap": "health-check",
+    "summary": "Health check",
+    "description": ""
+  },
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId/siptrunk",
+    "soap": "update-sip-trunk",
+    "summary": "Update SIP Trunk",
+    "description": "",
+    "body": {
+      "trunkId": "TRUNKID",
+      "channels": 0,
+      "pilotTelephoneNumber": "PILOTTELEPHONENUMBER"
+    },
+    "fields": [
+      {
+        "name": "trunkId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "channels",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "pilotTelephoneNumber",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/:accountId/siptrunk",
+    "soap": "add-sip-trunk-1",
+    "summary": "Add SIP Trunk",
+    "description": "",
+    "body": {
+      "telephoneNumber": "TELEPHONENUMBER",
+      "planCode": "PLANCODE",
+      "channels": 0,
+      "trunkType": "TRUNKTYPE",
+      "firstName": "FIRSTNAME",
+      "lastName": "LASTNAME",
+      "userId": "USERID",
+      "clidFirstName": "CLIDFIRSTNAME",
+      "clidLastName": "CLIDLASTNAME",
+      "linePort": "LINEPORT",
+      "isLegacy": "ISLEGACY",
+      "isShared": "ISSHARED",
+      "contact": {},
+      "agent": {},
+      "billing": {
+        "billParentAccount": "BILLPARENTACCOUNT",
+        "recurringCharge": "RECURRINGCHARGE"
+      },
+      "provisioning": {
+        "sharingEnabled": "SHARINGENABLED"
+      }
+    },
+    "fields": [
+      {
+        "name": "telephoneNumber",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "planCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "channels",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "trunkType",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "firstName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lastName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "userId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "clidFirstName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "clidLastName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "linePort",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "isLegacy",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "isShared",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billing.billParentAccount",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billing.recurringCharge",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "provisioning.sharingEnabled",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/:accountId/siptrunktn",
+    "soap": "add-sip-trunk",
+    "summary": "Add SIP Trunk Tn",
+    "description": "",
+    "body": {
+      "trunkId": "TRUNKID",
+      "telephoneNumber": "TELEPHONENUMBER",
+      "sipTrunk": "SIPTRUNK",
+      "firstName": "FIRSTNAME",
+      "lastName": "LASTNAME",
+      "userId": "USERID",
+      "clidFirstName": "CLIDFIRSTNAME",
+      "clidLastName": "CLIDLASTNAME",
+      "linePort": "LINEPORT"
+    },
+    "fields": [
+      {
+        "name": "trunkId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "telephoneNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "sipTrunk",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "firstName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lastName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "userId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "clidFirstName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "clidLastName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "linePort",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/siptrunks",
+    "soap": "get-sip-trunk",
+    "summary": "GET SIP Trunk",
+    "description": "",
+    "params": [
+      {
+        "name": "serviceId",
+        "in": "query",
+        "required": false,
+        "description": "Service ID"
+      },
+      {
+        "name": "accountId",
+        "in": "query",
+        "required": false,
+        "description": "Account ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "planCode",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "includeTelephoneNumbers",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Page number"
+      },
+      {
+        "name": "pageLimit",
+        "in": "query",
+        "required": false,
+        "description": "Number of records per page"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "description": "createdOnDesc, updatedOnDesc"
+      },
+      {
+        "name": "billingType",
+        "in": "query",
+        "required": false,
+        "description": "Billing type"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/accounts/siptrunktelephonenumbers",
+    "soap": "sip-trunk-telephone-numbers",
+    "summary": "SIP Trunk Telephone Numbers",
+    "description": "",
+    "params": [
+      {
+        "name": "serviceId",
+        "in": "query",
+        "required": false,
+        "description": "Service ID"
+      },
+      {
+        "name": "accountId",
+        "in": "query",
+        "required": false,
+        "description": "Account ID"
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "NEW,ACTIVE,SUSPENDED,CLOSED"
+      },
+      {
+        "name": "planCode",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "pageLimit",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "description": "createdOnDesc, updatedOnDesc"
+      },
+      {
+        "name": "billingType",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/agents",
+    "soap": "get-agent",
+    "summary": "Get Agent",
+    "description": "",
+    "params": [
+      {
+        "name": "email",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "id",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/agents",
+    "soap": "add-agent",
+    "summary": "Add Agent",
+    "description": "",
+    "body": {
+      "agentCode": "AGENTCODE",
+      "agentName": "AGENTNAME",
+      "currency": "CURRENCY",
+      "city": "CITY",
+      "state": "STATE",
+      "country": "COUNTRY",
+      "phone": "PHONE",
+      "email": "EMAIL",
+      "date": "DATE",
+      "address": "ADDRESS"
+    },
+    "fields": [
+      {
+        "name": "agentCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "agentName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "currency",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "state",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "country",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "phone",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "date",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "address",
+        "required": false,
+        "description": "For Address : {     \"line1\": \"\",     \"line2\": \"\",     \"line3\": \"\"   }"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/agents/list",
+    "soap": "get-all-agents",
+    "summary": "Get All Agents",
+    "description": "",
+    "params": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/create-user",
+    "soap": "create-user",
+    "summary": "Create User",
+    "description": "",
+    "body": {
+      "email": "EMAIL",
+      "password": "PASSWORD",
+      "firstName": "FIRSTNAME",
+      "lastName": "LASTNAME",
+      "iristelWireless": "IRISTELWIRELESS",
+      "iceWireless": "ICEWIRELESS",
+      "address1": "ADDRESS1",
+      "city": "CITY",
+      "province": "PROVINCE",
+      "country": "COUNTRY",
+      "postalCode": "POSTALCODE"
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "password",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "firstName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lastName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "iristelWireless",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "iceWireless",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "address1",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "province",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "country",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "postalCode",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/forgot-password",
+    "soap": "forgot-password-1",
+    "summary": "Forgot Password",
+    "description": "",
+    "body": {
+      "email": "EMAIL"
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login",
+    "soap": "log-in-1",
+    "summary": "Log-in",
+    "description": "",
+    "body": {
+      "email": "EMAIL",
+      "password": "PASSWORD",
+      "locale": "en"
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "password",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "locale",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/auth/profile",
+    "soap": "update-profile",
+    "summary": "Update Profile",
+    "description": "",
+    "body": {
+      "email": "EMAIL",
+      "name": "NAME",
+      "password": "PASSWORD",
+      "birthday": "BIRTHDAY"
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "name",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "password",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "birthday",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/auth/profile-image",
+    "soap": "get-profile-image",
+    "summary": "Get Profile Image",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/auth/register",
+    "soap": "register",
+    "summary": "Register",
+    "description": "",
+    "params": [
+      {
+        "name": "email",
+        "in": "query",
+        "required": false,
+        "description": "User email Address"
+      },
+      {
+        "name": "accountId",
+        "in": "query",
+        "required": false,
+        "description": "User master account code"
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/auth/role",
+    "soap": "update-role",
+    "summary": "Update Role",
+    "description": "",
+    "body": {
+      "role": "ROLE"
+    },
+    "fields": [
+      {
+        "name": "role",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/upload",
+    "soap": "upload-profile-image",
+    "summary": "Upload Profile Image",
+    "description": "",
+    "body": {
+      "file": "FILE"
+    },
+    "fields": [
+      {
+        "name": "file",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/auth/user-info",
+    "soap": "user-details",
+    "summary": "User Details",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/adjustments",
+    "soap": "get-adjustments",
+    "summary": "Get Adjustments",
+    "description": "Use this endpoint to retrieve a list of adjustments that have been made to an account/service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to retrieve the adjustments."
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the starting date to get the adjustments. In format YYYY-MM-DD."
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the ending date to get the adjustments. In format YYYY-MM-DD."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/adjustments",
+    "soap": "add-adjustment",
+    "summary": "Add Adjustment",
+    "description": "",
+    "body": {
+      "currency": "CURRENCY",
+      "taxIncluded": true,
+      "reference": "REFERENCE",
+      "balanceType": "BALANCETYPE",
+      "taxGroup": "TAXGROUP"
+    },
+    "fields": [
+      {
+        "name": "currency",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "taxIncluded",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "reference",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "balanceType",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "taxGroup",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/billing/:accountId/adjustments/:adjustmentId",
+    "soap": "delete-adjustment",
+    "summary": "Delete Adjustment",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/adjustments/:adjustmentId",
+    "soap": "get-adjustment",
+    "summary": "Get Adjustment",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/balance",
+    "soap": "view-balance",
+    "summary": "View Balance",
+    "description": "Use this endpoint to get the outstanding balance related to an Account or Service. Note, for use with billable Services (billParentAccount=false) only.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to retrieve the balance."
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/billing/:accountId/credit-card",
+    "soap": "delete-credit-card",
+    "summary": "Delete Credit Card",
+    "description": "Use this endpoint to delete credit card details for an account or service. Note, for use with billable Services (billParentAccount=false) only.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to delete the credit card info."
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/billing/:accountId/credit-card",
+    "soap": "credit-card",
+    "summary": "Credit Card",
+    "description": "Use this endpoint to store credit card details or update credit card details for an account or service. Note, for use with billable Services (billParentAccount=false) only.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to update the credit card info."
+      }
+    ],
+    "body": {
+      "cardType": "VISA",
+      "number": "NUMBER",
+      "holder": "HOLDER",
+      "expMonth": "EXPMONTH",
+      "expYear": "EXPYEAR",
+      "CVV": "CVV"
+    },
+    "fields": [
+      {
+        "name": "cardType",
+        "required": true,
+        "description": "Specidy the type of credit card, for example VISA."
+      },
+      {
+        "name": "number",
+        "required": true,
+        "description": "Provide the credit card number."
+      },
+      {
+        "name": "holder",
+        "required": true,
+        "description": "Provide the credit card holder's name."
+      },
+      {
+        "name": "expMonth",
+        "required": true,
+        "description": "Provide the credit card expiry month. Ex: '04'."
+      },
+      {
+        "name": "expYear",
+        "required": true,
+        "description": "Provide the credit card expiry year. Ex: '2017'."
+      },
+      {
+        "name": "CVV",
+        "required": true,
+        "description": "Provide the credit card security code. Ex: '104 or '7612'."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/deposits",
+    "soap": "get-deposits",
+    "summary": "Get Deposits",
+    "description": "Use this endpoint to get a list of deposits applied to an account where {id} is the accountId or the serviceId.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "The account id to get deposits."
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "Status strings are used to represent multiple statuses within a single string, making it easier to manage and process different status values. To illustrate this better, let's consider an example with the status value \"OPEN\".  if want to add more values instead of using separate strings we can use a comma-delimited status string to combine them into one, like this:  \"OPEN,RETURNED\"."
+      },
+      {
+        "name": "paymentId",
+        "in": "query",
+        "required": false,
+        "description": "The related payment ID if applicable."
+      },
+      {
+        "name": "refundId",
+        "in": "query",
+        "required": false,
+        "description": "The related refund ID if applicable."
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": "The starting date to get the deposits for in format YYYY-MM-DD."
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": "The ending date to get the deposits for in format YYYY-MM-DD."
+      },
+      {
+        "name": "type",
+        "in": "query",
+        "required": false,
+        "description": "A code indicating the type of deposit."
+      },
+      {
+        "name": "productCode",
+        "in": "query",
+        "required": false,
+        "description": "The product code that related to the deposit."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/deposits",
+    "soap": "add-deposit",
+    "summary": "Add Deposit",
+    "description": "Use this endpoint to apply a deposit to an account where {id} is the accountId or the serviceId.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to add a deposit."
+      }
+    ],
+    "body": {
+      "type": "SECDEPOSIT",
+      "currency": "CURRENCY",
+      "amount": 0,
+      "note": "NOTE"
+    },
+    "fields": [
+      {
+        "name": "type",
+        "required": true,
+        "description": "A code indicating the type of deposit."
+      },
+      {
+        "name": "currency",
+        "required": true,
+        "description": "Provide the currency of the deposit to be applied to the account. For a list of ISO4217 currency codes please reference http://www.xe.com/iso4217.php"
+      },
+      {
+        "name": "amount",
+        "required": true,
+        "description": "Provide the amount of the deposit."
+      },
+      {
+        "name": "note",
+        "required": false,
+        "description": "A note regarding the deposit."
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/billing/:accountId/deposits/:depositId",
+    "soap": "delete-deposit",
+    "summary": "Delete Deposit",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/deposits/:depositId",
+    "soap": "get-deposit",
+    "summary": "Get Deposit",
+    "description": ""
+  },
+  {
+    "method": "PATCH",
+    "path": "/billing/:accountId/deposits/:depositId",
+    "soap": "update-deposit",
+    "summary": "Update Deposit",
+    "description": "",
+    "body": {
+      "note": "NOTE"
+    },
+    "fields": [
+      {
+        "name": "note",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/invoices",
+    "soap": "view-invoices",
+    "summary": "View Invoices",
+    "description": "Use this endpoint to get a list of invoices related to an Account or Service. Note, for use with billable Services (billParentAccount=false) only.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to retrieve invoices."
+      },
+      {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "description": "Specify if an invoice is open (unpaid) or closed (paid), use 0 or 2 respectively. If no value is provided, the request will retrieve both open and closed invoices. The only allowed values for this parameter are 0 or 2."
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the starting date in the format of YYYY-MM-DD."
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the ending date in the format of YYYY-MM-DD."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/invoices",
+    "soap": "add-invoices",
+    "summary": "Add invoices",
+    "description": "",
+    "body": {
+      "lnagaue": "LNAGAUE",
+      "adjustments": [
+        0
+      ],
+      "usage": true,
+      "recurringCharges": true
+    },
+    "fields": [
+      {
+        "name": "lnagaue",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "adjustments",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "usage",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "recurringCharges",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/invoices/:invoiceId/download",
+    "soap": "download-invoice",
+    "summary": "Download invoice",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/packages",
+    "soap": "get-packages",
+    "summary": "Get Packages",
+    "description": "Use this endpoint to retrieve a list of Packagesthat have been made to an account/service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account/service id to get packages."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/packages",
+    "soap": "add-pacakage",
+    "summary": "Add Pacakage",
+    "description": "",
+    "body": {
+      "code": "CODE",
+      "phoneNumbers": [
+        0
+      ]
+    },
+    "fields": [
+      {
+        "name": "code",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "phoneNumbers",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/billing/:accountId/packages/:packageId",
+    "soap": "delete-packages",
+    "summary": "Delete Packages",
+    "description": ""
+  },
+  {
+    "method": "PATCH",
+    "path": "/billing/:accountId/packages/:packageId",
+    "soap": "update-package",
+    "summary": "Update Package",
+    "description": "",
+    "body": {
+      "code": "CODE",
+      "phoneNumbers": [
+        0
+      ]
+    },
+    "fields": [
+      {
+        "name": "code",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "phoneNumbers",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/payments",
+    "soap": "get-payments",
+    "summary": "Get Payments",
+    "description": "Use this endpoint to retrieve a list of payments applied to an account/service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to retrieve the payments."
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the starting date to get the payments for in format YYYY-MM-DD."
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": "Enter the ending date to get the payments for in format YYYY-MM-DD."
+      },
+      {
+        "name": "reference",
+        "in": "query",
+        "required": false,
+        "description": "Provide the reference id to get the payment."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/payments",
+    "soap": "payments",
+    "summary": "Payments",
+    "description": "",
+    "body": {
+      "reference": "REFERENCE",
+      "remark": "REMARK",
+      "creditCard": {
+        "token": "TOKEN",
+        "number": "NUMBER",
+        "expMont": "EXPMONT",
+        "expYear": "EXPYEAR"
+      },
+      "taxesIncluded": "TAXESINCLUDED",
+      "isServicePayment": "ISSERVICEPAYMENT",
+      "currency": "CURRENCY",
+      "amount": "AMOUNT"
+    },
+    "fields": [
+      {
+        "name": "reference",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "remark",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.token",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expMont",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expYear",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "taxesIncluded",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "isServicePayment",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "currency",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/billing/:accountId/payments/:paymentId",
+    "soap": "get-payment",
+    "summary": "Get Payment",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/payments/:paymentId/reverse",
+    "soap": "reverse-payment",
+    "summary": "Reverse Payment",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/billing/:accountId/transactions",
+    "soap": "add-transaction",
+    "summary": "Add Transaction",
+    "description": "Use this endpoint to apply a transaction to an Account or Service. Note, for use with billable Services (billParentAccount=false) only.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the account id to process a payment."
+      }
+    ],
+    "body": {
+      "creditCard": {},
+      "saveCard": true,
+      "useExistingCard": true,
+      "reference": "REFERENCE",
+      "isServicePayment": true,
+      "remark": "REMARK",
+      "amount": 0,
+      "currency": "CURRENCY"
+    },
+    "fields": [
+      {
+        "name": "saveCard",
+        "required": false,
+        "description": "If true credit card information that's provided in the credit card object will be stored for future convinance."
+      },
+      {
+        "name": "useExistingCard",
+        "required": false,
+        "description": "If true, credit card information does not have to be provided to process a transaction, the stored credit card will be used."
+      },
+      {
+        "name": "reference",
+        "required": false,
+        "description": "A reference value that you may want to associate with the transaction."
+      },
+      {
+        "name": "isServicePayment",
+        "required": false,
+        "description": "If true, the account/service validity period will be extended. If left empty or false, only a payment will be applied to the account/service but the validity period will not change."
+      },
+      {
+        "name": "remark",
+        "required": false,
+        "description": "A general text remark regarding this payment."
+      },
+      {
+        "name": "amount",
+        "required": true,
+        "description": "Provide the amount of the payment to be applied to the account."
+      },
+      {
+        "name": "currency",
+        "required": true,
+        "description": "Provide the currency of the payment to be applied to the account. For a list of ISO4217 currency codes please reference http://www.xe.com/iso4217.php."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/billing/invoices/:invoiceId",
+    "soap": "get-invoice",
+    "summary": "Get Invoice",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/clover/charges",
+    "soap": "create-charge",
+    "summary": "Create Charge",
+    "description": "",
+    "body": {
+      "contact": {
+        "emailAddress": "EMAILADDRESS",
+        "address1": "ADDRESS1",
+        "postalCode": "POSTALCODE"
+      },
+      "accountId": "ACCOUNTID",
+      "amount": "AMOUNT",
+      "creditCard": {
+        "number": "NUMBER",
+        "expMonth": "EXPMONTH",
+        "expYear": "EXPYEAR",
+        "CVV": "CVV"
+      }
+    },
+    "fields": [
+      {
+        "name": "contact.emailAddress",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.address1",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.postalCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "accountId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expMonth",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expYear",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.CVV",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/clover/charges/:chargeId",
+    "soap": "get-charges",
+    "summary": "Get Charges",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/clover/create-payment",
+    "soap": "create-payment",
+    "summary": "Create Payment",
+    "description": "",
+    "body": {
+      "accountId": "ACCOUNTID",
+      "amount": "AMOUNT",
+      "contact": {
+        "emailAddress": "EMAILADDRESS",
+        "address1": "ADDRESS1",
+        "postalCode": "POSTALCODE"
+      },
+      "credit": {
+        "number": "NUMBER",
+        "expMonth": "EXPMONTH",
+        "expYear": "EXPYEAR",
+        "cvv": "CVV"
+      }
+    },
+    "fields": [
+      {
+        "name": "accountId",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "contact.emailAddress",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "contact.address1",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "contact.postalCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "credit.number",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "credit.expMonth",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "credit.expYear",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "credit.cvv",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/clover/create-token",
+    "soap": "create-token",
+    "summary": "Create Token",
+    "description": "",
+    "body": {
+      "accountId": "ACCOUNTID",
+      "amount": "AMOUNT",
+      "contact": {
+        "emailAddress": "EMAILADDRESS",
+        "address1": "ADDRESS1",
+        "postalCode": "POSTALCODE"
+      },
+      "creditCard": {
+        "number": "NUMBER",
+        "expMonth": "EXPMONTH",
+        "expYear": "EXPYEAR",
+        "CVV": "CVV"
+      }
+    },
+    "fields": [
+      {
+        "name": "accountId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.emailAddress",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.address1",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "contact.postalCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expMonth",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expYear",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.CVV",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/clover/merchants/orders/:orderId/payments",
+    "soap": "pos-payment",
+    "summary": "POS Payment",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/clover/refunds",
+    "soap": "refunds",
+    "summary": "Refunds",
+    "description": "",
+    "body": {
+      "charge": "CHARGE",
+      "amount": "AMOUNT",
+      "external_reference_id": "EXTERNAL_REFERENCE_ID",
+      "reason": "REASON"
+    },
+    "fields": [
+      {
+        "name": "charge",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "amount",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "external_reference_id",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "reason",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/clover/refunds/:refundId",
+    "soap": "get-refunds",
+    "summary": "Get Refunds",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/errors",
+    "soap": "get-error",
+    "summary": "Get Error",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/invoice-payments/:accountId",
+    "soap": "get-invoice-payment-details",
+    "summary": "Get Invoice Payment Details",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/issues",
+    "soap": "get-issues",
+    "summary": "Get Issues",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/issues/:id",
+    "soap": "delete-issues",
+    "summary": "Delete Issues",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/issues/:issueId",
+    "soap": "get-issue",
+    "summary": "Get Issue",
+    "description": ""
+  },
+  {
+    "method": "PATCH",
+    "path": "/issues/:issueId",
+    "soap": "update-issue",
+    "summary": "Update Issue",
+    "description": "",
+    "body": {
+      "serviceId": "SERVICEID",
+      "accountId": "ACCOUNTID",
+      "xmlPayload": "XMLPAYLOAD",
+      "error": "ERROR",
+      "changeStatus": "CHANGESTATUS",
+      "changeMasterContact": "CHANGEMASTERCONTACT",
+      "changeContact": "CHANGECONTACT",
+      "changePlan": "CHANGEPLAN",
+      "changeNumber": "CHANGENUMBER"
+    },
+    "fields": [
+      {
+        "name": "serviceId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "accountId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "xmlPayload",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "error",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "changeStatus",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "changeMasterContact",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "changeContact",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "changePlan",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "changeNumber",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/porting",
+    "soap": "get-all-porting-requests",
+    "summary": "Get All Porting Requests",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/porting",
+    "soap": "port-request",
+    "summary": "Port Request",
+    "description": "",
+    "body": {
+      "telephoneNumber": "TELEPHONENUMBER",
+      "providerName": "PROVIDERNAME",
+      "providerAccountNumber": "PROVIDERACCOUNTNUMBER",
+      "desiredDueDate": "DESIREDDUEDATE",
+      "serviceType": "SERVICETYPE",
+      "fullName": "FULLNAME",
+      "streetNumber": "STREETNUMBER",
+      "streetName": "STREETNAME",
+      "unitNumber": "UNITNUMBER",
+      "city": "CITY",
+      "province": "PROVINCE",
+      "postalCode": "POSTALCODE",
+      "comments": "COMMENTS",
+      "losingCarrierComments": "LOSINGCARRIERCOMMENTS",
+      "serviceId": "SERVICEID",
+      "pin": "PIN"
+    },
+    "fields": [
+      {
+        "name": "telephoneNumber",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "providerName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "providerAccountNumber",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "desiredDueDate",
+        "required": true,
+        "description": "date/time"
+      },
+      {
+        "name": "serviceType",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "fullName",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "streetNumber",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "streetName",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "unitNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "city",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "province",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "postalCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "comments",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "losingCarrierComments",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "serviceId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "pin",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/porting/:requestId",
+    "soap": "delete-port-request",
+    "summary": "Delete Port Request",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/porting/:requestId",
+    "soap": "get",
+    "summary": "Get Port Request",
+    "description": ""
+  },
+  {
+    "method": "PATCH",
+    "path": "/porting/:requestId",
+    "soap": "update-port-request",
+    "summary": "Update Port Request",
+    "description": "",
+    "body": {
+      "providerName": "PROVIDERNAME",
+      "providerAccountNumber": "PROVIDERACCOUNTNUMBER",
+      "desiredDueDate": "DESIREDDUEDATE",
+      "serviceType": "SERVICETYPE",
+      "fullName": "FULLNAME",
+      "streetNumber": "STREETNUMBER",
+      "streetName": "STREETNAME",
+      "unitNumber": "UNITNUMBER",
+      "city": "CITY",
+      "province": "PROVINCE",
+      "postalCode": "POSTALCODE",
+      "comments": "COMMENTS",
+      "losingCarrierComments": "LOSINGCARRIERCOMMENTS",
+      "serviceId": "SERVICEID",
+      "pin": "PIN"
+    },
+    "fields": [
+      {
+        "name": "providerName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "providerAccountNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "desiredDueDate",
+        "required": false,
+        "description": "date time"
+      },
+      {
+        "name": "serviceType",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "fullName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "streetNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "streetName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "unitNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "province",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "postalCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "comments",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "losingCarrierComments",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "serviceId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "pin",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/porting/check",
+    "soap": "check-portability",
+    "summary": "Check Portability",
+    "description": "Use this endpoint to determine if a telephone number is actually portable based on the NPA and NXX (ie: 905-840-XXXX. Not all area codes are supported so this check should always be performed prior to attempting to create a Porting Request.",
+    "params": [
+      {
+        "name": "areaCode",
+        "in": "query",
+        "required": true,
+        "description": "Excluding the country code, the first 3 digits of the telephone number."
+      },
+      {
+        "name": "exchangeCode",
+        "in": "query",
+        "required": true,
+        "description": "Provide the 3 digits of the telephone number following the area code."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/product/catalog",
+    "soap": "get-product-catalog",
+    "summary": "Get Product Catalog",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/providers",
+    "soap": "dfd",
+    "summary": "Get Providers",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/release-numbers",
+    "soap": "release-number",
+    "summary": "Release Number",
+    "description": "",
+    "body": {
+      "oldItem": "OLDITEM",
+      "accountId": "ACCOUNTID",
+      "oldType": "OLDTYPE",
+      "oldModel": "OLDMODEL"
+    },
+    "fields": [
+      {
+        "name": "oldItem",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "accountId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "oldType",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "oldModel",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/agent-payments",
+    "soap": "agent-payments",
+    "summary": "Agent Payments",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/telephone-numbers",
+    "soap": "add-telephone-numbers",
+    "summary": "Add Telephone Numbers",
+    "description": "",
+    "body": {
+      "telephoneNumbers": [
+        "TELEPHONENUMBERS"
+      ]
+    },
+    "fields": [
+      {
+        "name": "telephoneNumbers",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/telephone-numbers/account-details/:telephoneNumber",
+    "soap": "account-details-with-telephone-number",
+    "summary": "Account details with telephone number",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/telephone-numbers/accountInfo/:telephoneNumber",
+    "soap": "account-info-with-telephone-number",
+    "summary": "Account Info with telephone number",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/telephone-numbers/booked",
+    "soap": "book-telephone-number",
+    "summary": "Book Telephone Number",
+    "description": "",
+    "body": {
+      "telephoneNumber": "TELEPHONENUMBER"
+    },
+    "fields": [
+      {
+        "name": "telephoneNumber",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/telephone-numbers/catalogue",
+    "soap": "catalogue",
+    "summary": "Catalogue",
+    "description": "",
+    "params": [
+      {
+        "name": "city",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "province",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "country",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "areaCode",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "exchangeCode",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lineNumber",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/telephone-numbers/cities",
+    "soap": "cities",
+    "summary": "cities",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/telephone-numbers/numberAvailable/:telephoneNumber",
+    "soap": "number-available",
+    "summary": "Number Available",
+    "description": "",
+    "body": {
+      "telephoneNumber": "TELEPHONENUMBER"
+    },
+    "fields": [
+      {
+        "name": "telephoneNumber",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/telephone-numbers/release/:elephoneNumber",
+    "soap": "release-telephone-number",
+    "summary": "Release telephone number",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/telephone-numbers/reserve",
+    "soap": "reserve-telephone-numbers",
+    "summary": "Reserve telephone numbers",
+    "description": "",
+    "body": {
+      "telephoneNumbers": [
+        "TELEPHONENUMBERS"
+      ]
+    },
+    "fields": [
+      {
+        "name": "telephoneNumbers",
+        "required": false,
+        "description": "Array of telephone Numbers"
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/telephone-numbers/reserved",
+    "soap": "get-reserved-telephone-numbers",
+    "summary": "Get reserved telephone numbers",
+    "description": "",
+    "params": [
+      {
+        "name": "inUse",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "checkLastUsed",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lastUsed",
+        "in": "query",
+        "required": false,
+        "description": "Date in YYYY-MM-DD"
+      },
+      {
+        "name": "city",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "province",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "country",
+        "in": "query",
+        "required": false,
+        "description": "Country"
+      },
+      {
+        "name": "areaCode",
+        "in": "query",
+        "required": false,
+        "description": "Area code/codes"
+      },
+      {
+        "name": "exchangeCode",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lineNumber",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "fullNumber",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lat",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "lng",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "pageLimit",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/unified/forgot-password",
+    "soap": "forgot-password",
+    "summary": "forgot-password",
+    "description": "",
+    "body": {
+      "email": "EMAIL"
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/unified/log-in",
+    "soap": "log-in",
+    "summary": "log-in",
+    "description": "",
+    "body": {
+      "email": "EMAIL",
+      "password": "PASSWORD"
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "password",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/unified/mfa",
+    "soap": "activeinactive-mfa",
+    "summary": "Active/Inactive MFA",
+    "description": "",
+    "body": {
+      "mfa": true
+    },
+    "fields": [
+      {
+        "name": "mfa",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/unified/mfa-associate",
+    "soap": "associate-mfa",
+    "summary": "Associate MFA",
+    "description": "",
+    "body": {
+      "mfaToken": "MFATOKEN"
+    },
+    "fields": [
+      {
+        "name": "mfaToken",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/unified/mfa-verify",
+    "soap": "verify-mfa",
+    "summary": "Verify MFA",
+    "description": "",
+    "body": {
+      "mfaToken": "MFATOKEN",
+      "otp": "OTP"
+    },
+    "fields": [
+      {
+        "name": "mfaToken",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "otp",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/unified/password",
+    "soap": "update-password",
+    "summary": "Update Password",
+    "description": "",
+    "body": {
+      "password": "PASSWORD"
+    },
+    "fields": [
+      {
+        "name": "password",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/unified/sign-up",
+    "soap": "sign-up",
+    "summary": "sign-up",
+    "description": "",
+    "body": {
+      "email": "EMAIL",
+      "password": "PASSWORD",
+      "mfa": true
+    },
+    "fields": [
+      {
+        "name": "email",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "password",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "mfa",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/webhook/:webhookId",
+    "soap": "update-webhook",
+    "summary": "Update Webhook",
+    "description": "",
+    "body": {
+      "target_url": "TARGET_URL",
+      "event": "EVENT"
+    },
+    "fields": [
+      {
+        "name": "target_url",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "event",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/webhooks",
+    "soap": "get-webhooks",
+    "summary": "Get Webhooks",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/webhooks",
+    "soap": "create-webhook",
+    "summary": "Create Webhook",
+    "description": "",
+    "body": {
+      "target_url": "TARGET_URL",
+      "event": "EVENT"
+    },
+    "fields": [
+      {
+        "name": "target_url",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "event",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/webhooks/:webhookId",
+    "soap": "delete-webhook",
+    "summary": "Delete Webhook",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/webhooks/:webhookId",
+    "soap": "get-webhook",
+    "summary": "Get Webhook",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/webhooks/events",
+    "soap": "get-events",
+    "summary": "Get Events",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/webhooks/events/:webhookName",
+    "soap": "get-events-1",
+    "summary": "Get Event",
+    "description": ""
+  }
+]

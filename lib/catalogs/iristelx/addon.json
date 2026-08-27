@@ -1,0 +1,79 @@
+[
+  {
+    "method": "GET",
+    "path": "/accounts/:masterAccountCode/services/:serviceAccountCode/add-on",
+    "soap": "get-add-on",
+    "summary": "Get Add-on",
+    "description": ""
+  },
+  {
+    "method": "PUT",
+    "path": "/accounts/:masterAccountCode/services/:serviceAccountCode/add-on",
+    "soap": "update-add-on",
+    "summary": "Update Add-on",
+    "description": "",
+    "body": {
+      "addOnCode": "ADDONCODE",
+      "statusCode": "STATUSCODE",
+      "operationDate": "OPERATIONDATE",
+      "closedBy": "CLOSEDBY"
+    },
+    "fields": [
+      {
+        "name": "addOnCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "statusCode",
+        "required": true,
+        "description": ""
+      },
+      {
+        "name": "operationDate",
+        "required": true,
+        "description": "format : yyyymmdd hhmmss"
+      },
+      {
+        "name": "closedBy",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/accounts/:masterAccountCode/services/serviceAccountCode/add-on",
+    "soap": "add",
+    "summary": "ADD",
+    "description": "",
+    "body": {
+      "addOnCode": "ADDONCODE",
+      "statusCode": "STATUSCODE",
+      "activationDate": "ACTIVATIONDATE",
+      "quantity": "1"
+    },
+    "fields": [
+      {
+        "name": "addOnCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "statusCode",
+        "required": false,
+        "description": "NEW - 0   ACTIVE -1    SUSPENDED -2   CLOSED –3"
+      },
+      {
+        "name": "activationDate",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "quantity",
+        "required": false,
+        "description": ""
+      }
+    ]
+  }
+]

@@ -1,0 +1,298 @@
+[
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId/services/:serviceId/imei",
+    "soap": "update-imei",
+    "summary": "Update IMEI",
+    "description": "",
+    "body": {
+      "imei": "IMEI"
+    },
+    "fields": [
+      {
+        "name": "imei",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId/services/:serviceId/sim",
+    "soap": "update-imei-copy",
+    "summary": "Update SIM",
+    "description": "Use this endpoint to add or replace the SIM Card associated with a service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the master account id to update service account details."
+      },
+      {
+        "name": "serviceId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the service account id to add/update the sim."
+      }
+    ],
+    "body": {
+      "sim": "SIM"
+    },
+    "fields": [
+      {
+        "name": "sim",
+        "required": true,
+        "description": "Adjust the SIM Card ICCID to be associated with this service account."
+      }
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/accounts/:accountId/services/:serviceId/telephone-number",
+    "soap": "update-sim-copy",
+    "summary": "Update Telephone Number",
+    "description": "Use this endpoint to add or replace the telephone number associated with a service.",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the master account id to update service account details for."
+      },
+      {
+        "name": "serviceId",
+        "in": "path",
+        "required": true,
+        "description": "Provide the service account id to add/update the msisdn."
+      }
+    ],
+    "body": {
+      "telephoneNumber": "TELEPHONENUMBER"
+    },
+    "fields": [
+      {
+        "name": "telephoneNumber",
+        "required": true,
+        "description": "For wireless services, the primary telephone number associated with the service acccount is referred to as an MSISDN."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/esim-cards",
+    "soap": "get-all-esim",
+    "summary": "Get All ESIM",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/esim-cards",
+    "soap": "add-esim",
+    "summary": "Add ESIM",
+    "description": "",
+    "body": {
+      "simcards": {
+        "simcards": [
+          ""
+        ]
+      }
+    },
+    "fields": [
+      {
+        "name": "simcards.simcards",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/esim-cards/:iccid/assign",
+    "soap": "assign-esim",
+    "summary": "Assign ESIM",
+    "description": "",
+    "body": {
+      "iccid": "ICCID",
+      "isUsed": "ISUSED"
+    },
+    "fields": [
+      {
+        "name": "iccid",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "isUsed",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/plans/:planCode",
+    "soap": "get-plan-by-iccid",
+    "summary": "Get a plan",
+    "description": "Use this endpoint to get a specific plan.",
+    "params": [
+      {
+        "name": "planCode",
+        "in": "path",
+        "required": true,
+        "description": "Provide the plan code to retrieve the plan."
+      }
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/sim-cards",
+    "soap": "delete-sim-card",
+    "summary": "Delete SIM Card",
+    "description": "",
+    "body": {
+      "simcards": {
+        "simcards": [
+          "SIMCARDS"
+        ]
+      }
+    },
+    "fields": [
+      {
+        "name": "simcards.simcards",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/sim-cards",
+    "soap": "get-sim-cards",
+    "summary": "Get SIM Cards",
+    "description": "Use this endpoint to lookup SIM Card attributes for SIM Cards that are in inventory. If a SIM Card is in use the serviceId of the service that it's assigned to will be returned.",
+    "params": [
+      {
+        "name": "iccid",
+        "in": "query",
+        "required": false,
+        "description": "Provide the iccid to find sim card."
+      },
+      {
+        "name": "imsi",
+        "in": "query",
+        "required": false,
+        "description": "Provide the imsi to find sim card."
+      },
+      {
+        "name": "puk",
+        "in": "query",
+        "required": false,
+        "description": "Provide the puk to find sim card."
+      },
+      {
+        "name": "udf1",
+        "in": "query",
+        "required": false,
+        "description": "Provide the udf1 to find sim card."
+      },
+      {
+        "name": "udf2",
+        "in": "query",
+        "required": false,
+        "description": "Provide the udf2 to find sim card."
+      },
+      {
+        "name": "udf3",
+        "in": "query",
+        "required": false,
+        "description": "Provide the udf3 to find sim card."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/sim-cards",
+    "soap": "add-sim-card",
+    "summary": "Add SIM Card",
+    "description": "Use this endpoint to add a new SIM Card.",
+    "body": {
+      "simcards": [
+        ""
+      ]
+    },
+    "fields": [
+      {
+        "name": "simcards",
+        "required": true,
+        "description": "array of objects (sim cards)."
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/sim-cards/:iccid",
+    "soap": "get-sim-card",
+    "summary": "Get SIM Card",
+    "description": "Use this endpoint to retrieve attributes associated with a specific SIM Card.",
+    "params": [
+      {
+        "name": "iccid",
+        "in": "path",
+        "required": true,
+        "description": "Provide the iccid to find sim card."
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/sim-cards/:sacode/reserve",
+    "soap": "reserve-sim",
+    "summary": "Reserve SIM",
+    "description": "",
+    "body": {
+      "iccid": "ICCID"
+    },
+    "fields": [
+      {
+        "name": "iccid",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/sim-cards/:sacode/unreserve",
+    "soap": "unreserve-sim",
+    "summary": "Unreserve SIM",
+    "description": "",
+    "body": {
+      "iccid": "ICCID"
+    },
+    "fields": [
+      {
+        "name": "iccid",
+        "required": true,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/sim-cards/booked",
+    "soap": "book-sim",
+    "summary": "Book SIM",
+    "description": "",
+    "body": {
+      "iccid": "ICCID"
+    },
+    "fields": [
+      {
+        "name": "iccid",
+        "required": false,
+        "description": ""
+      }
+    ]
+  }
+]

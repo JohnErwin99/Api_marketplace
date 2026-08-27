@@ -1,0 +1,426 @@
+[
+  {
+    "method": "GET",
+    "path": "/mobile/app-notification",
+    "soap": "app-notification",
+    "summary": "App Notification",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/mobile/app-user-notification-read",
+    "soap": "notification-read",
+    "summary": "Notification Read",
+    "description": "",
+    "body": {
+      "id": "ID"
+    },
+    "fields": [
+      {
+        "name": "id",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/esim/qrcode/local",
+    "soap": "esim-local-qr",
+    "summary": "esim local qr",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/esim/qrcode/matching",
+    "soap": "get-qr-by-matching-id",
+    "summary": "Get QR by matching ID",
+    "description": "",
+    "params": [
+      {
+        "name": "matchingId",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/mock-payment",
+    "soap": "mock-payment",
+    "summary": "Mock Payment",
+    "description": "",
+    "body": {
+      "amount": "AMOUNT",
+      "creditCard": {
+        "adapterId": "ADAPTERID",
+        "code": "CODE",
+        "number": "NUMBER",
+        "token": "TOKEN",
+        "expDate": {
+          "expMonth": "EXPMONTH",
+          "expYear": "EXPYEAR"
+        },
+        "startDate": {
+          "month": "MONTH",
+          "year": "YEAR"
+        },
+        "holder": "HOLDER",
+        "securityCode": "SECURITYCODE",
+        "issuer": "ISSUER",
+        "externalRefId": "EXTERNALREFID"
+      },
+      "remark": "REMARK"
+    },
+    "fields": [
+      {
+        "name": "amount",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.adapterId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.code",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.token",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expDate.expMonth",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.expDate.expYear",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.startDate.month",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.startDate.year",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.holder",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.securityCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.issuer",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "creditCard.externalRefId",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "remark",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/my-plan",
+    "soap": "my-plan",
+    "summary": "My plan",
+    "description": "",
+    "params": [
+      {
+        "name": "macode",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/plan",
+    "soap": "plan",
+    "summary": "Plan",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/plan-feature",
+    "soap": "plan-feature",
+    "summary": "Plan Feature",
+    "description": "",
+    "body": {
+      "planCode": "PLANCODE"
+    },
+    "fields": [
+      {
+        "name": "planCode",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/port-in",
+    "soap": "get-port-rquest",
+    "summary": "Get Port Rquest",
+    "description": "",
+    "params": [
+      {
+        "name": "id",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/mobile/port-in",
+    "soap": "port-in",
+    "summary": "Port IN",
+    "description": "",
+    "body": {
+      "portedNumber": "PORTEDNUMBER",
+      "newServiceProvider": "NEWSERVICEPROVIDER",
+      "oldServiceProvider": "OLDSERVICEPROVIDER",
+      "oldLocalResellerName": "OLDLOCALRESELLERNAME",
+      "sup": "SUP",
+      "remarks": "REMARKS",
+      "accountNumber": "ACCOUNTNUMBER",
+      "ESN": "ESN",
+      "country": "COUNTRY",
+      "zipCode": "ZIPCODE",
+      "state": "STATE",
+      "city": "CITY",
+      "billStreetName": "BILLSTREETNAME",
+      "billLastName": "BILLLASTNAME",
+      "billFirstName": "BILLFIRSTNAME",
+      "desiredDueDate": "DESIREDDUEDATE",
+      "authorizationDate": "AUTHORIZATIONDATE",
+      "authorizerName": "AUTHORIZERNAME"
+    },
+    "fields": [
+      {
+        "name": "portedNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "newServiceProvider",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "oldServiceProvider",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "oldLocalResellerName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "sup",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "remarks",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "accountNumber",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "ESN",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "country",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "zipCode",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "state",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "city",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billStreetName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billLastName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "billFirstName",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "desiredDueDate",
+        "required": false,
+        "description": "052520261200"
+      },
+      {
+        "name": "authorizationDate",
+        "required": false,
+        "description": "05082026"
+      },
+      {
+        "name": "authorizerName",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/service-now/tickets",
+    "soap": "get-service-now-tickets",
+    "summary": "Get service Now Tickets",
+    "description": ""
+  },
+  {
+    "method": "POST",
+    "path": "/mobile/service-now/tickets",
+    "soap": "create-service-now-ticket",
+    "summary": "Create Service Now Ticket",
+    "description": "",
+    "body": {
+      "short_description": "SHORT_DESCRIPTION",
+      "description": "DESCRIPTION"
+    },
+    "fields": [
+      {
+        "name": "short_description",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "description",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/mobile/service-now/tickets/:id/comments",
+    "soap": "add-comments",
+    "summary": "Add Comments",
+    "description": "",
+    "body": {
+      "comment": "COMMENT"
+    },
+    "fields": [
+      {
+        "name": "comment",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/mobile/service-now/tickets/:id/images",
+    "soap": "add-image-on-the-service-now-ticket",
+    "summary": "Add image on the service now ticket",
+    "description": "",
+    "body": {
+      "file": "FILE"
+    },
+    "fields": [
+      {
+        "name": "file",
+        "required": false,
+        "description": ""
+      }
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/service-now/tickets/:id/with-comments",
+    "soap": "get-service-now-tickets-with-comments",
+    "summary": "Get Service now tickets with comments",
+    "description": ""
+  },
+  {
+    "method": "GET",
+    "path": "/mobile/service-usage",
+    "soap": "service-usage",
+    "summary": "Service Usage",
+    "description": "",
+    "params": [
+      {
+        "name": "accountId",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "serviceId",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "fromDate",
+        "in": "query",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "toDate",
+        "in": "query",
+        "required": false,
+        "description": ""
+      }
+    ]
+  }
+]
