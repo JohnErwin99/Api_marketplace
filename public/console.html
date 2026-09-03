@@ -25,6 +25,7 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  body{display:flex;flex-direction:column}
   ::selection{background:rgba(62,140,203,.35)}
   *::-webkit-scrollbar{width:10px;height:10px}
   *::-webkit-scrollbar-thumb{background:rgba(62,140,203,.25);border-radius:99px}
@@ -32,7 +33,7 @@
   *::-webkit-scrollbar-track{background:transparent}
 
   /* ---- header ---- */
-  header{position:relative;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#020c15;flex-wrap:wrap}
+  header{position:relative;flex:none;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#020c15;flex-wrap:wrap}
   header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,#3E8CCB,transparent)}
   header .logo{height:26px;width:auto;display:block}
   header h1{font:700 15px/1 var(--head);margin:0;letter-spacing:.3px;white-space:nowrap}
@@ -52,20 +53,37 @@
   .badge.tier{color:var(--gold-soft);border-color:rgba(201,164,76,.5);background:rgba(201,164,76,.08)}
   .badge.planned{color:var(--warn);border-color:rgba(245,217,138,.4)}
 
-  /* ---- product bar ---- */
-  .products{display:flex;gap:8px;align-items:center;padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto}
-  .pchip{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 12.5px var(--head);padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;gap:7px;align-items:center}
-  .pchip:hover{color:var(--ink);border-color:var(--line-strong);transform:translateY(-1px)}
+  /* ---- layout: product sidebar + content ---- */
+  .layout{flex:1;min-height:0;display:grid;grid-template-columns:230px 1fr}
+  .content{min-width:0;min-height:0;display:flex}
+  .content>*{flex:1;min-width:0}
+  .products{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:14px 12px;background:var(--bg2);border-right:1px solid var(--line);overflow-y:auto;overflow-x:hidden}
+  .pchip{border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 12.5px var(--head);padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .15s;text-align:left;display:flex;gap:7px;align-items:center;justify-content:space-between}
+  .pchip:hover{color:var(--ink);border-color:var(--line-strong);background:rgba(62,140,203,.08)}
+  .pchip[hidden]{display:none}
   .pchip.active{color:#fff;background:var(--grad);border-color:transparent;box-shadow:0 4px 14px rgba(62,140,203,.35)}
   .pchip .soon{font:600 10px var(--head);color:var(--gold-soft);background:rgba(201,164,76,.14);border-radius:999px;padding:1px 7px}
   .pchip.active .soon{color:#fff;background:rgba(255,255,255,.18)}
   .pchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-  main{display:grid;grid-template-columns:310px 1fr;height:calc(100% - 108px)}
+  /* ---- sidebar search ---- */
+  #product-search{flex:none;width:100%;font:13px var(--sans);padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink);margin-bottom:4px}
+  #product-search:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  #product-search::placeholder{color:var(--muted)}
+  #search-results{flex:none;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:4px;max-height:40vh;overflow-y:auto}
+  #search-results[hidden]{display:none}
+  .sres{border:0;background:none;text-align:left;color:var(--ink);font:12.5px var(--sans);padding:7px 8px;border-radius:7px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+  .sres:hover,.sres.kbd{background:rgba(62,140,203,.14)}
+  .sres .m{font:700 10px var(--mono);color:var(--accent)}
+  .sres small{color:var(--muted)}
+  .sres b{color:var(--accent)}
+  .snone{color:var(--muted);font-size:12px;padding:8px}
+
+  main{display:grid;grid-template-columns:310px 1fr;height:100%}
   main[hidden]{display:none}
 
   /* ---- docs ---- */
-  .docs{height:calc(100% - 108px);overflow:auto;padding:30px 24px 70px}
+  .docs{height:100%;overflow:auto;padding:30px 24px 70px}
   .docs .wrap{max-width:920px;margin:0 auto;animation:fadein .2s ease}
   .docs h2{font:800 24px/1.2 var(--head);margin:0 0 8px}
   .docs h3{font:700 16px var(--head);margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--line)}
@@ -205,7 +223,14 @@
   .hint{font-size:12px;color:var(--muted)}
   .errcode{font-family:var(--mono);color:var(--warn);font-weight:600}
   @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-  @media (max-width:900px){main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}.field{grid-template-columns:1fr}.field .fd{grid-column:1}header{gap:10px}}
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    .products{flex-direction:row;flex-wrap:wrap;align-items:center;overflow-x:auto;overflow-y:visible;border-right:0;border-bottom:1px solid var(--line);padding:10px 16px;max-height:40vh}
+    .pchip{flex:none;white-space:nowrap;border-radius:999px;justify-content:flex-start}
+    #product-search{width:100%}
+    #search-results{width:100%}
+    main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}.field{grid-template-columns:1fr}.field .fd{grid-column:1}header{gap:10px}
+  }
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -226,7 +251,13 @@
     <button id="xkey-clear" type="button" title="Forget the stored key" aria-label="Clear API key">✕</button>
   </label>
 </header>
-<div class="products" id="product-bar" role="tablist" aria-label="Products"></div>
+<div class="layout">
+<nav class="products" aria-label="Products">
+  <input id="product-search" type="search" placeholder="Search APIs… (e.g. port a number)" aria-label="Search APIs" autocomplete="off">
+  <div id="search-results" hidden></div>
+  <div style="display:contents" id="product-bar" role="tablist" aria-orientation="vertical" aria-label="Product list"></div>
+</nav>
+<div class="content">
 <div class="docs" id="view-docs" role="tabpanel" aria-labelledby="tab-docs">
   <div class="wrap" id="docs-body"><p class="lead">Loading reference…</p></div>
 </div>
@@ -245,6 +276,8 @@
     </div>
   </section>
 </main>
+</div>
+</div>
 
 <script>
 (async function(){
@@ -334,6 +367,129 @@
 
   const product=()=>products.find(p=>p.id===productId);
   const catalog=()=>product().endpoints||[];
+
+  // ---- sidebar search ---------------------------------------------------
+  // Intent map: everyday phrasings -> product ids. Keys are matched as
+  // whole words/phrases against the query.
+  const INTENT_MAP={
+    'phone number|buy number|did|dids|order number|search number|number inventory|toll free|local number':['dids'],
+    'port|porting|port in|port out|transfer number|move number|lnp|pon|migrate number':['lnp-enterprise','lnp-wireless'],
+    'wireless|mobile port|cwnpg|syniverse':['lnp-wireless'],
+    'wireline|enterprise port':['lnp-enterprise'],
+    '911|e911|emergency|dispatch|address listing':['e911'],
+    'trunk|sip|provision|uboss|welcome letter|welcome email':['provisioning','iristelx-accounts'],
+    'account|customer|service|plan|plans|usage|address|billing':['iristelx-accounts'],
+    'sim|esim|qr|sim card|activate sim':['iristelx-sim','iristelx-mobile'],
+    'addon|add-on|add on|feature':['iristelx-addon'],
+    'commission|agent|payout|revenue':['iristelx-commission'],
+    'app|subscriber|notification|support ticket|top up|topup|payment|pay':['iristelx-mobile','iristelx-bot'],
+    'bot|chatbot':['iristelx-bot'],
+  };
+  const norm=s=>String(s||'').toLowerCase();
+  function intentProducts(q){
+    const hits=new Set();
+    Object.entries(INTENT_MAP).forEach(([keys,ids])=>{
+      if(keys.split('|').some(k=>new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'s?\\b').test(q)))
+        ids.forEach(id=>hits.add(id));
+    });
+    return hits;
+  }
+  // Per-product searchable text (same fields the docs render from).
+  const searchIndex=products.map(p=>({
+    id:p.id,
+    nameL:norm(p.name),
+    text:norm([p.name,p.summary,(p.endpoints||[]).map(e=>
+      [e.method,e.path,e.summary,e.description,e.returns,
+       (e.params||[]).map(x=>x.name+' '+(x.description||'')).join(' '),
+       (e.fields||[]).map(f=>f.name+' '+(f.description||'')).join(' ')].join(' ')
+    ).join(' ')].join(' ')),
+    endpoints:(p.endpoints||[]).map(e=>({e,text:norm([e.method,e.path,e.summary,e.description].join(' '))})),
+  }));
+  function searchAll(qRaw){
+    const q=norm(qRaw).trim();
+    if(!q)return null;
+    const tokens=q.split(/\s+/).filter(t=>t.length>1);
+    const intents=intentProducts(q);
+    const scored=searchIndex.map(ix=>{
+      let s=0;
+      if(ix.nameL.includes(q))s+=100;
+      if(intents.has(ix.id))s+=60;
+      tokens.forEach(t=>{
+        if(ix.nameL.includes(t))s+=25;
+        else if(ix.text.includes(t))s+=8;
+      });
+      const eps=ix.endpoints
+        .map(x=>({...x,score:tokens.reduce((a,t)=>a+(x.text.includes(t)?10:0),0)}))
+        .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
+      if(eps.length)s+=5;
+      return {id:ix.id,score:s,eps};
+    }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score);
+    // Drop weak matches when a clearly better one exists.
+    const top=scored.length?scored[0].score:0;
+    return scored.filter(r=>r.score>=Math.max(10,top/4));
+  }
+
+  const searchEl=$('#product-search'), resultsEl=$('#search-results');
+  function openEndpoint(pid,ep){
+    if(productId!==pid){productId=pid;location.hash='#'+pid;markProduct();renderProduct();}
+    showTab('console');
+    const b=nav.querySelector('[data-ep="'+ep.method+' '+ep.path+'"]');
+    if(b){b.click();b.scrollIntoView({block:'nearest'});}
+  }
+  function openProduct(pid){
+    productId=pid;location.hash='#'+pid;markProduct();renderProduct();
+    clearSearch();
+  }
+  function clearSearch(){
+    searchEl.value='';
+    resultsEl.hidden=true;resultsEl.innerHTML='';
+    bar.querySelectorAll('.pchip').forEach(b=>{b.hidden=false;b.style.order='';});
+  }
+  function runSearch(){
+    const q=searchEl.value;
+    const scored=searchAll(q);
+    if(!scored){clearSearch();return;}
+    const rank={};scored.forEach((r,i)=>rank[r.id]=i);
+    bar.querySelectorAll('.pchip').forEach(b=>{
+      const r=rank[b.dataset.id];
+      b.hidden=r===undefined;
+      b.style.order=r===undefined?'':String(r);
+    });
+    resultsEl.innerHTML='';
+    const frag=document.createDocumentFragment();
+    let shown=0;
+    scored.slice(0,4).forEach(r=>{
+      const p=products.find(x=>x.id===r.id);
+      r.eps.forEach(x=>{
+        if(shown>=8)return;shown++;
+        const btn=document.createElement('button');
+        btn.className='sres';
+        btn.innerHTML='<span><span class="m">'+x.e.method+'</span> '+esc(x.e.path)+'</span>'
+          +'<small>'+esc(p.name)+(x.e.summary?' · '+esc(x.e.summary):'')+'</small>';
+        btn.onclick=()=>{openEndpoint(r.id,x.e);clearSearch();};
+        frag.appendChild(btn);
+      });
+    });
+    if(!scored.length){
+      resultsEl.innerHTML='<div class="snone">No API matches — try other words (e.g. “port a number”, “send text”, “911”).</div>';
+    }else{
+      resultsEl.appendChild(frag);
+    }
+    resultsEl.hidden=false;
+  }
+  let searchT;
+  searchEl.addEventListener('input',()=>{clearTimeout(searchT);searchT=setTimeout(runSearch,150);});
+  searchEl.addEventListener('keydown',ev=>{
+    if(ev.key==='Escape'){clearSearch();searchEl.blur();}
+    if(ev.key==='Enter'){
+      const scored=searchAll(searchEl.value);
+      if(scored&&scored.length){
+        if(scored[0].eps.length){openEndpoint(scored[0].id,scored[0].eps[0].e);}
+        else openProduct(scored[0].id);
+        clearSearch();
+      }
+    }
+  });
 
   // ---- tabs -------------------------------------------------------------
   function showTab(which){
@@ -575,6 +731,7 @@
       groups[g].forEach(e=>{
         const b=document.createElement('button');
         b.innerHTML='<span class="m '+e.method+'">'+e.method+'</span><span>'+esc(e.path)+'</span>';
+        b.dataset.ep=e.method+' '+e.path;
         b.onclick=()=>select(e,b);nav.appendChild(b);
       });
     });
