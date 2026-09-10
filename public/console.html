@@ -4,24 +4,54 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Iristel · API Marketplace</title>
+<script>
+  (() => {
+    let saved = null; try { saved = localStorage.getItem('iristel-api-theme'); } catch {}
+    const preferred = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = saved || preferred;
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* Light theme is the default; the console's original dark palette lives
+     under [data-theme="dark"]. Toggle in the header, persisted per browser. */
   :root{
+    color-scheme:light;
+    --bg:#f8fafc; --bg2:#f1f5f9; --panel:#ffffff; --panel2:#eef2f7;
+    --ink:#111827; --muted:#667085;
+    --line:#e5e7eb; --line-strong:#cbd5e1;
+    --accent:#2563eb; --accent2:#1d4ed8; --accent-ink:#FFFFFF;
+    --accent-soft:#1d4ed8;
+    --gold:#a16207; --gold-soft:#854d0e;
+    --ok:#15803d; --ok-deep:#15803d; --warn:#b45309; --err:#b91c1c; --err-deep:#b91c1c;
+    --ok-bg:rgba(21,128,61,.08); --err-bg:rgba(185,28,28,.07); --warn-bg:rgba(180,83,9,.07);
+    --grad:linear-gradient(135deg,#2563eb,#1d4ed8);
+    --shadow:0 8px 24px rgba(15,23,42,.08);
+    --glow:0 6px 18px rgba(37,99,235,.28);
+    --code-bg:#0f172a; --code-ink:#d8e6f3; --code-line:#1e293b;
+    --header-bg:rgba(255,255,255,.94);
+    --r:14px; --r-sm:10px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --head:'Inter',system-ui,sans-serif;
+  }
+  [data-theme="dark"]{
+    color-scheme:dark;
     --bg:#01111E; --bg2:#050d16; --panel:#0a1628; --panel2:#0d1f3c;
     --ink:#E8F1F8; --muted:#9fb8cc;
     --line:rgba(62,140,203,.18); --line-strong:rgba(62,140,203,.38);
     --accent:#3E8CCB; --accent2:#2a6a9a; --accent-ink:#FFFFFF;
+    --accent-soft:#9CCBEF;
     --gold:#c9a44c; --gold-soft:#e5c76b;
     --ok:#a5d6a7; --ok-deep:#2e7d32; --warn:#f5d98a; --err:#ef9a9a; --err-deep:#d32f2f;
+    --ok-bg:rgba(46,125,50,.16); --err-bg:rgba(211,47,47,.14); --warn-bg:rgba(201,164,76,.09);
     --grad:linear-gradient(135deg,#3E8CCB,#2a6a9a);
     --shadow:0 10px 30px rgba(62,140,203,.15);
     --glow:0 8px 22px rgba(62,140,203,.4);
-    --r:14px; --r-sm:10px;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    --sans:'Heebo',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    --head:'Plus Jakarta Sans','Heebo',system-ui,sans-serif;
+    --code-bg:#050d16; --code-ink:#DDE9F2; --code-line:rgba(62,140,203,.18);
+    --header-bg:#020c15;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
@@ -33,9 +63,16 @@
   *::-webkit-scrollbar-track{background:transparent}
 
   /* ---- header ---- */
-  header{position:relative;flex:none;display:flex;align-items:center;gap:16px;padding:12px 20px;background:#020c15;flex-wrap:wrap}
-  header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,#3E8CCB,transparent)}
-  header .logo{height:26px;width:auto;display:block}
+  header{position:relative;flex:none;display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--header-bg);flex-wrap:wrap}
+  header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+  .brand-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;color:#fff;font-size:17px;font-weight:800;background:var(--grad);flex:none}
+  .theme-toggle{height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border:1px solid var(--line-strong);border-radius:8px;background:none;color:var(--ink);font:600 12px var(--head);cursor:pointer}
+  .theme-toggle:hover{background:var(--bg2)}
+  .theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .theme-toggle .sun{color:#d97706}
+  .theme-toggle .moon{display:none;color:#93c5fd}
+  [data-theme="dark"] .theme-toggle .sun{display:none}
+  [data-theme="dark"] .theme-toggle .moon{display:inline}
   header h1{font:700 15px/1 var(--head);margin:0;letter-spacing:.3px;white-space:nowrap}
   header h1 span{color:var(--muted);font-weight:500}
   header .grow{flex:1}
@@ -81,6 +118,9 @@
 
   main{display:grid;grid-template-columns:310px 1fr;height:100%}
   main[hidden]{display:none}
+  nav[hidden]{display:none}
+  .opgroup{grid-column:1/-1;font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:8px 0 -6px;padding-top:6px;border-top:1px solid var(--line)}
+  .opgroup:first-child{margin-top:0;padding-top:0;border-top:0}
 
   /* ---- docs ---- */
   .docs{height:100%;overflow:auto;padding:30px 24px 70px}
@@ -90,9 +130,9 @@
   .docs h4{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin:16px 0 6px}
   .docs p{max-width:74ch;font-size:13.5px;color:var(--ink)}
   .docs .lead{color:var(--muted);font-size:14.5px;margin-top:0}
-  .docs pre{font:12px/1.65 var(--mono);background:var(--bg2);color:#DDE9F2;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;overflow-x:auto;white-space:pre}
+  .docs pre{font:12px/1.65 var(--mono);background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:var(--r-sm);padding:14px;overflow-x:auto;white-space:pre}
   .docs code{font-family:var(--mono);font-size:12.5px}
-  .docs p code,.docs td code,.docs li code,.docs ol code{background:rgba(62,140,203,.12);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:#9CCBEF}
+  .docs p code,.docs td code,.docs li code,.docs ol code{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--accent-soft)}
   .docs table{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0}
   .docs table td,.docs table th{border-top:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
   .docs table th{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-top:0}
@@ -100,10 +140,10 @@
   .docs .ep:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-strong)}
   .docs .ep .sig{font:13px var(--mono);display:flex;gap:10px;align-items:baseline}
   .docs .toc{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 4px}
-  .docs .toc a{font:12px var(--mono);text-decoration:none;color:#9CCBEF;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel);transition:all .15s}
+  .docs .toc a{font:12px var(--mono);text-decoration:none;color:var(--accent-soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel);transition:all .15s}
   .docs .toc a:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 3px 10px rgba(62,140,203,.25)}
-  .callout{background:rgba(201,164,76,.09);border:1px solid rgba(201,164,76,.35);color:#EBD9A8;border-radius:var(--r-sm);padding:12px 14px;font-size:13px;margin:14px 0}
-  .callout code{background:rgba(201,164,76,.15);border-color:rgba(201,164,76,.3);color:#F1E3B8}
+  .callout{background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);color:var(--gold-soft);border-radius:var(--r-sm);padding:12px 14px;font-size:13px;margin:14px 0}
+  .callout code{background:color-mix(in srgb,var(--gold) 12%,transparent);border-color:color-mix(in srgb,var(--gold) 30%,transparent);color:var(--gold-soft)}
   .callout b{color:var(--gold-soft)}
 
   /* ---- flow diagram ---- */
@@ -131,7 +171,7 @@
   .fdetail .fep{font:600 11.5px var(--mono);color:var(--tone,var(--accent));word-break:break-all;display:block;margin-bottom:6px}
   .fdetail dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
   .fdetail dt{font:700 10px var(--head);text-transform:uppercase;letter-spacing:.6px;color:var(--muted);white-space:nowrap}
-  .fdetail dd{margin:0;font:11px var(--mono);color:#C9DCEC;word-break:break-word}
+  .fdetail dd{margin:0;font:11px var(--mono);color:var(--ink);word-break:break-word}
   .flow-notes{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-top:16px}
   .flow-notes .ni{color:var(--accent);font-size:16px;line-height:1.2;flex:none}
   .flow-notes ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.65}
@@ -153,22 +193,22 @@
   nav button.active{background:rgba(62,140,203,.14);border-left-color:var(--accent)}
   nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   .m{font-size:10.5px;font-weight:700;width:44px;flex:none;font-family:var(--head)}
-  .m.GET{color:var(--ok)} .m.POST{color:#7FB8E8} .m.PUT{color:var(--warn)} .m.DELETE{color:var(--err)}
+  .m.GET{color:var(--ok)} .m.POST{color:var(--accent)} .m.PUT{color:var(--warn)} .m.DELETE{color:var(--err)}
 
   /* ---- console main ---- */
   section{overflow:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:0 4px 20px rgba(1,17,30,.35)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
   .card h2{margin:0 0 2px;font:700 16px var(--head)}
   .card h2 .mono{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-weight:400;margin-left:8px}
   .soap{color:var(--muted);font-size:12px;margin:0 0 10px}
   .soap code{font-family:var(--mono)}
   .desc{font-size:13.5px;margin:0 0 10px;max-width:70ch}
-  .pre-note{font-size:12.5px;background:rgba(201,164,76,.09);border:1px solid rgba(201,164,76,.35);color:#EBD9A8;border-radius:var(--r-sm);padding:9px 12px;margin:0 0 12px}
+  .pre-note{font-size:12.5px;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);color:var(--gold-soft);border-radius:var(--r-sm);padding:9px 12px;margin:0 0 12px}
   .pre-note b{color:var(--gold-soft)}
   .doc h3{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin:16px 0 6px}
   table.doc{border-collapse:collapse;width:100%;font-size:12.5px}
   table.doc td{border-top:1px solid var(--line);padding:6px 9px;vertical-align:top}
-  table.doc td.k{font-family:var(--mono);white-space:nowrap;color:#9CCBEF}
+  table.doc td.k{font-family:var(--mono);white-space:nowrap;color:var(--accent-soft)}
   table.doc td.req{color:var(--err);font-size:11px;width:1%;white-space:nowrap}
   .field{display:grid;grid-template-columns:160px 1fr;gap:8px;align-items:center;margin:7px 0}
   .field label{font-size:12px;color:var(--muted);font-family:var(--mono)}
@@ -183,45 +223,74 @@
   .btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
   .url{font:12px var(--mono);color:var(--muted);word-break:break-all}
   .status{font:600 12px var(--mono);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
-  .status.ok{color:var(--ok);border-color:rgba(165,214,167,.5);background:rgba(46,125,50,.15)}
-  .status.warn{color:var(--warn);border-color:rgba(245,217,138,.45);background:rgba(245,217,138,.08)}
-  .status.err{color:var(--err);border-color:rgba(239,154,154,.5);background:rgba(211,47,47,.15)}
+  .status.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent);background:var(--ok-bg)}
+  .status.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:var(--warn-bg)}
+  .status.err{color:var(--err);border-color:color-mix(in srgb,var(--err) 50%,transparent);background:var(--err-bg)}
 
   /* ---- response ---- */
   .resp-banner{display:flex;gap:10px;align-items:center;border-radius:var(--r-sm);padding:10px 14px;margin:10px 0 12px;font:700 13.5px var(--head);animation:fadein .18s ease}
   .resp-banner .icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;color:#fff}
-  .resp-banner.good{background:rgba(46,125,50,.16);border:1px solid rgba(165,214,167,.35);color:var(--ok)}
+  .resp-banner.good{background:var(--ok-bg);border:1px solid color-mix(in srgb,var(--ok) 40%,transparent);color:var(--ok)}
   .resp-banner.good .icon{background:var(--ok-deep)}
-  .resp-banner.bad{background:rgba(211,47,47,.14);border:1px solid rgba(239,154,154,.35);color:var(--err)}
+  .resp-banner.bad{background:var(--err-bg);border:1px solid color-mix(in srgb,var(--err) 40%,transparent);color:var(--err)}
   .resp-banner.bad .icon{background:var(--err-deep)}
-  .listing-table{border-collapse:collapse;width:100%;font-size:12.5px;margin:4px 0;animation:fadein .18s ease}
-  .listing-table td{border-top:1px solid var(--line);padding:7px 9px;vertical-align:top}
-  .listing-table td:first-child{color:var(--muted);white-space:nowrap;font-family:var(--head);font-weight:600;width:1%;padding-right:22px}
+  .listing-table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12.5px;margin:4px 0;animation:fadein .18s ease}
+  .listing-table td{border-top:1px solid var(--line);padding:7px 9px;vertical-align:top;overflow-wrap:break-word;word-break:break-word}
+  .listing-table td:first-child{color:var(--muted);font-family:var(--head);font-weight:600;width:36%;padding-right:22px}
+  .listing-table .listing-table td:first-child{width:45%}
   .listing-table tr:first-child td{border-top:0}
   details.raw{margin-top:12px}
   details.raw summary{cursor:pointer;font:600 12px var(--head);color:var(--muted);padding:4px 0;list-style:none}
   details.raw summary::before{content:'▸ ';color:var(--accent)}
   details.raw[open] summary::before{content:'▾ '}
   details.raw summary:hover{color:var(--ink)}
-  pre.out{margin:8px 0 0;font:12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;background:var(--bg2);color:#DDE9F2;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;max-height:50vh;overflow:auto}
+  pre.out{margin:8px 0 0;font:12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:var(--r-sm);padding:14px;max-height:50vh;overflow:auto}
   .resp-empty{color:var(--muted);font-size:13px;padding:10px 0}
 
   /* ---- misc ---- */
   .railnote{padding:16px 14px;margin-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}
-  .railnote code{font-family:var(--mono);font-size:11px;color:#9CCBEF}
+  .railnote code{font-family:var(--mono);font-size:11px;color:var(--accent-soft)}
   .railnote strong{color:var(--gold-soft)}
   .base{display:flex;align-items:center;gap:8px;font:12px var(--mono);color:var(--muted)}
   .base b{font:700 10.5px var(--head);text-transform:uppercase;letter-spacing:.8px}
-  .base code{color:#9CCBEF;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 9px;user-select:all}
+  .base code{color:var(--accent-soft);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 9px;user-select:all}
   .snippet{position:relative;margin:0}
-  .snippet pre{margin:0;font:12px/1.65 var(--mono);white-space:pre;overflow-x:auto;background:var(--bg2);color:#DDE9F2;border:1px solid var(--line);border-radius:var(--r-sm);padding:14px}
-  .snippet .cred{color:var(--gold-soft)}
+  .snippet pre{margin:0;font:12px/1.65 var(--mono);white-space:pre;overflow-x:auto;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:var(--r-sm);padding:14px}
+  .snippet .cred{color:#e5c76b} /* snippet bg is dark in both themes */
   .copy{position:absolute;top:9px;right:9px;background:var(--panel2);color:var(--ink);border:1px solid var(--line-strong);border-radius:7px;font:600 11px var(--head);padding:5px 11px;cursor:pointer;transition:all .15s}
   .copy:hover{border-color:var(--accent);transform:translateY(-1px)}
   .copy.ok{color:var(--ok);border-color:rgba(165,214,167,.5)}
   .empty{color:var(--muted);font-size:13px}
   .hint{font-size:12px;color:var(--muted)}
   .errcode{font-family:var(--mono);color:var(--warn);font-weight:600}
+  /* ---- guided forms ---- */
+  .gfield{margin:12px 0}
+  .gfield>label{display:block;font:600 12.5px var(--head);color:var(--ink);margin-bottom:5px}
+  .gfield .req{color:var(--accent)}
+  .gfield input,.gfield select{font:13.5px var(--sans);padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;width:100%;background:var(--bg2);color:var(--ink);transition:border-color .15s,box-shadow .15s}
+  .gfield input:focus,.gfield select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+  .gfield .ghelp{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .grow2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .info-box{background:color-mix(in srgb,var(--accent) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:var(--r-sm);padding:12px 14px;margin:14px 0;font-size:12.5px;color:var(--ink)}
+  .info-box b,.info-box strong{color:var(--accent)}
+  .btn.danger{background:linear-gradient(135deg,#dc2626,#b91c1c)}
+  .btn .spin{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:7px}
+  .btn[aria-busy="true"] .spin{display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .opgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start}
+  .opgrid .card{position:relative;overflow:hidden}
+  .opgrid .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .2s}
+  .opgrid .card:hover::before{opacity:1}
+  .opgrid .card:hover{border-color:var(--line-strong)}
+  .op-title{display:flex;align-items:center;gap:10px;margin:0 0 12px;font:700 16px var(--head)}
+  .op-title .op-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--grad);flex:none}
+  .op-resp{margin-top:8px}
+  .ghost-btn{width:100%;background:none;border:2px solid var(--accent);color:var(--accent);border-radius:var(--r-sm);padding:9px 14px;font:700 12.5px var(--head);cursor:pointer;margin:4px 0 10px;transition:background .15s}
+  .ghost-btn:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  details.adv{margin:10px 0}
+  details.adv summary{cursor:pointer;font:600 12px var(--head);color:var(--muted);list-style:none;padding:4px 0}
+  details.adv summary::before{content:'▸ ';color:var(--accent)}
+  details.adv[open] summary::before{content:'▾ '}
   @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   @media (max-width:900px){
     .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
@@ -236,8 +305,10 @@
 </head>
 <body>
 <header>
-  <img class="logo" src="https://cdn.prod.website-files.com/67ae3dc9346b175361116c60/67ae3dc9346b175361116ceb_iristel-logo.png" alt="Iristel">
-  <h1>API <span>Marketplace</span></h1>
+  <a href="/" title="Marketplace guide" style="text-decoration:none;display:flex;align-items:center;gap:10px;color:inherit">
+    <span class="brand-mark" aria-hidden="true">I</span>
+    <h1>Iristel API <span>Marketplace</span></h1>
+  </a>
   <div class="tabs" role="tablist">
     <button class="tab" id="tab-docs" role="tab" aria-selected="true" aria-controls="view-docs">Documentation</button>
     <button class="tab" id="tab-console" role="tab" aria-selected="false" aria-controls="view-console">Console</button>
@@ -250,6 +321,11 @@
       title="Your IristelX API key. Stored only in this browser (localStorage), sent as the x-api-key header.">
     <button id="xkey-clear" type="button" title="Forget the stored key" aria-label="Clear API key">✕</button>
   </label>
+  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+    <span class="sun" aria-hidden="true">☀</span>
+    <span class="moon" aria-hidden="true">☾</span>
+    <span class="theme-label">Light</span>
+  </button>
 </header>
 <div class="layout">
 <nav class="products" aria-label="Products">
@@ -264,9 +340,11 @@
 
 <main id="view-console" role="tabpanel" aria-labelledby="tab-console" hidden>
   <nav id="nav"><div class="empty" style="padding:14px">Loading endpoints…</div></nav>
-  <section>
+  <section id="console-main">
+    <div id="op-intro" hidden></div>
+    <div id="opgrid" class="opgrid" hidden></div>
     <div class="card" id="req"><div class="empty">Pick an endpoint on the left to see its docs and try it.</div></div>
-    <div class="card">
+    <div class="card" id="resp-card">
       <div class="row" style="margin:0 0 4px">
         <strong style="font:700 14px var(--head)">Response</strong>
         <span id="status" class="status" hidden></span>
@@ -289,6 +367,22 @@
   // 911 API key. Users of this page are already logged-in Iristel customers,
   // so the shared key ships with the console.
   const E911_API_KEY='b1582d78d369685683e090ad37489937';
+
+  // ---- theme toggle -----------------------------------------------------
+  const themeToggle=$('#theme-toggle');
+  function applyTheme(theme){
+    document.documentElement.dataset.theme=theme;
+    const dark=theme==='dark';
+    themeToggle.setAttribute('aria-pressed',String(dark));
+    themeToggle.setAttribute('aria-label','Switch to '+(dark?'light':'dark')+' mode');
+    themeToggle.querySelector('.theme-label').textContent=dark?'Dark':'Light';
+  }
+  applyTheme(document.documentElement.dataset.theme||'light');
+  themeToggle.addEventListener('click',()=>{
+    const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
+    try{localStorage.setItem('iristel-api-theme',next);}catch(_){}
+    applyTheme(next);
+  });
 
   function getCookie(name){
     const m=document.cookie.match(new RegExp('(?:^|; )'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'=([^;]*)'));
@@ -327,9 +421,9 @@
 
   // ---- load registry ----------------------------------------------------
   let products;
-  try{ products=(await (await fetch('/')).json()).products; }
+  try{ products=(await (await fetch('/catalog.json')).json()).products; }
   catch(e){
-    const msg='Could not load <code>GET /</code>. Is the gateway running?';
+    const msg='Could not load <code>GET /catalog.json</code>. Is the gateway running?';
     nav.innerHTML='<div class="empty" style="padding:14px">'+msg+'</div>';
     $('#docs-body').innerHTML='<p class="lead">'+msg+'</p>';
     return;
@@ -435,6 +529,11 @@
     showTab('console');
     const b=nav.querySelector('[data-ep="'+ep.method+' '+ep.path+'"]');
     if(b){b.click();b.scrollIntoView({block:'nearest'});}
+    else{
+      // Multi-card products have no endpoint list — scroll to the card.
+      const card=$('#opgrid [data-ep="'+ep.method+' '+ep.path+'"]');
+      if(card)card.scrollIntoView({block:'start',behavior:'smooth'});
+    }
   }
   function openProduct(pid){
     productId=pid;location.hash='#'+pid;markProduct();renderProduct();
@@ -571,7 +670,7 @@
     const c=cfg();
     let d='<h2>'+esc(p.name)+'</h2>'
       +'<p class="lead">'+esc(p.summary)+'</p>'
-      +'<p>Intended for partner tiers: '+p.tiers.map(t=>'<code>'+esc(t)+'</code>').join(' ')+'.</p>';
+      +(p.classification?'<p>Classification: <code>'+esc(p.classification)+'</code>.</p>':'');
     if(p.status==='planned'){
       d+='<div class="callout"><b>Coming soon.</b> This product is on the marketplace roadmap; its endpoints have not been published yet.</div>';
       return d;
@@ -716,7 +815,7 @@
   }
 
   // ---- console nav ------------------------------------------------------
-  function renderNav(){
+  function renderNav(multi){
     const cat=catalog(), c=cfg();
     nav.innerHTML='';
     if(!cat.length){
@@ -732,7 +831,13 @@
         const b=document.createElement('button');
         b.innerHTML='<span class="m '+e.method+'">'+e.method+'</span><span>'+esc(e.path)+'</span>';
         b.dataset.ep=e.method+' '+e.path;
-        b.onclick=()=>select(e,b);nav.appendChild(b);
+        // In card mode the rail is a jump list: clicking scrolls to the card.
+        b.onclick=multi?()=>{
+          nav.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+          const card=$('#opgrid [data-ep="'+e.method+' '+e.path+'"]');
+          if(card)card.scrollIntoView({block:'start',behavior:'smooth'});
+        }:()=>select(e,b);
+        nav.appendChild(b);
       });
     });
     const rail=document.createElement('div');
@@ -758,49 +863,230 @@
   }
 
   // ---- per-product chrome ----------------------------------------------
+  // Every product renders the console as a grid of self-contained operation
+  // cards (one per endpoint, each with its own inline response). The left
+  // rail stays as a jump list into the grid.
   function renderProduct(){
-    const c=cfg();
+    const c=cfg(), p=product();
     $('#baseurl').textContent=c.base;
     $('#xkey-wrap').hidden=c.auth!=='xkey';
     current=null;
+    const multi=catalog().length>0;
+    nav.hidden=false;
+    $('#op-intro').hidden=!multi;
+    $('#opgrid').hidden=!multi;
+    $('#req').hidden=!!multi;
+    $('#resp-card').hidden=true;
     reqEl.innerHTML='<div class="empty">Pick an endpoint on the left to see its docs and try it.</div>';
     statusEl.hidden=true;timeEl.textContent='';
     respBody.innerHTML='<div class="resp-empty">Send a request to see the result here.</div>';
     renderDocs();
-    renderNav();
+    renderNav(multi);
+    if(multi)renderOpGrid(p);
+  }
+  const AUTO_ICON={GET:'🔍',POST:'➕',PUT:'✏️',PATCH:'✏️',DELETE:'🗑️'};
+  function autoTitle(e){
+    if(e.summary)return e.summary;
+    const seg=e.path.split('/').filter(s=>s&&!s.startsWith(':')).pop()||e.path;
+    return humanize(seg.replace(/-/g,' '));
+  }
+  function devDetailsHtml(e){
+    let d='';
+    if(e.precondition)d+='<div class="pre-note"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
+    d+='<div class="snippet"><button class="copy" data-copy>Copy</button><pre data-curl></pre></div>';
+    if(e.returns)d+='<h4 style="font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin:12px 0 4px">Returns</h4><p class="hint" style="margin:0;font-size:12px">'+esc(e.returns)+'</p>';
+    if(e.errors&&e.errors.length){
+      d+='<table class="doc" style="margin-top:8px">';
+      e.errors.forEach(er=>d+='<tr><td class="k errcode">'+er.code+'</td><td>'+esc(er.when||'')+'</td></tr>');
+      d+='</table>';
+    }
+    return '<details class="adv"><summary>Developer details</summary>'+d+'</details>';
+  }
+  function renderOpGrid(p){
+    const ui=p.ui||{}, c=cfg();
+    $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">'+esc(ui.title||p.name)+'</h2>'
+      +'<p class="hint" style="margin:0;font-size:13px">'+esc(ui.blurb||p.summary||'')+'</p>';
+    const grid=$('#opgrid');grid.innerHTML='';
+    const groups={},order=[];
+    catalog().forEach(e=>{const g=c.group(e.path);if(!groups[g]){groups[g]=[];order.push(g)}groups[g].push(e)});
+    order.forEach(g=>{
+      if(order.length>1){
+        const hd=document.createElement('div');hd.className='opgroup';hd.textContent=g;grid.appendChild(hd);
+      }
+      groups[g].forEach(e=>{
+        const h=hintFor(e);
+        const card=document.createElement('div');
+        card.className='card';card.dataset.ep=e.method+' '+e.path;
+        card.innerHTML='<h2 class="op-title"><span class="op-icon" aria-hidden="true">'+(h.icon||AUTO_ICON[e.method]||'⚙')+'</span>'
+          +esc(h.title||autoTitle(e))+'</h2>'
+          +(e.description?'<p class="desc" style="font-size:12.5px;color:var(--muted)">'+esc(e.description)+'</p>':'')
+          +formHtml(e,{compact:true})
+          +devDetailsHtml(e)
+          +'<div class="op-resp"></div>';
+        grid.appendChild(card);
+        wireForm(card,e,{inline:true});
+      });
+    });
   }
 
-  // ---- endpoint form ----------------------------------------------------
+  // ---- guided endpoint forms --------------------------------------------
+  // Field controls come from catalog metadata plus the optional per-endpoint
+  // `ui` hints served with the catalog (labels, enums, help, defaults,
+  // confirmation prompts, banner templates). Everything degrades gracefully
+  // when no hints exist.
   let current=null;
+  const hintFor=e=>e.ui||{};
+  function interp(t,vals){return String(t).replace(/\{(\w+)\}/g,(_,k)=>vals[k]!==undefined&&vals[k]!==''?vals[k]:'{'+k+'}');}
+  function fieldHtml(kind,name,meta,val,required,pdesc){
+    meta=meta||{};
+    const label=meta.label||humanize(name);
+    const help=meta.help||pdesc||'';
+    const attr=' data-'+kind+'="'+esc(name)+'"'+(required?' data-req="1"':'');
+    let ctl;
+    if(meta.enum){
+      const opts=meta.enum.map(o=>{const v=Array.isArray(o)?o[0]:o,l=Array.isArray(o)?o[1]:o;
+        return '<option value="'+esc(v)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(l)+'</option>';}).join('');
+      const hasVal=meta.enum.some(o=>String(Array.isArray(o)?o[0]:o)===String(val));
+      const blank=hasVal?'':'<option value="" '+(required?'disabled ':'')+'selected>Select…</option>';
+      ctl='<select'+attr+'>'+blank+opts+'</select>';
+    }else if(meta.type==='textarea'){
+      ctl='<textarea'+attr+(meta.placeholder?' placeholder="'+esc(meta.placeholder)+'"':'')+'>'
+        +esc(val==null?'':String(val))+'</textarea>';
+    }else{
+      const t=meta.type==='tel'?'tel':meta.type==='number'?'number':'text';
+      ctl='<input type="'+t+'"'+attr
+        +' value="'+esc(val==null?'':String(val))+'"'
+        +(meta.placeholder?' placeholder="'+esc(meta.placeholder)+'"':'')+'>';
+    }
+    return '<div class="gfield"><label>'+esc(label)+(required?' <span class="req">*</span>':'')+'</label>'+ctl
+      +(help?'<div class="ghelp">'+esc(help)+'</div>':'')+'</div>';
+  }
+  function formHtml(e,opts){
+    opts=opts||{};
+    const h=hintFor(e), fm=h.fields||{};
+    let html='';
+    (e.params||[]).filter(p=>p.in==='path').forEach(p=>{
+      const m=fm[p.name]||{};
+      html+=fieldHtml('path',p.name,m,m.default!==undefined?m.default:(DEFAULTS[p.name]||''),p.required,p.description);
+    });
+    (e.params||[]).filter(p=>p.in==='query').forEach(p=>{
+      const m=fm[p.name]||{};
+      html+=fieldHtml('query',p.name,m,m.default!==undefined?m.default:(DEFAULTS[p.name]||''),p.required,p.description);
+    });
+    if(e.upload){
+      html+='<div class="gfield"><label>File <span class="req">*</span></label><input type="file" data-upload accept="'+esc(e.upload.accept||'')+'">'
+        +'<div class="ghelp">Sent as multipart/form-data field "'+esc(e.upload.field)+'".</div></div>';
+      if(h.csvTemplate)html+='<button type="button" class="ghost-btn" data-template>📥 Download CSV template</button>';
+    }else if(e.fields&&e.fields.length&&e.fields.some(f=>/[.\[]/.test(f.name))){
+      // Nested/array field paths can't be edited as flat inputs — offer the
+      // structured JSON template instead so the request body stays valid.
+      html+='<div class="info-box"><strong>Structured request:</strong> this call takes a nested body — edit the JSON template below.</div>'
+        +'<div class="gfield"><label>Body (JSON) <span class="req">*</span></label><textarea data-rawbody>'+esc(JSON.stringify(e.body||{},null,2))+'</textarea></div>';
+    }else if(e.fields&&e.fields.length){
+      e.fields.forEach(f=>{
+        const m=fm[f.name]||{};
+        // With curated hints the form starts empty (except explicit defaults);
+        // without hints the example body is prefilled so it works as-is.
+        const val=m.default!==undefined?m.default:(h.fields?'':(e.body?e.body[f.name]:''));
+        html+=fieldHtml('body',f.name,m,val,f.required,f.description);
+      });
+    }else if(e.body){
+      html+='<div class="gfield"><label>Body (JSON) <span class="req">*</span></label><textarea data-rawbody>'+esc(JSON.stringify(e.body,null,2))+'</textarea></div>';
+    }
+    if(h.info)html+='<div class="info-box"><strong>Note:</strong> '+esc(h.info)+'</div>';
+    const danger=h.danger!==undefined?h.danger:e.method==='DELETE';
+    html+='<div class="row"><button class="btn'+(danger?' danger':'')+'" data-send>'
+      +'<span class="spin" aria-hidden="true"></span><span>'+esc(h.submitLabel||'Send request')+'</span></button>'
+      +(opts.compact?'':'<span class="url" data-url></span>')+'</div>';
+    return html;
+  }
+  function formValues(root){
+    const vals={};
+    root.querySelectorAll('[data-path],[data-query],[data-body]').forEach(i=>{
+      vals[i.dataset.path||i.dataset.query||i.dataset.body]=i.value;
+    });
+    return vals;
+  }
+  function buildPathFrom(root,e){
+    let p=e.path;
+    root.querySelectorAll('[data-path]').forEach(i=>{p=p.replace(':'+i.dataset.path,encodeURIComponent(i.value))});
+    const qs=new URLSearchParams();
+    root.querySelectorAll('[data-query]').forEach(i=>{if(i.value!=='')qs.set(i.dataset.query,i.value)});
+    const s=qs.toString();return p+(s?'?'+s:'');
+  }
+  // Returns the JSON body as a string, or undefined when the endpoint has none.
+  // Throws on invalid raw JSON.
+  function buildBodyFrom(root,e){
+    const ta=root.querySelector('[data-rawbody]');
+    if(ta){JSON.parse(ta.value);return ta.value;}
+    const inputs=root.querySelectorAll('[data-body]');
+    if(!inputs.length)return undefined;
+    const out={};
+    inputs.forEach(i=>{
+      const v=i.value.trim();if(v==='')return;
+      const ex=e.body?e.body[i.dataset.body]:undefined;
+      out[i.dataset.body]=(typeof ex==='number'&&/^[0-9]+(\.[0-9]+)?$/.test(v))?Number(v):v;
+    });
+    return JSON.stringify(out);
+  }
+  function curlTextFor(root,e){
+    const L=["curl -s -X "+e.method+" '"+cfg().base+buildPathFrom(root,e)+"'",
+             ...authHeaderLines(cfg().auth==='edid'?CONSOLE_ENV:null)];
+    if(e.upload){L.push("  -F '"+(e.upload.field||'file')+"=@listings.csv'");}
+    else{
+      let b;try{b=buildBodyFrom(root,e);}catch(_){b=undefined;}
+      if(b!==undefined){
+        try{b=JSON.stringify(JSON.parse(b));}catch(_){/* leave as typed */}
+        L.push("  -H 'Content-Type: application/json'");
+        L.push("  -d '"+b+"'");
+      }
+    }
+    // Comments lead the snippet: after a '\' continuation a trailing '#' line
+    // would reach curl as an argument, not a comment.
+    const head=cfg().auth==='edid'
+      ?"# Test environment. For live traffic, use X-EDID-Env: production\n# with your production Espresso credentials.\n":"";
+    return head+L.join(" \\\n");
+  }
+  function wireForm(root,e,opts){
+    opts=opts||{};
+    const h=hintFor(e);
+    const refresh=()=>{
+      const u=root.querySelector('[data-url]');if(u)u.textContent=e.method+' '+buildPathFrom(root,e);
+      const c=root.querySelector('[data-curl]');if(c)c.innerHTML=highlight(curlTextFor(root,e));
+    };
+    root.querySelectorAll('[data-path],[data-query],[data-body],[data-rawbody]').forEach(i=>{
+      i.addEventListener('input',refresh);i.addEventListener('change',refresh);
+    });
+    refresh();
+    const tpl=root.querySelector('[data-template]');
+    if(tpl&&h.csvTemplate)tpl.onclick=()=>{
+      const t=h.csvTemplate;
+      const blob=new Blob([t.header+'\n'+(t.example||'')+'\n'],{type:'text/csv'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download=t.filename||'template.csv';
+      a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    };
+    const sendBtn=root.querySelector('[data-send]');
+    if(sendBtn)sendBtn.onclick=()=>sendFrom(root,e,opts);
+    const copy=root.querySelector('[data-copy]');
+    if(copy)copy.onclick=()=>{
+      navigator.clipboard.writeText(curlTextFor(root,e)).then(()=>{
+        copy.textContent='✓ Copied';copy.classList.add('ok');
+        setTimeout(()=>{copy.textContent='Copy';copy.classList.remove('ok')},1400);
+      });
+    };
+  }
+
   function select(e,btn){
     current=e;
     nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-    const pathParams=(e.params||[]).filter(p=>p.in==='path');
-    const queryParams=(e.params||[]).filter(p=>p.in==='query');
+    const h=hintFor(e);
 
-    let html='<h2>'+esc(e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span></h2>';
-    html+='<p class="soap">Maps to <code>'+esc(e.soap)+'</code></p>';
+    let html='<h2>'+esc(h.title||e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span></h2>';
+    if(e.soap)html+='<p class="soap">Maps to <code>'+esc(e.soap)+'</code></p>';
     if(e.description)html+='<p class="desc">'+esc(e.description)+'</p>';
     if(e.precondition)html+='<div class="pre-note"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
-
-    pathParams.forEach(p=>{
-      html+='<div class="field"><label>:'+p.name+(p.required?' *':'')+'</label><input data-path="'+p.name+'" value="'+esc(DEFAULTS[p.name]||'')+'">';
-      if(p.description)html+='<div class="fd">'+esc(p.description)+'</div>';
-      html+='</div>';
-    });
-    queryParams.forEach(p=>{
-      html+='<div class="field"><label>?'+p.name+(p.required?' *':'')+'</label><input data-query="'+p.name+'" value="'+esc(DEFAULTS[p.name]||'')+'">';
-      if(p.description)html+='<div class="fd">'+esc(p.description)+'</div>';
-      html+='</div>';
-    });
-    if(e.upload){
-      html+='<div class="field"><label>file *</label><input type="file" id="upfile" accept="'+esc(e.upload.accept||'')+'">'
-        +'<div class="fd">CSV file sent as multipart/form-data field "'+esc(e.upload.field)+'".</div></div>';
-    }else if(e.body){
-      html+='<div class="field" style="align-items:start"><label>body (JSON) *</label><textarea id="body">'+esc(JSON.stringify(e.body,null,2))+'</textarea></div>';
-    }
-
-    html+='<div class="row"><button class="btn" id="send">Send request</button><span class="url" id="url"></span></div>';
+    html+=formHtml(e);
 
     const a=cfg().auth;
     html+='<div class="doc"><h3>Call this from your own app</h3>';
@@ -817,7 +1103,7 @@
     }else{
       html+='<p class="hint" style="margin:0 0 8px">No credentials needed — the gateway injects the upstream key.</p>';
     }
-    html+='<div class="snippet"><button class="copy" id="copy">Copy</button><pre id="curl"></pre></div></div>';
+    html+='<div class="snippet"><button class="copy" data-copy>Copy</button><pre data-curl></pre></div></div>';
 
     if(e.fields&&e.fields.length){
       html+='<div class="doc"><h3>Body fields</h3><table class="doc">';
@@ -832,99 +1118,69 @@
     }
 
     reqEl.innerHTML=html;
-    reqEl.querySelectorAll('input[data-path],input[data-query]').forEach(i=>i.addEventListener('input',renderUrl));
-    const bodyTa=$('#body'); if(bodyTa)bodyTa.addEventListener('input',renderUrl);
-    renderUrl();
-    $('#send').onclick=send;
-    $('#copy').onclick=()=>{
-      navigator.clipboard.writeText(curlText()).then(()=>{
-        const b=$('#copy');b.textContent='✓ Copied';b.classList.add('ok');
-        setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok')},1400);
-      });
-    };
+    wireForm(reqEl,e,{});
   }
 
-  function buildPath(){
-    let p=current.path;
-    reqEl.querySelectorAll('[data-path]').forEach(i=>{p=p.replace(':'+i.dataset.path,encodeURIComponent(i.value))});
-    const qs=new URLSearchParams();
-    reqEl.querySelectorAll('[data-query]').forEach(i=>{if(i.value!=='')qs.set(i.dataset.query,i.value)});
-    const s=qs.toString();return p+(s?'?'+s:'');
-  }
-  function curlLines(){
-    const L=["curl -s -X "+current.method+" '"+cfg().base+buildPath()+"'",
-             ...authHeaderLines(cfg().auth==='edid'?CONSOLE_ENV:null)];
-    if(current.upload){
-      L.push("  -F 'file=@listings.csv'");
-    }else{
-      const ta=$('#body');
-      if(ta){
-        let b=ta.value;
-        try{ b=JSON.stringify(JSON.parse(b)); }catch(_){ /* leave as typed */ }
-        L.push("  -H 'Content-Type: application/json'");
-        L.push("  -d '"+b+"'");
-      }
+  async function sendFrom(root,e,opts){
+    opts=opts||{};
+    const h=hintFor(e), vals=formValues(root);
+    const inlineEl=opts.inline?root.querySelector('.op-resp'):null;
+    const fail=msg=>showResult(e,vals,0,msg,0,inlineEl);
+
+    const miss=[...root.querySelectorAll('[data-req]')].find(i=>!String(i.value).trim());
+    if(miss){
+      const g=miss.closest('.gfield');
+      const lb=g?g.querySelector('label').textContent.replace(/\s*\*\s*$/,'').trim():'a required field';
+      fail('Please fill in “'+lb+'” before sending.');miss.focus();return;
     }
-    return L;
-  }
-  // Comments lead the snippet: after a '\' continuation a trailing '#' line
-  // would reach curl as an argument, not a comment.
-  function curlText(){
-    const head=cfg().auth==='edid'
-      ?"# Test environment. For live traffic, use X-EDID-Env: production\n# with your production Espresso credentials.\n"
-      :"";
-    return head+curlLines().join(" \\\n");
-  }
-  function renderUrl(){
-    const u=$('#url'); if(u)u.textContent=current.method+' '+buildPath();
-    const c=$('#curl'); if(c)c.innerHTML=highlight(curlText());
-  }
+    const confirmMsg=h.confirm||(e.method==='DELETE'?'This permanently deletes the record. Continue?':null);
+    if(confirmMsg&&!window.confirm(interp(confirmMsg,vals)))return;
 
-  async function send(){
-    const btn=$('#send');btn.disabled=true;btn.textContent='Sending…';
-    statusEl.hidden=true;timeEl.textContent='';
-    respBody.innerHTML='<div class="resp-empty">Waiting for the response…</div>';
     const c=cfg();
     const headers={};
     if(c.auth==='edid')headers['X-EDID-Env']=CONSOLE_ENV;
     if(c.auth==='apikey')headers['x-api-key']=E911_API_KEY;
     if(c.auth==='xkey'){
       const k=xkeyEl.value.trim();
-      if(!k){
-        show(0,'Enter your IristelX API key in the header bar first — it is sent as the x-api-key header and stored only in this browser.',0);
-        btn.disabled=false;btn.textContent='Send request';return;
-      }
+      if(!k){fail('Enter your IristelX API key in the header bar first — it is sent as the x-api-key header and stored only in this browser.');return;}
       // The ReadMe docs declare iristelx-api-key, but the live gateway only
       // accepts x-api-key. Send both so we keep working if they fix the docs
       // mismatch on their side.
       headers['x-api-key']=k;
       headers['iristelx-api-key']=k;
     }
-    const opts={method:current.method,headers};
-    if(current.upload){
-      const f=$('#upfile')&&$('#upfile').files[0];
-      if(!f){show(0,'Choose a CSV file first.',0);btn.disabled=false;btn.textContent='Send request';return;}
-      const fd=new FormData();fd.append(current.upload.field,f);opts.body=fd;
+    const reqOpts={method:e.method,headers};
+    if(e.upload){
+      const f=root.querySelector('[data-upload]');
+      if(!f||!f.files[0]){fail('Choose a CSV file first.');return;}
+      const fd=new FormData();fd.append(e.upload.field,f.files[0]);reqOpts.body=fd;
     }else{
-      const ta=$('#body');
-      if(ta){
-        headers['Content-Type']='application/json';
-        try{JSON.parse(ta.value);opts.body=ta.value;}
-        catch(err){show(0,'Body is not valid JSON: '+err.message,0);btn.disabled=false;btn.textContent='Send request';return;}
-      }
+      let b;
+      try{b=buildBodyFrom(root,e);}
+      catch(err){fail('Body is not valid JSON: '+err.message);return;}
+      if(b!==undefined){headers['Content-Type']='application/json';reqOpts.body=b;}
+    }
+    const btn=root.querySelector('[data-send]');
+    btn.disabled=true;btn.setAttribute('aria-busy','true');
+    if(inlineEl){
+      inlineEl.innerHTML='<div class="resp-empty">Waiting for the response…</div>';
+    }else{
+      statusEl.hidden=true;timeEl.textContent='';
+      respBody.innerHTML='<div class="resp-empty">Waiting for the response…</div>';
     }
     const t0=performance.now();
     try{
-      const r=await fetch(c.base+buildPath(),opts);
-      const txt=await r.text();let body;
-      try{body=JSON.stringify(JSON.parse(txt),null,2)}catch(_){body=txt}
-      show(r.status,body,performance.now()-t0);
-    }catch(err){show(0,'Network error: '+err.message,performance.now()-t0);}
-    btn.disabled=false;btn.textContent='Send request';
+      const r=await fetch(c.base+buildPathFrom(root,e),reqOpts);
+      const txt=await r.text();
+      showResult(e,vals,r.status,txt,performance.now()-t0,inlineEl);
+    }catch(err){showResult(e,vals,0,'Network error: '+err.message,performance.now()-t0,inlineEl);}
+    btn.disabled=false;btn.removeAttribute('aria-busy');
   }
   // ---- friendly response rendering -------------------------------------
   function humanize(k){
-    return String(k).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    return String(k).replace(/_/g,' ')
+      .replace(/([a-z0-9])([A-Z])/g,'$1 $2')   // camelCase -> spaced
+      .replace(/\b\w/g,c=>c.toUpperCase());
   }
   function fmtValue(k,v){
     if(v===null||v===undefined||v==='')return '—';
@@ -956,23 +1212,22 @@
     if(code===0)return 'Connection error';
     if(code>=200&&code<300)return 'Success';
     if(parsed&&parsed.message)return String(parsed.message);
-    if(code===401)return 'Not authorized';
-    if(code===404)return 'Not found';
-    if(code===409)return 'Wrong state';
-    if(code===422||code===400)return 'Invalid request';
-    if(code>=500)return 'Service error';
+    if(code===401)return 'Not authorized — check your API key or credentials';
+    if(code===404)return 'Not found — verify the identifier';
+    if(code===409)return 'Wrong state — the record already exists or cannot change';
+    if(code===422||code===400)return 'Invalid request — check the fields';
+    if(code>=500)return 'Upstream service problem — try again shortly';
     return 'Request failed';
   }
-  function show(code,body,ms){
-    statusEl.hidden=false;statusEl.textContent=code||'ERR';
-    statusEl.className='status '+(code>=200&&code<300?'ok':code>=400&&code<500?'warn':'err');
-    timeEl.textContent=ms?Math.round(ms)+' ms':'';
+  function showResult(e,vals,code,body,ms,inlineEl){
     let parsed=null;
     try{ parsed=JSON.parse(body); }catch(_){ /* plain text */ }
     const good=code>=200&&code<300;
+    const hint=hintFor(e);
+    const title=good&&hint.successMsg?interp(hint.successMsg,vals):respTitle(code,parsed);
     let h='<div class="resp-banner '+(good?'good':'bad')+'">'
       +'<span class="icon">'+(good?'✓':'✕')+'</span>'
-      +'<span>'+esc(respTitle(code,parsed))+'</span></div>';
+      +'<span>'+esc(title)+'</span></div>';
     if(parsed&&typeof parsed==='object'){
       if(!good&&parsed.code!==undefined){
         h+='<p class="hint" style="margin:0 0 8px">Espresso error code <span class="errcode">'+esc(String(parsed.code))+'</span>'
@@ -986,7 +1241,14 @@
     }else{
       h+='<pre class="out">'+esc(String(body))+'</pre>';
     }
-    respBody.innerHTML=h;
+    if(inlineEl){
+      inlineEl.innerHTML=(code?'<div class="hint" style="margin:8px 0 4px">HTTP '+code+(ms?' · '+Math.round(ms)+' ms':'')+'</div>':'')+h;
+    }else{
+      statusEl.hidden=false;statusEl.textContent=code||'ERR';
+      statusEl.className='status '+(good?'ok':code>=400&&code<500?'warn':'err');
+      timeEl.textContent=ms?Math.round(ms)+' ms':'';
+      respBody.innerHTML=h;
+    }
   }
 
   renderProduct();

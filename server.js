@@ -29,6 +29,8 @@ app.get('/healthz', (req, res) => res.json({ ok: true }));
 // Test console (single static page) at /console
 const path = require('path');
 app.get('/console', (req, res) => res.sendFile(path.join(__dirname, 'public', 'console.html')));
+// Shared design tokens (light/dark) used by the landing page and the console.
+app.get('/theme.css', (req, res) => res.sendFile(path.join(__dirname, 'public', 'theme.css')));
 
 // ---------------------------------------------------------------------------
 // Credentials resolution
@@ -76,23 +78,45 @@ const h = (fn) => (req, res) => {
 // ---------------------------------------------------------------------------
 // Index — machine-readable endpoint catalog (handy for the console UI)
 // ---------------------------------------------------------------------------
-const { PRODUCTS, TIERS } = require('./lib/catalogs');
+const { PRODUCTS, CLASSIFICATIONS } = require('./lib/catalogs');
+const UI_HINTS = require('./lib/catalogs/ui-hints');
 const CATALOG = PRODUCTS.find((p) => p.id === 'dids').endpoints;
 
-app.get('/', (req, res) => {
-  res.json({
+// Attach UI hints once at startup: per-endpoint `ui` object + per-product `ui`.
+for (const p of PRODUCTS) {
+  const hints = UI_HINTS[p.id];
+  if (!hints) continue;
+  if (hints.product) p.ui = hints.product;
+  for (const e of p.endpoints || []) {
+    const h = hints[`${e.method} ${e.path}`];
+    if (h) e.ui = h;
+  }
+}
+
+function catalogPayload() {
+  return {
     service: 'iristel-api-marketplace',
     upstream: soap.ENDPOINTS,
     default_env: (process.env.EDID_ENV || 'test'),
-    tiers: TIERS,
+    classifications: CLASSIFICATIONS,
     products: PRODUCTS.map((p) => ({
       id: p.id, name: p.name, summary: p.summary,
-      tiers: p.tiers, status: p.status, endpoints: p.endpoints,
-      flow: p.flow, images: p.images,
+      classification: p.classification, status: p.status, endpoints: p.endpoints,
+      flow: p.flow, images: p.images, ui: p.ui,
     })),
     // Kept for older clients that read the flat DID list.
     endpoints: CATALOG,
-  });
+  };
+}
+
+// Canonical catalog URL (the console fetches this).
+app.get('/catalog.json', (req, res) => res.json(catalogPayload()));
+
+// Root: browsers get the marketplace landing page; API clients that ask for
+// JSON (Accept: application/json) keep getting the catalog (backward compat).
+app.get('/', (req, res) => {
+  if (req.accepts(['html', 'json']) === 'json') return res.json(catalogPayload());
+  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Number Porting — Enterprise (LNP, Espresso v4)

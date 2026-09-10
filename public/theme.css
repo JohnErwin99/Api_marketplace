@@ -1,0 +1,99 @@
+/* Iristel API Marketplace — shared design tokens & primitives.
+ * Loaded by the landing page (/) and the console (/console).
+ * Theme is driven by <html data-theme="light|dark">, set by an inline boot
+ * snippet before first paint (localStorage 'iristel-api-theme', falling back
+ * to prefers-color-scheme). */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  color-scheme: light;
+  --ink: #111827;
+  --muted: #667085;
+  --blue: #2563eb;
+  --cyan: #2563eb;
+  --navy: #111827;
+  --line: #e5e7eb;
+  --paper: #f8fafc;
+  --white: #ffffff;
+  --green: #15803d;
+  --orange: #c2410c;
+  --red: #b91c1c;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-code: #111827;
+  --header-glass: rgba(255, 255, 255, 0.92);
+  --field: #ffffff;
+  --focus-ring: rgba(37, 99, 235, 0.28);
+  --shadow: none;
+  --ok-bg: #f0fdf4;
+  --ok-line: #bbf7d0;
+  --err-bg: #fef2f2;
+  --err-line: #fecaca;
+  --warn-bg: #fff7ed;
+  --warn-ink: #9a3412;
+  --info-bg: #eff6ff;
+  --info-line: #bfdbfe;
+  --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f3f4f6;
+  --muted: #9ca3af;
+  --blue: #60a5fa;
+  --cyan: #60a5fa;
+  --navy: #090e16;
+  --line: #293241;
+  --paper: #111827;
+  --white: #0b1018;
+  --green: #4ade80;
+  --orange: #fb923c;
+  --red: #f87171;
+  --surface: #0b1018;
+  --surface-raised: #111827;
+  --surface-soft: #0f1722;
+  --surface-code: #070b11;
+  --header-glass: rgba(11, 16, 24, 0.92);
+  --field: #0b1018;
+  --focus-ring: rgba(96, 165, 250, 0.34);
+  --ok-bg: #0b2015;
+  --ok-line: #14532d;
+  --err-bg: #240f0f;
+  --err-line: #7f1d1d;
+  --warn-bg: #2a160c;
+  --warn-ink: #fdba74;
+  --info-bg: #0f1a2e;
+  --info-line: #1e3a8a;
+}
+
+html, body { background: var(--surface); }
+body { color: var(--ink); }
+body, input, textarea, select, button {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+/* ---- theme toggle (shared component) ---- */
+.theme-toggle {
+  height: 34px; min-width: 78px; display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px;
+  background: transparent; color: var(--ink); font: inherit; font-size: 0.75rem;
+  font-weight: 650; cursor: pointer;
+}
+.theme-toggle:hover { background: var(--surface-soft); }
+.theme-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.theme-toggle .sun { color: #d97706; }
+.theme-toggle .moon { display: none; color: #93c5fd; }
+[data-theme="dark"] .theme-toggle .sun { display: none; }
+[data-theme="dark"] .theme-toggle .moon { display: inline; }
+
+@media (max-width: 580px) {
+  .theme-toggle { min-width: 38px; width: 38px; padding: 0; }
+  .theme-toggle .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body, input, textarea, select, button { transition: none; }
+}
