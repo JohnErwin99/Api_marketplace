@@ -336,7 +336,8 @@ footer { background: var(--surface); border-color: var(--line); }
             <label>Technical owner<input name="technicalOwner" placeholder="Technical contact" /></label>
           </div>
           <label>Primary contact email<input name="email" type="email" required placeholder="you@company.com"
-            title="Used as the primary contact on the account created in Dynamics 365 and for the approval email." /></label>
+            title="Used as the primary contact on the account created in Dynamics 365 and for the approval email." />
+            <small id="email-hint" style="display:none;font-weight:400;color:var(--orange)"></small></label>
           <label>Business purpose<textarea name="businessPurpose" placeholder="What will this application do?"></textarea></label>
           <div class="two-col">
             <label>Environment<select name="environment"><option value="sandbox">Sandbox → Production</option><option value="sandbox-only">Sandbox only</option></select></label>
@@ -498,6 +499,24 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   const loggedIn = !!(window.MarketplaceAccess && window.MarketplaceAccess.email());
   document.querySelectorAll("[data-auth-only]").forEach((el) => { el.hidden = !loggedIn; });
   document.querySelectorAll("[data-guest-only]").forEach((el) => { el.hidden = loggedIn; });
+})();
+
+// ---- Prefill from the portal login ---------------------------------------
+// Logged-in partners get their portal email prefilled and the existing-
+// customer box ticked; editing the email shows an informational hint.
+(function () {
+  const portalEmail = window.MarketplaceAccess && window.MarketplaceAccess.email();
+  if (!portalEmail) return;
+  const form = document.getElementById("access-form");
+  const emailInput = form.querySelector('input[name="email"]');
+  const hint = document.getElementById("email-hint");
+  emailInput.value = portalEmail;
+  form.querySelector('input[name="existingCustomer"]').checked = true;
+  emailInput.addEventListener("input", () => {
+    const differs = emailInput.value.trim().toLowerCase() !== portalEmail.toLowerCase();
+    hint.style.display = differs ? "block" : "none";
+    hint.textContent = differs ? "Differs from your portal login (" + portalEmail + ") — approval will attach to the email entered here." : "";
+  });
 })();
 
 // ---- Packages section + access-request form (data-driven from the catalog)
