@@ -573,6 +573,23 @@ document.getElementById("access-form").addEventListener("submit", async (ev) => 
     out.textContent = res.status === "auto-authorized"
       ? "✓ Approved automatically — " + res.emailMessage
       : "✓ Received (" + res.id + ") — " + res.emailMessage;
+    // Auto-approved: refresh the marketplaceAccess cookie in place so the
+    // console opens right away — no re-login needed. (This page runs on the
+    // portal domain, so it owns the same cookies the login page sets.)
+    if (res.status === "auto-authorized") {
+      try {
+        const auth = await (await fetch(GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(data.email))).json();
+        const ids = (auth.products || []).join(",");
+        if (ids) {
+          const d = new Date(); d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);
+          document.cookie = "marketplaceAccess=" + encodeURIComponent(ids) + "; expires=" + d.toUTCString() + "; path=/; SameSite=Strict";
+          // Reveal the console buttons without a reload.
+          document.querySelectorAll("[data-auth-only]").forEach((el) => { el.hidden = false; });
+          document.querySelectorAll("[data-guest-only]").forEach((el) => { el.hidden = true; });
+          out.textContent += " Your console access is active now.";
+        }
+      } catch { /* cookie refresh is best-effort; login still sets it */ }
+    }
   } catch { out.textContent = "⚠ Could not reach the gateway. Try again."; }
 });
 
