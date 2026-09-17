@@ -9,7 +9,10 @@ const { AppError, call, str, requestItems, orderRequestArray } = soap;
 const app = express();
 // CORS: set ALLOWED_ORIGINS="https://portal.example.com,https://www.example.com" in prod.
 // If unset, any origin is allowed (dev convenience).
-const allowed = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+// The partner portal is always allowed — its embedded pages call the gateway.
+const PORTAL_ORIGIN = 'https://iristel-portal.webflow.io';
+const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? [PORTAL_ORIGIN] : [])])];
 app.use(cors(allowed.length ? { origin: allowed } : {}));
 app.use(express.json());
 
