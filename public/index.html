@@ -262,6 +262,12 @@ footer { background: var(--surface); border-color: var(--line); }
         #packages .pk-card h3{margin:0 0 4px;font-size:15px}
         #packages .pk-card .use{font-size:12.5px;opacity:.75;margin:0 0 8px}
         #packages .pk-card ul{margin:0;padding-left:16px;font-size:12px;opacity:.85}
+        #packages .pk-card{cursor:default}
+        #packages .pk-sum{font-size:12.5px;opacity:.8;margin:0 0 10px}
+        #packages .pk-steps{margin:0;padding-left:18px;font-size:12px}
+        #packages .pk-steps li{margin:6px 0}
+        #packages .pk-steps code{display:block;opacity:.95}
+        #packages .pk-steps span{display:block;opacity:.7}
       </style>
       <div class="section-heading">
         <div><p class="eyebrow">Bundles &amp; packages</p><h2>Which APIs for which job</h2></div>
@@ -496,21 +502,29 @@ document.querySelectorAll("[data-view]").forEach((button) => {
 
 // ---- Packages section + access-request form (data-driven from the catalog)
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// When this page is copied into Webflow, relative fetches would hit the
+// Webflow domain (404) — call the gateway absolutely unless we ARE the gateway.
+const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname === "localhost" || location.hostname === "127.0.0.1")
+  ? "" : "https://api-marketplace-1im9.onrender.com";
 (async () => {
   let reg;
-  try { reg = await (await fetch("/catalog.json")).json(); }
+  try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
   catch { document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>"; return; }
 
   // Packages grid
   const grid = document.getElementById("packages-grid");
   const bundles = reg.bundles || [], audiences = reg.audiences || [];
+  // Self-contained cards: every step visible with its explanation, no console
+  // link — visitors without marketplace access can still see how each package
+  // would be used.
   grid.innerHTML = audiences.map((a) => {
     const list = bundles.filter((b) => b.audience === a.id);
     if (!list.length) return "";
     return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
-      `<a class="pk-card" href="/console#bundles"><h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
-      `<ul>${(b.steps || []).slice(0, 4).map((s) => `<li><code>${escHtml(s.endpoint)}</code></li>`).join("")}` +
-      `${b.steps.length > 4 ? `<li>+${b.steps.length - 4} more steps</li>` : ""}</ul></a>`
+      `<div class="pk-card"><h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
+      `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
+      `<ol class="pk-steps">${(b.steps || []).map((s) =>
+        `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
     ).join("") + `</div>`;
   }).join("") || "<p>No packages published yet.</p>";
 
@@ -532,7 +546,7 @@ document.getElementById("access-form").addEventListener("submit", async (ev) => 
   data.existingCustomer = !!form.querySelector('input[name="existingCustomer"]').checked;
   out.hidden = false; out.textContent = "Submitting…";
   try {
-    const r = await fetch("/marketplace/access-request", {
+    const r = await fetch(GATEWAY + "/marketplace/access-request", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
     });
     const res = await r.json();
