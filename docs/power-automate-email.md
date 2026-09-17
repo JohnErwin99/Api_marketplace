@@ -46,14 +46,19 @@ Pending-review requests get the "under review" subject/body instead.
 
 ## Notes
 
-- The unlike SNAG flow (which hardcodes provisioning@ as recipient), this flow
+- Unlike the SNAG flow (which hardcodes provisioning@ as recipient), this flow
   must map **To** from the payload — a marketplace approval goes to the
   requester.
-- For manual approvals done directly in Dynamics (filling
-  `iristel_apimarketplaceaccess` on the Account), add a second flow with the
-  Dataverse trigger *"When a row is added, modified or deleted"* on Account,
-  column filter `iristel_apimarketplaceaccess`, sending the same email to
-  `emailaddress1` — then the email also fires when your team approves in CRM.
+- **Manual approvals in Dynamics are already covered — no second flow needed.**
+  The gateway runs an approval watcher (`lib/onboarding.js` →
+  `startApprovalWatcher`) that polls Dataverse every 5 minutes
+  (`APPROVAL_POLL_MS` to change) for Accounts whose
+  `iristel_apimarketplaceaccess` was filled or changed, and sends the same
+  granted email to `emailaddress1` through this webhook. First run after a
+  boot/redeploy baselines silently, so existing approvals never trigger an
+  email storm; a change made while the service is redeploying is picked up as
+  a change on the next edit, or can be resent by clearing and re-entering the
+  field.
 - Future hardening: OnlineOrdering also has a direct Microsoft Graph sender
   using the same D365 app registration; it needs the `Mail.Send` application
   permission with admin consent. The webhook needs no consent, which is why
