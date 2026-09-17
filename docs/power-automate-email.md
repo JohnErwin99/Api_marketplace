@@ -67,7 +67,7 @@ when Dynamics is unreachable.
 > URL is `https://iris-sandbox.crm3.dynamics.com` (verify under Power Apps →
 > gear → *Session details*). Building it in the environment where your other
 > flows live gives "The following filtering attributes are not valid in
-> entity account: iristel_apimarketplaceaccess", because that org has no such
+> entity account: cr57d_apimarketplaceaccess", because that org has no such
 > column. Flow 1 (HTTP trigger) has no such constraint and can live anywhere.
 
 Build it:
@@ -78,15 +78,15 @@ Build it:
    - **Change type**: Modified
    - **Table name**: Accounts
    - **Scope**: Organization
-   - **Select columns** (under Advanced): `iristel_apimarketplaceaccess`
+   - **Select columns** (under Advanced): `cr57d_apimarketplaceaccess`
      — the flow then fires *only* when that column changes.
-3. Add a **Condition**: `iristel_apimarketplaceaccess` *is not equal to* empty
+3. Add a **Condition**: `cr57d_apimarketplaceaccess` *is not equal to* empty
    — so clearing the field (revoking access) sends nothing.
 4. In the **Yes** branch, add **"Send an email (V2)"** (Office 365 Outlook):
    - **To** → dynamic content **Email** (`emailaddress1`)
    - **Subject** → `Your Iristel API Marketplace access has been granted`
    - **Body**:
-     > Your access for **@{triggerOutputs()?['body/iristel_apimarketplaceaccess']}**
+     > Your access for **@{triggerOutputs()?['body/cr57d_apimarketplaceaccess']}**
      > has been granted. Please log in to the partner portal
      > (https://www.iristelpartnerportal.com) and navigate to /console.
 5. **Save** and turn the flow on. Nothing to configure on Render for this one

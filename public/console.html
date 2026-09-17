@@ -454,7 +454,7 @@
 
   // ---- marketplace access gating (portal cookie) ------------------------
   // The partner portal sets `marketplaceAccess` at login from the CRM field
-  // iristel_apimarketplaceaccess. When present, only authorized products are
+  // cr57d_apimarketplaceaccess. When present, only authorized products are
   // shown. Absent cookie = open behavior (test env / direct visitors).
   const mpAuth=window.MarketplaceAccess?window.MarketplaceAccess.authorizedProducts():null;
   if(mpAuth!==null){

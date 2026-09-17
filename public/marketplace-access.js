@@ -6,7 +6,7 @@
  *
  * Cookies (set by the partner portal login page):
  *   marketplaceAccess — comma-separated authorized product ids ("e911,dids"),
- *                       sourced from the CRM field iristel_apimarketplaceaccess.
+ *                       sourced from the CRM field cr57d_apimarketplaceaccess.
  *   userEmail         — the logged-in partner's email.
  * No cookie => no portal login context; callers decide the open/default view.
  *

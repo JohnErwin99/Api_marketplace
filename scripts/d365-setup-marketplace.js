@@ -6,7 +6,7 @@
  *   form onto Account (same names, types, picklist options).
  * - Creates a dedicated Account MAIN FORM named "Api-marketplace-request"
  *   (shows in the form-selector dropdown) combining those fields with
- *   iristel_apimarketplacerequestname + iristel_apimarketplaceaccess.
+ *   cr57d_apimarketplacerequestname + cr57d_apimarketplaceaccess.
  * - Removes the "API Marketplace" tab previously injected into the default
  *   Account form.
  * - Publishes.
@@ -64,8 +64,8 @@ const FORM_NAME = 'Api-marketplace-request';
 // Field order on the new form: the lead form's fields + the iristel pair.
 const FORM_FIELDS = [
   ['cr57d_applicationname', 'Application Name'],
-  ['iristel_apimarketplacerequestname', 'API Marketplace Request Name'],
-  ['iristel_apimarketplaceaccess', 'API Marketplace Access'],
+  ['cr57d_apimarketplacerequestname', 'API Marketplace Request Name'],
+  ['cr57d_apimarketplaceaccess', 'API Marketplace Access'],
   ['cr57d_businessowner', 'Business Owner'],
   ['cr57d_technicalowner', 'Technical Owner'],
   ['cr57d_businesspurpose', 'Business Purpose'],
@@ -110,8 +110,8 @@ async function buildFormXml() {
     `<labels><label description="${label}" languagecode="1033" /></labels>` +
     `<control id="${logical}" classid="${TEXT}" datafieldname="${logical}" disabled="false" /></cell></row>`;
   const extra = [
-    ['iristel_apimarketplacerequestname', 'API Marketplace Request Name'],
-    ['iristel_apimarketplaceaccess', 'API Marketplace Access'],
+    ['cr57d_apimarketplacerequestname', 'API Marketplace Request Name'],
+    ['cr57d_apimarketplaceaccess', 'API Marketplace Access'],
   ].map(row).join('');
   return xml.replace('<rows>', '<rows>' + extra);
 }

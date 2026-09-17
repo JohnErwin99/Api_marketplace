@@ -13,7 +13,7 @@
       2. setMarketplaceAccessCookie() — asks the marketplace gateway which API
          products this email is authorized for and stores them in the
          `marketplaceAccess` cookie (comma-separated product ids). The gateway
-         reads the Dynamics 365 Account field iristel_apimarketplaceaccess.
+         reads the Dynamics 365 Account field cr57d_apimarketplaceaccess.
       3. completeLogin() / completeEmployeeLogin() await that call before the
          redirect, so the cookie exists on the very first portal page load.
 
@@ -353,7 +353,7 @@
       // ── MARKETPLACE ────────────────────────────────────────────
       // Which API Marketplace products is this partner authorized for?
       // The gateway answers from the Dynamics 365 Account field
-      // iristel_apimarketplaceaccess (comma-separated product ids, e.g.
+      // cr57d_apimarketplaceaccess (comma-separated product ids, e.g.
       // "e911,dids"). The nav script shows the API Marketplace menu only when
       // this cookie is non-empty, and the marketplace console itself filters
       // the product list to exactly these ids.

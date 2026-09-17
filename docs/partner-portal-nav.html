@@ -8,7 +8,7 @@
        users.
     2. Logged-in branch shows the "API Marketplace" menu item ONLY when the
        `marketplaceAccess` cookie (set by the login page from the CRM field
-       iristel_apimarketplaceaccess) is non-empty — same pattern as
+       cr57d_apimarketplaceaccess) is non-empty — same pattern as
        911listing.
     3. Admin badge block always shows it for admins.
 
@@ -236,7 +236,7 @@
     const activationDate = getCookie("startActivationDate");
 
     // MARKETPLACE: authorized API product ids ("e911,dids"), set by the
-    // login page from the CRM field iristel_apimarketplaceaccess.
+    // login page from the CRM field cr57d_apimarketplaceaccess.
     // Non-empty => this partner may see the API Marketplace menu item.
     const marketplaceAccess = (getCookie("marketplaceAccess") || "").trim();
 
