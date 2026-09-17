@@ -78,10 +78,10 @@ Build it:
    - **Change type**: Modified
    - **Table name**: Accounts
    - **Scope**: Organization
-   - **Select columns** (under Advanced): `cr57d_apimarketplaceaccess`
-     — the flow then fires *only* when that column changes.
-3. Add a **Condition**: `cr57d_apimarketplaceaccess` *is not equal to* empty
-   — so clearing the field (revoking access) sends nothing.
+   - **Select columns** (under Advanced): `cr57d_apimarketplaceapproved`
+     — the flow then fires *only* when the Yes/No approval switch changes.
+3. Add a **Condition**: *API Marketplace Approved* **is equal to** `true`
+   — so flipping it back to No (revoking access) sends nothing.
 4. In the **Yes** branch, add **"Send an email (V2)"** (Office 365 Outlook):
    - **To** → dynamic content **Email** (`emailaddress1`)
    - **Subject** → `Your Iristel API Marketplace access has been granted`
