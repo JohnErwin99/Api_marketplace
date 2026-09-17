@@ -60,6 +60,16 @@ the CRM write succeeded (`emailVia: "dynamics-flow"` in its response); Flow 1
 (the HTTP webhook) then only carries pending-review notices and the fallback
 when Dynamics is unreachable.
 
+> **Build this flow inside the sandbox environment.** The Dataverse trigger
+> has no organization picker — it only watches the Dataverse of the
+> environment the flow lives in. Before creating it, switch the Power
+> Automate environment picker (top right) to the environment whose instance
+> URL is `https://iris-sandbox.crm3.dynamics.com` (verify under Power Apps →
+> gear → *Session details*). Building it in the environment where your other
+> flows live gives "The following filtering attributes are not valid in
+> entity account: iristel_apimarketplaceaccess", because that org has no such
+> column. Flow 1 (HTTP trigger) has no such constraint and can live anywhere.
+
 Build it:
 
 1. **New flow** → *Automated cloud flow* → trigger
