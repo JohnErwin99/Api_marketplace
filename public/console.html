@@ -729,7 +729,7 @@
     const c=cfg();
     let d='<h2>'+esc(p.name)+'</h2>'
       +'<p class="lead">'+esc(p.summary)+'</p>'
-      +(p.classification?'<p>Classification: <code>'+esc(p.classification)+'</code>.</p>':'');
+      ;
     if(p.status==='planned'){
       d+='<div class="callout"><b>Coming soon.</b> This product is on the marketplace roadmap; its endpoints have not been published yet.</div>';
       return d;
