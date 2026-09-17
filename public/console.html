@@ -279,6 +279,20 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .opgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start}
   .opgrid .card{position:relative;overflow:hidden}
+  /* Bundles view */
+  .bundle-aud{font:700 12px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:26px 0 10px}
+  .bundle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  .bundle-card{border:1px solid var(--line);border-radius:var(--r-sm,10px);background:var(--panel);padding:16px 18px;animation:fadein .18s ease}
+  .bundle-card h3{margin:0 0 2px;font:700 15px var(--head)}
+  .bundle-card .buse{color:var(--accent-soft);font-size:12.5px;margin:0 0 6px}
+  .bundle-card p{font-size:12.5px;margin:0 0 10px}
+  .bundle-card ol{margin:0;padding-left:18px;font-size:12.5px}
+  .bundle-card li{margin:5px 0}
+  .bundle-card li a{color:inherit;text-decoration:none;display:block;border-radius:6px;padding:2px 4px;margin:-2px -4px}
+  .bundle-card li a:hover{background:var(--code-bg)}
+  .bundle-card li code{font:11px var(--mono);color:var(--accent-soft)}
+  .bundle-card li small{display:block;color:var(--muted)}
+  .pchip.bundles{font-weight:700;border-style:dashed}
   .opgrid .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .2s}
   .opgrid .card:hover::before{opacity:1}
   .opgrid .card:hover{border-color:var(--line-strong)}
@@ -357,6 +371,7 @@
 </div>
 </div>
 
+<script src="/marketplace-access.js"></script>
 <script>
 (async function(){
   const $=s=>document.querySelector(s);
@@ -405,10 +420,8 @@
     'provisioning':   {auth:'xkey', base:IX, group:p=>/email|welcome/.test(p)?'Welcome letters':'Trunk provisioning'},
     'iristelx-accounts':{auth:'xkey',base:IX, group:p=>/\/plans?(\/|$)/.test(p)?'Plans':/canada-post|address/.test(p)?'Addresses':/siptrunk/.test(p)?'SIP trunks':/service/.test(p)?'Services':'Accounts'},
     'iristelx-sim':     {auth:'xkey',base:IX, group:p=>/esim/i.test(p)?'eSIM':'SIM cards'},
-    'iristelx-addon':   {auth:'xkey',base:IX, group:()=>'Add-ons'},
     'iristelx-commission':{auth:'xkey',base:IX, group:()=>'Commissions'},
     'iristelx-mobile':  {auth:'xkey',base:IX, group:p=>/service-now/.test(p)?'Support tickets':/esim|qr/.test(p)?'eSIM':/port-in/.test(p)?'Port in':/notification/.test(p)?'Notifications':/payment/.test(p)?'Payment':'Plans & usage'},
-    'iristelx-bot':     {auth:'xkey',base:IX, group:()=>'Bot'},
   };
   const cfg=()=>PRODUCT_CFG[productId]||{auth:'proxy',base:ORIGIN,group:()=>'Endpoints'};
 
@@ -420,8 +433,11 @@
     code:'', };
 
   // ---- load registry ----------------------------------------------------
-  let products;
-  try{ products=(await (await fetch('/catalog.json')).json()).products; }
+  let products,bundles=[],audiences=[];
+  try{
+    const reg=await (await fetch('/catalog.json')).json();
+    products=reg.products; bundles=reg.bundles||[]; audiences=reg.audiences||[];
+  }
   catch(e){
     const msg='Could not load <code>GET /catalog.json</code>. Is the gateway running?';
     nav.innerHTML='<div class="empty" style="padding:14px">'+msg+'</div>';
@@ -429,19 +445,47 @@
     return;
   }
 
-  // ---- partner tier badge (label only — nothing is gated yet) -----------
+  // ---- partner tier badge -----------------------------------------------
   const partnerType=(getCookie('partnerType')||'').trim();
   if(partnerType){
     const b=$('#partner-badge'); b.hidden=false; b.textContent=partnerType;
     b.title='Partner type from your portal login. Used for labelling only for now.';
   }
 
+  // ---- marketplace access gating (portal cookie) ------------------------
+  // The partner portal sets `marketplaceAccess` at login from the CRM field
+  // iristel_apimarketplaceaccess. When present, only authorized products are
+  // shown. Absent cookie = open behavior (test env / direct visitors).
+  const mpAuth=window.MarketplaceAccess?window.MarketplaceAccess.authorizedProducts():null;
+  if(mpAuth!==null){
+    products=products.filter(p=>mpAuth.includes(p.id));
+    bundles=bundles.filter(b=>(b.steps||[]).every(s=>mpAuth.includes(s.product)));
+    const badge=$('#partner-badge'); badge.hidden=false;
+    const em=window.MarketplaceAccess.email();
+    badge.textContent='Access: '+products.length+' API'+(products.length===1?'':'s')+(em?' · '+em:'');
+    badge.title='API products authorized for your partner portal login.';
+    if(!products.length){
+      $('#docs-body').innerHTML='<h2>No API access yet</h2><p class="lead">Your partner portal login has no marketplace products authorized. <a href="/#request-form">Request access here</a>.</p>';
+      $('#product-bar').innerHTML='';
+      return;
+    }
+  }
+
   // ---- product menu -----------------------------------------------------
   const bar=$('#product-bar');
   const hashProduct=(location.hash.match(/#([a-z0-9-]+)/)||[])[1];
-  let productId=products.some(p=>p.id===hashProduct)?hashProduct
+  let productId=(hashProduct==='bundles'&&bundles.length)?'bundles'
+    :products.some(p=>p.id===hashProduct)?hashProduct
     :(products.find(p=>p.status==='live')||products[0]).id;
 
+  if(bundles.length){
+    const b=document.createElement('button');
+    b.className='pchip bundles'; b.dataset.id='bundles'; b.setAttribute('role','tab');
+    b.innerHTML='📦 Bundles';
+    b.title='Curated packages: which APIs to use for each use case';
+    b.onclick=()=>{ productId='bundles'; location.hash='#bundles'; markProduct(); renderProduct(); };
+    bar.appendChild(b);
+  }
   products.forEach(p=>{
     const b=document.createElement('button');
     b.className='pchip'; b.dataset.id=p.id; b.setAttribute('role','tab');
@@ -474,10 +518,8 @@
     'trunk|sip|provision|uboss|welcome letter|welcome email':['provisioning','iristelx-accounts'],
     'account|customer|service|plan|plans|usage|address|billing':['iristelx-accounts'],
     'sim|esim|qr|sim card|activate sim':['iristelx-sim','iristelx-mobile'],
-    'addon|add-on|add on|feature':['iristelx-addon'],
     'commission|agent|payout|revenue':['iristelx-commission'],
-    'app|subscriber|notification|support ticket|top up|topup|payment|pay':['iristelx-mobile','iristelx-bot'],
-    'bot|chatbot':['iristelx-bot'],
+    'app|subscriber|notification|support ticket|top up|topup|payment|pay':['iristelx-mobile'],
   };
   const norm=s=>String(s||'').toLowerCase();
   function intentProducts(q){
@@ -556,6 +598,23 @@
     });
     resultsEl.innerHTML='';
     const frag=document.createDocumentFragment();
+    // Bundle matches first — "order a sip trunk" should surface the package.
+    const qn=norm(q), qTokens=qn.split(/\s+/).filter(t=>t.length>2);
+    bundles.map(b=>{
+      const text=norm([b.name,b.useCase,b.summary,b.audience].join(' '));
+      let s=0; if(text.includes(qn))s+=40;
+      qTokens.forEach(t=>{if(text.includes(t))s+=10;});
+      return {b,s};
+    }).filter(x=>x.s>=20).sort((a,b)=>b.s-a.s).slice(0,2).forEach(x=>{
+      const btn=document.createElement('button');
+      btn.className='sres';
+      btn.innerHTML='<span>📦 '+esc(x.b.name)+'</span><small>Bundle · '+esc(x.b.useCase)+'</small>';
+      btn.onclick=()=>{
+        productId='bundles';location.hash='#bundles';markProduct();renderProduct();clearSearch();
+        const card=$('#bundle-'+x.b.id);if(card)card.scrollIntoView({block:'start',behavior:'smooth'});
+      };
+      frag.appendChild(btn);
+    });
     let shown=0;
     scored.slice(0,4).forEach(r=>{
       const p=products.find(x=>x.id===r.id);
@@ -569,7 +628,7 @@
         frag.appendChild(btn);
       });
     });
-    if(!scored.length){
+    if(!scored.length&&!frag.childNodes.length){
       resultsEl.innerHTML='<div class="snone">No API matches — try other words (e.g. “port a number”, “send text”, “911”).</div>';
     }else{
       resultsEl.appendChild(frag);
@@ -866,7 +925,48 @@
   // Every product renders the console as a grid of self-contained operation
   // cards (one per endpoint, each with its own inline response). The left
   // rail stays as a jump list into the grid.
+  // ---- bundles view -----------------------------------------------------
+  function renderBundlesView(){
+    $('#baseurl').textContent=ORIGIN;
+    $('#xkey-wrap').hidden=true;
+    nav.innerHTML='<div class="empty" style="padding:14px">Bundles are guided packages — pick a step to jump into its console.</div>';
+    $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
+    let h='<h2>Bundles &amp; packages</h2>'
+      +'<p class="lead">Curated recipes per business model: the exact APIs to call, in order, for each use case. Click a step to open it in the console.</p>';
+    audiences.forEach(a=>{
+      const list=bundles.filter(b=>b.audience===a.id);
+      if(!list.length)return;
+      h+='<div class="bundle-aud">'+esc(a.label)+'</div><div class="bundle-grid">';
+      list.forEach(b=>{
+        h+='<div class="bundle-card" id="bundle-'+esc(b.id)+'"><h3>'+esc(b.name)+'</h3>'
+          +'<p class="buse">'+esc(b.useCase)+'</p><p>'+esc(b.summary)+'</p><ol>';
+        (b.steps||[]).forEach(s=>{
+          const p=products.find(x=>x.id===s.product);
+          h+='<li><a href="#'+esc(s.product)+'" data-bstep data-pid="'+esc(s.product)+'" data-ep="'+esc(s.endpoint)+'">'
+            +'<code>'+esc(s.endpoint)+'</code>'
+            +'<small>'+esc((p?p.name+' — ':'')+(s.note||''))+'</small></a></li>';
+        });
+        h+='</ol></div>';
+      });
+      h+='</div>';
+    });
+    const body=$('#docs-body');
+    body.innerHTML=h;
+    body.querySelectorAll('[data-bstep]').forEach(a=>{
+      a.onclick=ev=>{
+        ev.preventDefault();
+        const pid=a.dataset.pid,key=a.dataset.ep;
+        const p=products.find(x=>x.id===pid);
+        if(!p)return;
+        const e=(p.endpoints||[]).find(x=>x.method+' '+x.path===key);
+        if(e)openEndpoint(pid,e);else openProduct(pid);
+      };
+    });
+    showTab('docs');
+  }
+
   function renderProduct(){
+    if(productId==='bundles')return renderBundlesView();
     const c=cfg(), p=product();
     $('#baseurl').textContent=c.base;
     $('#xkey-wrap').hidden=c.auth!=='xkey';

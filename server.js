@@ -31,6 +31,8 @@ const path = require('path');
 app.get('/console', (req, res) => res.sendFile(path.join(__dirname, 'public', 'console.html')));
 // Shared design tokens (light/dark) used by the landing page and the console.
 app.get('/theme.css', (req, res) => res.sendFile(path.join(__dirname, 'public', 'theme.css')));
+// Marketplace-access cookie reader — also embedded standalone in Webflow.
+app.get('/marketplace-access.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-access.js')));
 
 // ---------------------------------------------------------------------------
 // Credentials resolution
@@ -93,6 +95,32 @@ for (const p of PRODUCTS) {
   }
 }
 
+// Bundles: curated use-case packages. Validate references at startup and drop
+// any step that points at a missing product or one classified internal /
+// restricted — bundles must only expose partner-safe products.
+const { AUDIENCES, BUNDLES } = require('./lib/catalogs/bundles');
+const EXPOSABLE = new Set(['public', 'customer-confidential']);
+for (const b of BUNDLES) {
+  b.steps = b.steps.filter((s) => {
+    const p = PRODUCTS.find((x) => x.id === s.product);
+    if (!p) {
+      console.warn(`bundle ${b.id}: unknown product "${s.product}" — step dropped`);
+      return false;
+    }
+    if (!EXPOSABLE.has(p.classification)) {
+      console.warn(`bundle ${b.id}: product "${s.product}" is ${p.classification} — step dropped`);
+      return false;
+    }
+    if (!(p.endpoints || []).some((e) => `${e.method} ${e.path}` === s.endpoint)) {
+      console.warn(`bundle ${b.id}: endpoint "${s.endpoint}" not found in "${s.product}" — kept, check catalog`);
+    }
+    return true;
+  });
+}
+
+// Onboarding: access-request intake + authorization lookup for the portal.
+require('./lib/onboarding').register(app, PRODUCTS);
+
 function catalogPayload() {
   return {
     service: 'iristel-api-marketplace',
@@ -104,6 +132,8 @@ function catalogPayload() {
       classification: p.classification, status: p.status, endpoints: p.endpoints,
       flow: p.flow, images: p.images, ui: p.ui,
     })),
+    audiences: AUDIENCES,
+    bundles: BUNDLES,
     // Kept for older clients that read the flat DID list.
     endpoints: CATALOG,
   };

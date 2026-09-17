@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!--
+    IRISTEL PARTNER PORTAL — LOGIN PAGE (complete Webflow embed)
+
+    API Marketplace additions vs. the previous version, all marked
+    "MARKETPLACE" below:
+      1. `marketplaceAccess` added to the clear-cookies-on-load list.
+      2. setMarketplaceAccessCookie() — asks the marketplace gateway which API
+         products this email is authorized for and stores them in the
+         `marketplaceAccess` cookie (comma-separated product ids). The gateway
+         reads the Dynamics 365 Account field iristel_apimarketplaceaccess.
+      3. completeLogin() / completeEmployeeLogin() await that call before the
+         redirect, so the cookie exists on the very first portal page load.
+
+    Set MARKETPLACE_GATEWAY to the deployed marketplace URL before publishing.
+  -->
+
+  <style>
+    .container {
+      width: 400px;
+      background: #fff;
+      padding: 35px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: fadeIn 0.6s ease;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    #subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    label {
+      text-align: left;
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 25px;
+      border: none;
+      border-radius: 8px;
+      background: #D1155A;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover { background: #3d41a6; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .links-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: auto;
+      font-size: 13px;
+      font-weight: 500;
+      color: #D1155A;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .link-btn:hover { text-decoration: underline; background: none; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #888;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    #message {
+      margin-top: 15px;
+      font-weight: 600;
+      color: #333;
+      min-height: 22px;
+      font-size: 14px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+
+  <script>
+    // ── MARKETPLACE ────────────────────────────────────────────
+    // Base URL of the API Marketplace gateway (Render deployment).
+    const MARKETPLACE_GATEWAY = "https://YOUR-MARKETPLACE-GATEWAY";
+
+    // Clear all existing cookies on load
+    document.cookie = 'userEmail=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'agentId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'agentIds=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'partnerType=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'code=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'name=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'lastCourseId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'startActivationDate=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    // MARKETPLACE: authorized API products, re-fetched on every login.
+    document.cookie = 'marketplaceAccess=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+    // Clear President's Club cached data (localStorage + IndexedDB)
+    ['pc_commissions','pc_agents','pc_cache_ts','pc_leaderboard','pc_cached_user'].forEach(function(k){
+      try { localStorage.removeItem(k); } catch(e) {}
+    });
+    try {
+      var req = indexedDB.open('pc_cache_db', 1);
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      };
+      req.onsuccess = function(e) {
+        var db = e.target.result;
+        try {
+          if (db.objectStoreNames.contains('kv')) {
+            var tx = db.transaction('kv','readwrite');
+            tx.objectStore('kv').clear();
+          }
+        } catch(err) { /* store missing or blocked — nothing to clear */ }
+        db.close();
+      };
+      req.onerror = function() { /* IndexedDB unavailable — ignore */ };
+    } catch(e) {}
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // ── Email aliases ──────────────────────────────────────────
+      // Some contacts must log in under a different email than the one on
+      // their MIND record because we can't rename the record right now.
+      // Keyed by the typed (lower-cased) email -> the email actually used
+      // for every auth/lookup call.
+      const EMAIL_ALIASES = {
+        'provisioning@telehop.com': 'accounting@telehop.com'
+      };
+      const resolveEmail = (email) =>
+        EMAIL_ALIASES[String(email || '').trim().toLowerCase()] || email;
+
+      // ── API helpers ────────────────────────────────────────────
+
+      // Unified login endpoint (auth0-backed).
+      //   POST https://api.iristelx.com/unified/log-in   body: { email, password }
+      //
+      // IMPORTANT: failures come back as HTTP 200 with an `auth0Error` object
+      // (e.g. { code:404, status:404, message:"Wrong email or password." }).
+      // That same 404 is returned BOTH when there is no auth0 account yet AND
+      // when the password is simply wrong — the two cases can't be told apart
+      // from this call alone. However agent / masterDetails / accountContact
+      // are still populated in the body even when auth0Error is present, so
+      // this call also doubles as an "is this email known to us?" lookup.
+      const unifiedLogin = async (email, password) => {
+        const url = "https://api.iristelx.com/unified/log-in";
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "x-api-key": "b1582d78d369685683e090ad37489937",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email: email, password: password })
+        });
+
+        if (!response.ok) {
+          console.warn("Login API call failed with status:", response.status);
+          return { error: "Login service unavailable. Please try again." };
+        }
+
+        const data = await response.json();
+        console.log("Login API response:", data);
+
+        const agentRaw  = data.agent || {};
+        const masterRaw = data.masterDetails || {};
+
+        const agent  = (agentRaw.id  != null || agentRaw.email  != null) ? agentRaw  : null;
+        const master = (masterRaw.id != null || masterRaw.email != null) ? masterRaw : null;
+        const contact = (Array.isArray(data.accountContact) && data.accountContact.length > 0)
+          ? data.accountContact[0]
+          : null;
+
+        const userType = data.userType || '';
+
+        return {
+          agent, master, contact, userType,
+          auth0: data.auth0 || null,
+          auth0Error: data.auth0Error || null
+        };
+      };
+
+      // Sends the auth0 password-reset email.
+      //   -> { ok: true, message }   reset email sent (auth0 account exists)
+      //   -> { ok: false, message }  could not send (likely no auth0 account)
+      const sendResetEmail = async (email) => {
+        try {
+          const response = await fetch("https://api.iristelx.com/unified/forgot-password", {
+            method: "POST",
+            headers: {
+              "x-api-key": "b1582d78d369685683e090ad37489937",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email: email })
+          });
+          const data = await response.json().catch(() => ({}));
+          console.log("Forgot-password API response:", data);
+          return {
+            ok: !!(response.ok && data.success),
+            message: data.message || ''
+          };
+        } catch (error) {
+          console.error('Forgot-password API error:', error);
+          return { ok: false, message: '' };
+        }
+      };
+
+      // Normalizes the API's userType into the partnerType cookie value.
+      // Resellers come back from unified/log-in as CUSTOMER (and, depending on
+      // provider, sometimes literally RESELL / RESELLER) — all of these must
+      // map to exactly "Reseller" so the dashboard shows the reseller view.
+      // partnerType is always stored in lower case; the dashboard compares it
+      // case-insensitively, so lowercasing keeps a single canonical form.
+      const normalizePartnerType = (userType) => {
+        const t = String(userType || '').trim();
+        if (!t) return '';
+        const u = t.toUpperCase();
+        if (u === 'CUSTOMER' || u === 'RESELL' || u === 'RESELLER') return 'reseller';
+        return t.toLowerCase();
+      };
+
+      const checkIfEmployee = async (email) => {
+        const url = "https://api.iristelx.com/employees?email=" + encodeURIComponent(email);
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { "x-api-key": "b1582d78d369685683e090ad37489937" }
+        });
+
+        if (!response.ok) {
+          console.warn("Employee API call failed with status:", response.status);
+          return null;
+        }
+
+        const data = await response.json();
+        console.log("Employee check:", data.data);
+
+        if (data.data && data.data.length > 0) {
+          const employee = data.data[0];
+          return {
+            email: employee.workEmail,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            ID: employee.id,
+            partnerType: "internal"
+          };
+        }
+        return null;
+      };
+
+      // Creates the auth0 account for a known email.
+      //   -> { ok: true }                 account created
+      //   -> { ok: false, exists: true }  409, account already in auth0
+      //   -> { ok: false }                other failure
+      const auth0SignUp = async (email, password) => {
+        const response = await fetch("https://api.iristelx.com/unified/sign-up", {
+          method: "POST",
+          headers: {
+            "x-api-key": "b1582d78d369685683e090ad37489937",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email: email, password: password })
+        });
+
+        if (response.status === 409) return { ok: false, exists: true };
+        if (!response.ok) {
+          console.warn("Sign-up API call failed with status:", response.status);
+          return { ok: false };
+        }
+        const data = await response.json();
+        console.log("Sign-up API response:", data);
+        return { ok: true };
+      };
+
+      // Probes whether an auth0 account exists WITHOUT creating one: calls
+      // sign-up with a deliberately policy-failing dummy password.
+      //   409          -> true   (account already exists)
+      //   other status -> false  (no account; the weak password is rejected
+      //                           before anything is created)
+      //   network err  -> null   (unknown)
+      const auth0AccountExists = async (email) => {
+        try {
+          const response = await fetch("https://api.iristelx.com/unified/sign-up", {
+            method: "POST",
+            headers: {
+              "x-api-key": "b1582d78d369685683e090ad37489937",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email: email, password: "x" })
+          });
+          return response.status === 409;
+        } catch (error) {
+          console.error('Account-exists probe error:', error);
+          return null;
+        }
+      };
+
+      const setCookie = (name, value, days) => {
+        let expires = "";
+        if (days) {
+          const date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/; SameSite=Strict";
+      };
+
+      // ── MARKETPLACE ────────────────────────────────────────────
+      // Which API Marketplace products is this partner authorized for?
+      // The gateway answers from the Dynamics 365 Account field
+      // iristel_apimarketplaceaccess (comma-separated product ids, e.g.
+      // "e911,dids"). The nav script shows the API Marketplace menu only when
+      // this cookie is non-empty, and the marketplace console itself filters
+      // the product list to exactly these ids.
+      // Never blocks login: any failure just leaves the marketplace hidden.
+      const setMarketplaceAccessCookie = async (email) => {
+        try {
+          const response = await fetch(
+            MARKETPLACE_GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email)
+          );
+          if (!response.ok) {
+            console.warn("Marketplace authorization lookup failed:", response.status);
+            return;
+          }
+          const data = await response.json();
+          const ids = (data.products || []).join(",");
+          if (ids) {
+            setCookie('marketplaceAccess', ids, 7);
+          } else {
+            document.cookie = 'marketplaceAccess=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          }
+          console.log("🛒 marketplaceAccess:", ids || "(none)");
+        } catch (error) {
+          console.warn("Marketplace authorization lookup error:", error);
+        }
+      };
+
+      const startCountdown = (seconds) => {
+        let counter = seconds;
+        const message = document.getElementById('message');
+        const interval = setInterval(() => {
+          if (counter > 0) {
+            message.textContent = `Redirecting in ${counter} seconds...`;
+          } else {
+            clearInterval(interval);
+            window.location.href = "/home";
+          }
+          counter--;
+        }, 1000);
+        return interval;
+      };
+
+      // Sets cookies from a resolved record (agent / master / contact) and
+      // redirects. Shared by both the login flow and the create-account flow.
+      const completeLogin = async (email, agent, master, contact, userType) => {
+        const partnerType = normalizePartnerType(userType);
+
+        const userEmail =
+          (agent && agent.email) ||
+          (master && master.email) ||
+          (contact && contact.EMAIL) ||
+          email;
+        setCookie('userEmail', userEmail, 7);
+
+        let name = '';
+        if (agent && agent.name) {
+          name = agent.name;
+        } else if (master && (master.fname || master.lname || master.name)) {
+          name = (master.fname && master.lname) ? (master.fname + ' ' + master.lname) : (master.name || '');
+        } else if (contact) {
+          name = [contact.FIRSTNAME, contact.LASTNAME].filter(Boolean).join(' ');
+        }
+        setCookie('name', name, 7);
+        setCookie('partnerType', partnerType, 7);
+
+        // `code` deliberately left unset for customer-only logins — the 911
+        // script gates on its absence.
+        if (agent) {
+          setCookie('agentId',  agent.id, 7);
+          setCookie('agentIds', String(agent.id), 7);
+          setCookie('code',     agent.account_code || '', 7);
+        } else if (master) {
+          setCookie('agentId',  master.id, 7);
+          setCookie('agentIds', String(master.id), 7);
+          setCookie('code',     master.accountId || '', 7);
+        }
+
+        // MARKETPLACE: awaited so the cookie exists before the redirect.
+        await setMarketplaceAccessCookie(userEmail);
+
+        document.getElementById('message').textContent = 'Login successful! Redirecting...';
+        startCountdown(5);
+      };
+
+      const completeEmployeeLogin = async (email, employeeResult) => {
+        setCookie('userEmail', email, 7);
+        setCookie('name', (employeeResult.firstName + ' ' + employeeResult.lastName) || '', 7);
+        setCookie('partnerType', employeeResult.partnerType, 7);
+
+        // MARKETPLACE: internal staff get access from the same lookup.
+        await setMarketplaceAccessCookie(email);
+
+        document.getElementById('message').textContent = 'Login successful! Redirecting...';
+        startCountdown(5);
+      };
+
+      // ── Mode switching (Login <-> Create Password) ────────────────────
+
+      const emailInput        = document.getElementById('email');
+      const passwordInput     = document.getElementById('password');
+      const confirmGroup      = document.getElementById('confirmGroup');
+      const confirmInput      = document.getElementById('passwordConfirm');
+      const passwordLabel     = document.getElementById('passwordLabel');
+      const submitBtn         = document.getElementById('submitBtn');
+      const message           = document.getElementById('message');
+      const subtitle          = document.getElementById('subtitle');
+      const loginLinksRow     = document.getElementById('loginLinksRow');
+      const backToLoginLink   = document.getElementById('backToLogin');
+      const goToCreateLink    = document.getElementById('goToCreate');
+      const forgotPasswordLink= document.getElementById('forgotPassword');
+
+      let mode = 'login'; // 'login' | 'create'
+
+      const setMode = (newMode) => {
+        mode = newMode;
+        message.textContent = '';
+
+        if (mode === 'create') {
+          subtitle.textContent = 'Set up your portal password';
+          passwordLabel.textContent = 'New Password';
+          passwordInput.autocomplete = 'new-password';
+          confirmGroup.classList.remove('hidden');
+          confirmInput.required = true;
+          submitBtn.textContent = 'Create Password & Login';
+          loginLinksRow.classList.add('hidden');
+          backToLoginLink.classList.remove('hidden');
+        } else {
+          subtitle.textContent = 'Log in to the Iristel Partner Portal';
+          passwordLabel.textContent = 'Password';
+          passwordInput.autocomplete = 'current-password';
+          confirmGroup.classList.add('hidden');
+          confirmInput.required = false;
+          confirmInput.value = '';
+          submitBtn.textContent = 'Login';
+          loginLinksRow.classList.remove('hidden');
+          backToLoginLink.classList.add('hidden');
+        }
+        submitBtn.disabled = false;
+      };
+
+      // Shared handler for a failed auth0 login. Uses the sign-up probe to
+      // tell "wrong password" apart from "no auth0 account yet" (the log-in
+      // API returns the same 404 for both) and shows a clear message for
+      // each case.
+      const handleAuthFailure = async (email, emailIsKnown) => {
+        if (!emailIsKnown) {
+          message.textContent = "We couldn't find an account for that email. Please check the address or contact support.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        message.textContent = 'Checking your account...';
+        const exists = await auth0AccountExists(email);
+
+        if (exists === true) {
+          message.textContent = 'Incorrect password. Click "Forgot password?" below to reset it.';
+        } else if (exists === false) {
+          const firstTimeMsg = 'Looks like this is your first time logging in — set up your password below.';
+          setMode('create');
+          emailInput.value = email;
+          passwordInput.value = '';
+          // setMode clears the message — restore it after switching.
+          message.textContent = firstTimeMsg;
+        } else {
+          message.textContent = 'Wrong email or password. If you\'ve logged in before use "Forgot password?"; if it\'s your first time use "First time logging in?".';
+        }
+        submitBtn.disabled = false;
+      };
+
+      // ── First time logging in? ────────────────────────────────────
+      // NOTE: /unified/forgot-password returns success for ANY email
+      // (auth0 anti-enumeration), so we can't pre-check whether an account
+      // exists here. We go straight to create mode; the submit handler's
+      // 409 branch is what catches existing accounts — it discards the
+      // typed password and sends a reset email instead.
+      goToCreateLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        setMode('create');
+      });
+
+      backToLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        setMode('login');
+      });
+
+      // ── Forgot password ───────────────────────────────────────────
+      forgotPasswordLink.addEventListener('click', async function(event) {
+        event.preventDefault();
+        const email = resolveEmail(emailInput.value.trim());
+
+        if (!email) {
+          message.textContent = 'Please enter your email address first.';
+          emailInput.focus();
+          return;
+        }
+
+        message.textContent = 'Sending reset email...';
+
+        const reset = await sendResetEmail(email);
+        message.textContent = reset.ok
+          ? (reset.message || "We've just sent you an email to reset your password.")
+          : (reset.message || 'Could not send reset email. Please try again.');
+      });
+
+      // ── Submit handler ─────────────────────────────────────────────
+      document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const email    = resolveEmail(emailInput.value.trim());
+        const password = passwordInput.value;
+
+        submitBtn.disabled = true;
+
+        // ════════════════════════════════════════════════════════════════
+        // CREATE PASSWORD MODE — explicit first-time setup, entered only via
+        // the "First time logging in?" link (and only when no auth0 account
+        // exists). Never inferred from a failed login attempt.
+        // ════════════════════════════════════════════════════════════════
+        if (mode === 'create') {
+          const confirmPassword = confirmInput.value;
+
+          if (password !== confirmPassword) {
+            message.textContent = 'Passwords do not match.';
+            submitBtn.disabled = false;
+            return;
+          }
+          if (password.length < 8) {
+            message.textContent = 'Password must be at least 8 characters.';
+            submitBtn.disabled = false;
+            return;
+          }
+
+          message.textContent = 'Verifying your account...';
+
+          // Look up whether this email is known to us at all — an employee,
+          // or an agent/master/contact record — before creating any auth0
+          // credentials. We pass the new password to /unified/log-in purely
+          // to fetch the record; a fresh account has no auth0 entry yet so
+          // this will always come back with auth0Error, which is expected
+          // and ignored here.
+          let employeeResult = null;
+          try { employeeResult = await checkIfEmployee(email); } catch (e) { console.error(e); }
+
+          let loginResult = null;
+          try { loginResult = await unifiedLogin(email, password); } catch (e) { console.error(e); }
+
+          const isEmployee = employeeResult && employeeResult.email === email;
+          // A populated userType (e.g. a reseller returned as CUSTOMER with no
+          // agent/master/contact record) also counts as a known account, so
+          // first-time resellers can create a password.
+          const hasRecord  = loginResult && (loginResult.agent || loginResult.master || loginResult.contact || loginResult.userType);
+
+          if (!isEmployee && !hasRecord) {
+            message.textContent = "We couldn't find an account for that email. Please contact support.";
+            submitBtn.disabled = false;
+            return;
+          }
+
+          message.textContent = 'Creating your password...';
+          const signup = await auth0SignUp(email, password);
+
+          if (!signup.ok) {
+            if (signup.exists) {
+              // 409 — an auth0 account already exists. NEVER accept the
+              // typed password: discard it and send a reset email instead,
+              // so the password can only be changed via the emailed link.
+              message.textContent = 'You already have an account — sending you a password reset email...';
+
+              const reset = await sendResetEmail(email);
+              message.textContent = reset.ok
+                ? ("You already have an account — we've sent a password reset email to " + email + ". Check your inbox to reset your password.")
+                : 'You already have an account for this email. Please use "Forgot password?" to reset it.';
+
+              setMode('login');
+              emailInput.value = email;
+              passwordInput.value = '';
+              // setMode clears the message — restore it after switching back.
+              message.textContent = reset.ok
+                ? ("You already have an account — we've sent a password reset email to " + email + ". Check your inbox to reset your password.")
+                : 'You already have an account for this email. Please use "Forgot password?" to reset it.';
+            } else {
+              message.textContent = 'Something went wrong. Please try again.';
+              submitBtn.disabled = false;
+            }
+            return;
+          }
+
+          // Account created — log them straight in.
+          if (isEmployee) {
+            await completeEmployeeLogin(email, employeeResult);
+          } else {
+            await completeLogin(email, loginResult.agent, loginResult.master, loginResult.contact, loginResult.userType);
+          }
+          return;
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // LOGIN MODE — verifies email + password only. Never silently
+        // creates an account; if auth0 doesn't recognize the credentials we
+        // point the user at "First time logging in?" or "Forgot password?".
+        // ════════════════════════════════════════════════════════════════
+        message.textContent = 'Signing in...';
+
+        // 1st check: Employee directory (still classifies Internal even if
+        // the person also has an agent record), auth still goes through auth0.
+        let employeeResult = null;
+        try { employeeResult = await checkIfEmployee(email); } catch (e) { console.error(e); }
+
+        if (employeeResult && employeeResult.email === email) {
+          const authCheck = await unifiedLogin(email, password);
+
+          if (authCheck && authCheck.auth0Error) {
+            await handleAuthFailure(email, true);
+            return;
+          }
+          if (authCheck && authCheck.error) {
+            message.textContent = authCheck.error;
+            submitBtn.disabled = false;
+            return;
+          }
+
+          await completeEmployeeLogin(email, employeeResult);
+          return;
+        }
+
+        // 2nd check: unified login (agent / master / customer contact).
+        let loginResult = null;
+        try { loginResult = await unifiedLogin(email, password); } catch (e) { console.error(e); }
+
+        // A reseller is "known" if we have an agent/master/contact record OR
+        // the API classified the email with a userType (resellers often come
+        // back as CUSTOMER with no populated record). userType alone used to
+        // fall through to "not found", which is why some resellers couldn't
+        // log in — now it counts as a known account.
+        const emailIsKnown = !!(loginResult && (loginResult.agent || loginResult.master || loginResult.contact || loginResult.userType));
+
+        if (loginResult && loginResult.auth0Error) {
+          await handleAuthFailure(email, emailIsKnown);
+          return;
+        }
+
+        if (emailIsKnown) {
+          await completeLogin(email, loginResult.agent, loginResult.master, loginResult.contact, loginResult.userType);
+          return;
+        }
+
+        message.textContent = "We couldn't find an account for that email. Please check the address or contact support.";
+        submitBtn.disabled = false;
+      });
+    });
+  </script>
+</head>
+
+<body>
+
+  <div class="container">
+    <div style="text-align:center;">
+      <img
+        src="https://cdn.prod.website-files.com/67ae3dc9346b175361116c60/693b2919992dfa59c54be930_Untitled%20design.png"
+        alt="Logo"
+        style="width:220px; margin-bottom:15px;"
+      />
+    </div>
+    <h2>Login</h2>
+    <div id="subtitle">Log in to the Iristel Partner Portal</div>
+
+    <form id="loginForm">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="password" id="passwordLabel">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+
+      <div id="confirmGroup" class="hidden">
+        <label for="passwordConfirm">Retype Password</label>
+        <input type="password" id="passwordConfirm" name="passwordConfirm" autocomplete="new-password">
+      </div>
+
+      <button type="submit" id="submitBtn">Login</button>
+
+      <div class="links-row" id="loginLinksRow">
+        <a href="#" id="goToCreate" class="link-btn">First time logging in?</a>
+        <a href="#" id="forgotPassword" class="link-btn">Forgot password?</a>
+      </div>
+
+      <a href="#" id="backToLogin" class="back-link hidden">&larr; Back to login</a>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+</body>
+</html>

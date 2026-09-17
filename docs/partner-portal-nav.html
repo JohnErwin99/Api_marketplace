@@ -1,0 +1,437 @@
+<!--
+  IRISTEL PARTNER PORTAL — LOGGED-IN NAV SCRIPT (complete Webflow embed)
+
+  API Marketplace additions vs. the previous version, all marked
+  "MARKETPLACE" below:
+    1. "apimarketplace" added to the guest hide list and the 0Wire blanket
+       hide list, so the menu item never leaks to logged-out / restricted
+       users.
+    2. Logged-in branch shows the "API Marketplace" menu item ONLY when the
+       `marketplaceAccess` cookie (set by the login page from the CRM field
+       iristel_apimarketplaceaccess) is non-empty — same pattern as
+       911listing.
+    3. Admin badge block always shows it for admins.
+
+  Requires a nav link in the Webflow navbar with id="apimarketplace"
+  pointing at the marketplace console (e.g.
+  https://YOUR-MARKETPLACE-GATEWAY/console), hidden by default like the
+  other gated items.
+-->
+<style>
+  .status-light {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background-color: #28a745; /* green */
+    vertical-align: middle;
+  }
+</style>
+
+<body>
+  <p style="display: none">Welcome, <span id="userEmail"></span></p>
+  <p>
+    <span class="status-light"></span>
+    Logged in as: <span id="loggedUser"></span>
+  </p>
+  <p>Id: <span id="agentId"></span></p>
+  <div id="google_translate_element"></div>
+
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({ pageLanguage: 'en' }, 'google_translate_element');
+    }
+  </script>
+
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <p style="display: none">partner type: <span id="isagent"></span></p>
+  <p style="display: none">partnerType: <span id="partnertype"></span></p>
+  <p style="display: none">from icewireless? : <span id="icewireless"></span></p>
+  <p style="display: none">Admin? : <span id="admin"></span></p>
+  <p style="display: none">Dashboard Role: <span id="dashRole"></span></p>
+
+  <!-- 🧩 Agent Selection Dropdown -->
+  <div id="agentSelectionContainer" style="margin: 20px 0; display: none">
+    <label for="agentSelect">Select Agent ID:</label>
+    <select id="agentSelect" style="margin-left: 10px; padding: 5px"></select>
+    <button id="confirmAgentBtn" style="margin-left: 10px">Confirm</button>
+  </div>
+
+ <script>
+  // ═══════════════════════════════════════════════════════════
+  //  COOKIE HELPERS
+  // ═══════════════════════════════════════════════════════════
+  function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === " ") c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0)
+        return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
+    return null;
+  }
+
+  function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = "; expires=" + date.toUTCString();
+    document.cookie =
+      name + "=" + encodeURIComponent(value) + expires + "; path=/; SameSite=Strict";
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  SAFE DOM HELPERS
+  //  ─────────────────────────────────────────────────────────
+  //  This nav script runs on MULTIPLE pages, and not every page
+  //  has every element (e.g. /presidents-club has no #hero).
+  //  A raw getElementById(...).src on a missing element throws a
+  //  TypeError that ABORTS the rest of the DOMContentLoaded
+  //  handler — which previously prevented the admin block at the
+  //  bottom from ever running. Always go through these helpers.
+  // ═══════════════════════════════════════════════════════════
+  function $el(id) { return document.getElementById(id); }
+  function setText(id, txt) { const e = $el(id); if (e) e.textContent = txt; }
+  function setHTML(id, html) { const e = $el(id); if (e) e.innerHTML = html; }
+  function setSrc(id, src)  { const e = $el(id); if (e) e.src = src; }
+  function setHref(id, href){ const e = $el(id); if (e) e.href = href; }
+  function show(id)  { const e = $el(id); if (e) e.style.display = "block"; }
+  function hide(id)  { const e = $el(id); if (e) e.style.display = "none"; }
+
+  // ═══════════════════════════════════════════════════════════
+  //  0WIRE SPECIAL ACCOUNTS — hide the whole nav, keep only
+  //  Training, 911 Listing, and Log out.
+  // ═══════════════════════════════════════════════════════════
+  const OWIRE_MENU_EMAILS = [
+    "elevitt@0wire.com",
+    "hfeldman@0wire.com",
+    "hmenon@0wire.com",
+    "support@0wire.com"
+  ];
+
+  // ═══════════════════════════════════════════════════════════
+  //  PARTNER TYPE — SINGLE SOURCE OF TRUTH = the `partnerType` cookie
+  //  ─────────────────────────────────────────────────────────
+  //  The API now provides partner_type directly, so the old
+  //  EMAIL_CHANNEL_MAP + code-derivation logic has been removed.
+  //  We read the cookie and use it verbatim — no overrides.
+  //
+  //  Expected values: agent, reseller, customer, cobranded,
+  //                   whitelabel, Internal
+  //
+  //  Commission (compensation link) is visible ONLY to agents
+  //  and Internal. reseller / customer / cobranded / whitelabel
+  //  never see commission.
+  // ═══════════════════════════════════════════════════════════
+  const partnerType = getCookie("partnerType");
+  console.log('🏷️ partnerType (from cookie):', partnerType);
+
+  // ═══════════════════════════════════════════════════════════
+  //  DASHBOARD ROLE DETECTION
+  //  ─────────────────────────────────────────────────────────
+  //  Determines which commission dashboard view the user gets.
+  //  Sets a `dashboardRole` cookie that the unified dashboard reads.
+  //
+  //  Roles:
+  //    admin       → full access, all agents, search, checkboxes
+  //    microage    → MicroAge-branded, micro agents only, checkboxes
+  //    icewireless → single agent, Ice Wireless branding
+  //    reseller    → partnerType cookie is "reseller" (or "customer")
+  //    agent       → single agent, own data only (default for logged-in users)
+  //    guest       → blocked, no data
+  //
+  //  Priority: admin > microage > icewireless > reseller > agent > guest
+  // ═══════════════════════════════════════════════════════════
+
+  const ADMIN_EMAILS = [
+    "jerwin@iristel.com", "jayoub@iristel.com", "fdalberto@iristel.com",
+    "jtamo@iristel.com", "storozyan@iristel.com", "nlajeunesse@iristel.com", "tkhei@iristel.com",
+    "sarmanious@iristel.com", "tcui@iristel.com"
+  ];
+
+  function detectDashboardRole(email, name, code, pt) {
+    // Guest — no login
+    if (!email || !name || name.trim().toLowerCase() === 'guest') {
+      hide("sectionHide"); // guarded: not every page has #sectionHide
+      return 'guest';
+    }
+
+    // Admin — email in admin list
+    if (ADMIN_EMAILS.includes(email.toLowerCase())) {
+      return 'admin';
+    }
+
+    // MicroAge — code contains MICROAGEHEADOFFICE
+    if (code && code.toUpperCase().includes("MICROAGEHEADOFFICE")) {
+      return 'microage';
+    }
+
+    // Ice Wireless — code starts with KRG or ICE
+    if (code && (code.toUpperCase().startsWith("KRG") || code.toUpperCase().startsWith("ICE"))) {
+      return 'icewireless';
+    }
+
+    // Reseller — partnerType cookie is "reseller"
+    // Customer also defaults to the reseller dashboard role.
+    if (pt === 'reseller' || pt === 'customer') {
+      return 'reseller';
+    }
+
+    // Default: regular agent
+    return 'agent';
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  ON DOM READY — set logged user name
+  // ═══════════════════════════════════════════════════════════
+  window.addEventListener("DOMContentLoaded", () => {
+    const name = getCookie("name");
+    setText("loggedUser", name || "Guest");
+  });
+
+  // ═══════════════════════════════════════════════════════════
+  //  MAIN INIT
+  // ═══════════════════════════════════════════════════════════
+  document.addEventListener("DOMContentLoaded", () => {
+    const agentSelectionContainer = $el("agentSelectionContainer");
+    const agentSelect = $el("agentSelect");
+    const confirmBtn = $el("confirmAgentBtn");
+
+    // ── Multi-agent ID selector ──
+    const agentIdsCookie = getCookie("agentIds");
+    if (agentIdsCookie && agentSelectionContainer && agentSelect && confirmBtn) {
+      const agentIds = agentIdsCookie.split(",").map(id => id.trim());
+      if (agentIds.length > 1) {
+        agentSelectionContainer.style.display = "block";
+        agentSelect.innerHTML = "";
+        agentIds.forEach(id => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = id;
+          agentSelect.appendChild(option);
+        });
+        confirmBtn.addEventListener("click", () => {
+          const selectedId = agentSelect.value;
+          setCookie("agentId", selectedId, 7);
+          alert(`Agent ID ${selectedId} selected!`);
+          window.location.reload();
+        });
+      } else {
+        setCookie("agentId", agentIds[0], 7);
+      }
+    } else if (agentIdsCookie) {
+      // Selector UI not on this page — still persist the single ID.
+      const ids = agentIdsCookie.split(",").map(id => id.trim());
+      if (ids.length === 1) setCookie("agentId", ids[0], 7);
+    }
+
+    // ── Read cookies ──
+    const email = getCookie("userEmail");
+    const name = getCookie("name");
+    const agentId = getCookie("agentId");
+    const code = getCookie("code");
+    const activationDate = getCookie("startActivationDate");
+
+    // MARKETPLACE: authorized API product ids ("e911,dids"), set by the
+    // login page from the CRM field iristel_apimarketplaceaccess.
+    // Non-empty => this partner may see the API Marketplace menu item.
+    const marketplaceAccess = (getCookie("marketplaceAccess") || "").trim();
+
+    // Normalized partner type for comparisons (display keeps original casing).
+    const pt = (partnerType || "").trim().toLowerCase();
+
+    // Commission (compensation link) is agents + Internal only.
+    const canSeeCommission = (pt === "agent" || pt === "internal");
+
+    // ═══════════════════════════════════════════════════════
+    //  SET DASHBOARD ROLE COOKIE
+    // ═══════════════════════════════════════════════════════
+    const dashRole = detectDashboardRole(email, name, code, pt);
+    setCookie("dashboardRole", dashRole, 7);
+    console.log('🔑 Dashboard role:', dashRole);
+    setText("dashRole", dashRole);
+
+    const compensationLink = $el("compensation");
+
+    // ── GUEST: early return ──
+    // Not logged in → the ONLY menu items visible are Sign up and Login.
+    if (!email || name === "Guest") {
+      console.log("🔒 Guest branch entered:", { email, name });
+      ["training", "marketing", "compensation", "911listing",
+       "toolkit", "presidentsclub", "apimarketplace", "logout"].forEach(hide); // MARKETPLACE: hidden for guests
+
+      // External "Support" link has no id — hide by href.
+      document.querySelectorAll('a[href*="support.iristel.com"]').forEach(function (a) {
+        a.style.display = "none";
+      });
+
+      show("signup");
+      show("login");
+      return;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  0WIRE SPECIAL ACCOUNTS
+    // ═══════════════════════════════════════════════════════
+    if (email && OWIRE_MENU_EMAILS.includes(email.trim().toLowerCase())) {
+      setText("partnertype", partnerType || "agent");
+      setText("agentId", agentId || "N/A");
+      setText("isagent", partnerType || "");
+      setHTML("admin", "No");
+
+      // 1) Hide EVERY nav item (blanket hide — nothing leaks).
+      ["training", "marketing", "compensation", "911listing", "toolkit",
+       "presidentsclub", "apimarketplace", "signup", "login", "logout"].forEach(hide); // MARKETPLACE: in the blanket hide
+
+      document.querySelectorAll('a[href*="support.iristel.com"]').forEach(function (a) {
+        a.style.display = "none";
+      });
+
+      // 2) KEEP only these three visible.
+      ["training", "911listing", "logout"].forEach(show);
+      setHref("training", "/training-agent");
+      setSrc("hero", "https://irp.cdn-website.com/f37dfe57/dms3rep/multi/Desktop+%281%29.png");
+
+      return; // skip the standard menu logic for these accounts
+    }
+
+    // ── Partner type is taken straight from the cookie (set above). ──
+    setText("partnertype", partnerType);
+
+    // ── Set up portal UI based on partnerType (cookie) ──
+    if (email) {
+      setText("agentId", agentId || "N/A");
+      setText("isagent", partnerType || "");
+      setHTML("admin", "No");
+
+      // ── All roles point to the same unified dashboard ──
+      if (compensationLink) compensationLink.href = "/compensation";
+
+      // Menu items common to every logged-in partner.
+      ["training", "marketing", "911listing", "toolkit"].forEach(show);
+
+      // ═══════════════════════════════════════════════════════
+      //  MARKETPLACE — API Marketplace menu item
+      //  ─────────────────────────────────────────────────────
+      //  Visible ONLY when the marketplaceAccess cookie is
+      //  non-empty (authorization comes from Dynamics 365 via
+      //  the login page). Same gating pattern as 911listing.
+      // ═══════════════════════════════════════════════════════
+      if (marketplaceAccess) {
+        show("apimarketplace");
+        console.log('🛒 API Marketplace visible for products:', marketplaceAccess);
+      } else {
+        hide("apimarketplace");
+      }
+
+      // ── Per partner type: training destination + commission ──
+      switch (pt) {
+        case "internal":
+          setHref("training", "/training");
+          if (compensationLink) compensationLink.style.display = "block";
+          setHref("presidentsclub", "/presidents-club");
+          setHref("training", "/training");
+          break;
+
+        case "agent":
+          setHref("training", "/training-agent");
+          if (compensationLink) compensationLink.style.display = "block";
+          hide("911listing");
+          break;
+
+        case "reseller":
+          setHref("training", "/training-agent");
+          if (compensationLink) compensationLink.style.display = "none"; // no commission
+          break;
+
+        case "cobranded":
+          setHref("training", "/training-partner");
+          if (compensationLink) compensationLink.style.display = "none"; // no commission
+          break;
+
+        case "whitelabel":
+          setHref("training", "/training-partner");
+          if (compensationLink) compensationLink.style.display = "none"; // no commission
+          break;
+
+        case "customer":
+          // Customers are treated as resellers portal-wide.
+          setHref("training", "/training-partner");
+          if (compensationLink) compensationLink.style.display = "none"; // no commission
+          break;
+
+        default:
+          // Unknown / missing partnerType — safest is no commission.
+          setHref("training", "/training-agent");
+          if (compensationLink) compensationLink.style.display = "none";
+      }
+    } else {
+      if (compensationLink) compensationLink.style.display = "none";
+      ["training", "marketing", "911listing", "toolkit", "apimarketplace"].forEach(hide); // MARKETPLACE: hidden without login
+    }
+
+    // ── Activation date check ──
+    if (activationDate) {
+      try {
+        const actDate = new Date(activationDate);
+        const cutoff = new Date("2025-10-27");
+        if (!isNaN(actDate.getTime())) {
+          const msg = $el("message");
+          if (actDate >= cutoff) {
+            if (msg) msg.insertAdjacentHTML(
+              "beforeend",
+              `<p style="color:green;font-weight:bold;">Activation date (${actDate.toISOString().split("T")[0]}) is valid — full access granted.</p>`
+            );
+            // Only reveal commission if this partner type is allowed to see it.
+            if (compensationLink && canSeeCommission) compensationLink.style.display = "block";
+          } else {
+            if (msg) msg.insertAdjacentHTML(
+              "beforeend",
+              `<p style="color:red;font-weight:bold;">Activation date (${actDate.toISOString().split("T")[0]}) is before Oct 27, 2025 — access limited.</p>`
+            );
+            if (compensationLink) compensationLink.style.display = "none";
+          }
+        }
+      } catch (err) {
+        console.error("Error checking activation date:", err);
+      }
+    }
+
+    // ── Ice Wireless branding ──
+    // NOTE: #logo and #hero do NOT exist on every page (e.g. /presidents-club).
+    // These are guarded so a missing element can't abort the admin block below.
+    if (code && (code.startsWith("KRG") || code.startsWith("ICE"))) {
+      setText("icewireless", "Yes");
+      setSrc("logo", "https://cdn.prod.website-files.com/677d69c9c22ca790a6abe12b/6787ee954810587bb1052c17_Untitled%20design%20-%202025-01-15T122057.186.webp");
+      setSrc("hero", "https://cdn.prod.website-files.com/677d69c9c22ca790a6abe12b/67895a64194d8db0dea38628_2_1_optimized_4000.jpg");
+      if (compensationLink) compensationLink.style.display = "block";
+    } else {
+      setText("icewireless", "No");
+      setSrc("hero", "https://irp.cdn-website.com/f37dfe57/dms3rep/multi/Desktop+%281%29.png");
+    }
+
+    // ── MicroAge: show location picker ──
+    if (code && code.includes("MICROAGEHEADOFFICE")) {
+      if (compensationLink) compensationLink.style.display = "block";
+      show("locationShow");
+      if (name) setText("loggedUser", "Leann Hayes");
+    }
+
+    // ── Admin badge ──
+    // Runs LAST so it overrides earlier per-partner-type settings.
+    if (ADMIN_EMAILS.includes(email.toLowerCase())) {
+      setHTML("admin", "Yes");
+      if (compensationLink) compensationLink.style.display = "block";
+      hide("adminShow");
+      show("911listing");
+      show("toolkit");
+      show("apimarketplace"); // MARKETPLACE: admins always see it
+      setHref("presidentsclub", "/presidents-club-admin");
+      console.log('👑 Admin detected — Presidents Club link set to /presidents-club-admin');
+    }
+  });
+</script>
+</body>

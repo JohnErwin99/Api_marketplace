@@ -1,0 +1,90 @@
+<!--
+  API MARKETPLACE CONSOLE — PORTAL EMBED (own Webflow embed block)
+
+  Paste this into the Webflow page that should host the console (e.g.
+  /api-marketplace, the page the "API Marketplace" nav item links to).
+
+  What it does:
+    1. Reads the portal cookies set at login (`marketplaceAccess`, `userEmail`).
+    2. If the visitor has no marketplace access, shows a message pointing at
+       the access-request form instead of the console.
+    3. Otherwise renders the console in a full-height iframe, forwarding the
+       access cookies as URL params (?mpa=&mpe=) — required because the
+       marketplace domain cannot read the portal's cookies from inside the
+       iframe. The console filters its product list to exactly those ids.
+
+  Set MARKETPLACE_GATEWAY to the deployed marketplace URL before publishing.
+-->
+<style>
+  #mp-console-wrap { width: 100%; }
+  #mp-console-wrap iframe {
+    width: 100%;
+    height: calc(100vh - 120px); /* adjust for your navbar height */
+    min-height: 640px;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  }
+  #mp-console-wrap .mp-no-access {
+    max-width: 560px;
+    margin: 60px auto;
+    padding: 30px;
+    text-align: center;
+    border: 1px solid #e3e8ef;
+    border-radius: 12px;
+    font-family: inherit;
+  }
+  #mp-console-wrap .mp-no-access a { color: #D1155A; font-weight: 600; }
+</style>
+
+<div id="mp-console-wrap"></div>
+
+<script>
+  (function () {
+    // Base URL of the API Marketplace gateway (Render deployment).
+    var MARKETPLACE_GATEWAY = "https://YOUR-MARKETPLACE-GATEWAY";
+    // Where "request access" points (the marketplace landing-page form).
+    var REQUEST_ACCESS_URL = MARKETPLACE_GATEWAY + "/#request-form";
+
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(";");
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === " ") c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0)
+          return decodeURIComponent(c.substring(nameEQ.length, c.length));
+      }
+      return null;
+    }
+
+    var wrap = document.getElementById("mp-console-wrap");
+    var access = (getCookie("marketplaceAccess") || "").trim();
+    var email = (getCookie("userEmail") || "").trim();
+
+    if (!email || !access) {
+      // Not logged in, or logged in without any authorized API products.
+      wrap.innerHTML =
+        '<div class="mp-no-access">' +
+        '<h3>API Marketplace access required</h3>' +
+        (email
+          ? "<p>Your portal login (" + email.replace(/</g, "&lt;") + ") has no API products authorized yet.</p>"
+          : "<p>Log in to the Iristel Partner Portal to open the API console.</p>") +
+        '<p><a href="' + REQUEST_ACCESS_URL + '">Request marketplace access →</a></p>' +
+        "</div>";
+      return;
+    }
+
+    // Forward access context to the console (cross-origin iframe cannot read
+    // the portal's cookies). The console persists these as its own cookies.
+    var src = MARKETPLACE_GATEWAY + "/console" +
+      "?mpa=" + encodeURIComponent(access) +
+      "&mpe=" + encodeURIComponent(email);
+
+    var iframe = document.createElement("iframe");
+    iframe.src = src;
+    iframe.title = "Iristel API Marketplace Console";
+    iframe.allow = "clipboard-write";
+    wrap.appendChild(iframe);
+  })();
+</script>
