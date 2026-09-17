@@ -49,16 +49,41 @@ Pending-review requests get the "under review" subject/body instead.
 - Unlike the SNAG flow (which hardcodes provisioning@ as recipient), this flow
   must map **To** from the payload — a marketplace approval goes to the
   requester.
-- **Manual approvals in Dynamics are already covered — no second flow needed.**
-  The gateway runs an approval watcher (`lib/onboarding.js` →
-  `startApprovalWatcher`) that polls Dataverse every 5 minutes
-  (`APPROVAL_POLL_MS` to change) for Accounts whose
-  `iristel_apimarketplaceaccess` was filled or changed, and sends the same
-  granted email to `emailaddress1` through this webhook. First run after a
-  boot/redeploy baselines silently, so existing approvals never trigger an
-  email storm; a change made while the service is redeploying is picked up as
-  a change on the next edit, or can be resent by clearing and re-entering the
-  field.
+
+## Flow 2 — granted email on CRM approval (Dataverse trigger)
+
+**This flow is the single sender of every "access granted" email** — both
+manual approvals (your team fills the field in Dynamics) and automatic ones
+(the gateway writes the same field on auto-authorization, which triggers this
+flow). The gateway deliberately does not email granted requests itself when
+the CRM write succeeded (`emailVia: "dynamics-flow"` in its response); Flow 1
+(the HTTP webhook) then only carries pending-review notices and the fallback
+when Dynamics is unreachable.
+
+Build it:
+
+1. **New flow** → *Automated cloud flow* → trigger
+   **"When a row is added, modified or deleted"** (Microsoft Dataverse).
+2. Trigger settings:
+   - **Change type**: Modified
+   - **Table name**: Accounts
+   - **Scope**: Organization
+   - **Select columns** (under Advanced): `iristel_apimarketplaceaccess`
+     — the flow then fires *only* when that column changes.
+3. Add a **Condition**: `iristel_apimarketplaceaccess` *is not equal to* empty
+   — so clearing the field (revoking access) sends nothing.
+4. In the **Yes** branch, add **"Send an email (V2)"** (Office 365 Outlook):
+   - **To** → dynamic content **Email** (`emailaddress1`)
+   - **Subject** → `Your Iristel API Marketplace access has been granted`
+   - **Body**:
+     > Your access for **@{triggerOutputs()?['body/iristel_apimarketplaceaccess']}**
+     > has been granted. Please log in to the partner portal
+     > (https://www.iristelpartnerportal.com) and navigate to /console.
+5. **Save** and turn the flow on. Nothing to configure on Render for this one
+   — Dynamics itself is the trigger.
+
+Test: edit any Account's *API Marketplace Access* field in the sandbox → the
+email arrives at that account's primary email within seconds.
 - Future hardening: OnlineOrdering also has a direct Microsoft Graph sender
   using the same D365 app registration; it needs the `Mail.Send` application
   permission with admin consent. The webhook needs no consent, which is why
