@@ -80,16 +80,26 @@ Build it:
    - **Scope**: Organization
    - **Select columns** (under Advanced): `cr57d_apimarketplaceapproved`
      — the flow then fires *only* when the Yes/No approval switch changes.
-3. Add a **Condition**: *API Marketplace Approved* **is equal to** `true`
-   — so flipping it back to No (revoking access) sends nothing.
-4. In the **Yes** branch, add **"Send an email (V2)"** (Office 365 Outlook):
+3. Add a **Condition**: *API Marketplace Approved* **is equal to** `true` —
+   both branches send an email, so approval AND revocation are announced.
+4. In the **Yes** branch (access granted), add **"Send an email (V2)"**
+   (Office 365 Outlook):
    - **To** → dynamic content **Email** (`emailaddress1`)
    - **Subject** → `Your Iristel API Marketplace access has been granted`
    - **Body**:
      > Your access for **@{triggerOutputs()?['body/cr57d_apimarketplaceaccess']}**
      > has been granted. Please log in to the partner portal
      > (https://www.iristelpartnerportal.com) and navigate to /console.
-5. **Save** and turn the flow on. Nothing to configure on Render for this one
+5. In the **No** branch (access removed), add a second **"Send an email (V2)"**:
+   - **To** → dynamic content **Email** (`emailaddress1`)
+   - **Subject** → `Your Iristel API Marketplace access has been removed`
+   - **Body**:
+     > Your API Marketplace access has been removed. You will no longer see
+     > the API console in the partner portal. If you believe this is an
+     > error, contact your Iristel representative.
+   (The console itself re-validates access against CRM on every load, so the
+   revocation takes effect on the partner's next visit regardless of email.)
+6. **Save** and turn the flow on. Nothing to configure on Render for this one
    — Dynamics itself is the trigger.
 
 Test: edit any Account's *API Marketplace Access* field in the sandbox → the

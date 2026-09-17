@@ -452,11 +452,23 @@
     b.title='Partner type from your portal login. Used for labelling only for now.';
   }
 
-  // ---- marketplace access gating (portal cookie) ------------------------
-  // The partner portal sets `marketplaceAccess` at login from the CRM field
-  // cr57d_apimarketplaceaccess. When present, only authorized products are
-  // shown. Absent cookie = open behavior (test env / direct visitors).
-  const mpAuth=window.MarketplaceAccess?window.MarketplaceAccess.authorizedProducts():null;
+  // ---- marketplace access gating -----------------------------------------
+  // Cookie/URL param give the login-time snapshot; when we know the email we
+  // re-validate LIVE against the gateway on every load, so a revocation in
+  // CRM (approved switch unchecked) locks the console on the next visit —
+  // no re-login needed. The cookie is rewritten with the fresh value.
+  let mpAuth=window.MarketplaceAccess?window.MarketplaceAccess.authorizedProducts():null;
+  const mpEmail=window.MarketplaceAccess?window.MarketplaceAccess.email():null;
+  if(mpEmail){
+    try{
+      const live=await (await fetch(ORIGIN+'/marketplace/authorizations?email='+encodeURIComponent(mpEmail))).json();
+      if(Array.isArray(live.products)){
+        mpAuth=live.products;
+        const d=new Date();d.setTime(d.getTime()+7*24*60*60*1000);
+        document.cookie='marketplaceAccess='+encodeURIComponent(mpAuth.join(','))+'; expires='+d.toUTCString()+'; path=/; SameSite=None; Secure';
+      }
+    }catch(_){/* offline/lookup failure: keep the login-time snapshot */}
+  }
   if(mpAuth!==null){
     products=products.filter(p=>mpAuth.includes(p.id));
     bundles=bundles.filter(b=>(b.steps||[]).every(s=>mpAuth.includes(s.product)));

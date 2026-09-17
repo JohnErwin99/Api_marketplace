@@ -547,13 +547,40 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
     ).join("") + `</div>`;
   }).join("") || "<p>No packages published yet.</p>";
 
-  // Requested-APIs checkboxes: only partner-exposable products.
+  // Requested-APIs checkboxes: only partner-exposable products, plus bundle
+  // shortcuts that auto-check the APIs each bundle uses. A bundle shows up in
+  // the console when ALL of its APIs are granted — so requesting every API
+  // unlocks every bundle.
   const okClass = new Set(["public", "customer-confidential"]);
   const choices = document.getElementById("product-choices");
-  choices.innerHTML = "<legend>Requested APIs</legend>" + (reg.products || [])
+  choices.innerHTML = "<legend>Requested APIs</legend>" +
+    `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Pick a bundle to select its APIs in one click — a bundle appears in your console once all of its APIs are granted.</p>` +
+    `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:6px 0 2px">Bundles</div>` +
+    bundles.map((b) => `<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0" title="${escHtml((b.steps || []).map((s) => s.product).join(", "))}">` +
+      `<input type="checkbox" data-bundle="${escHtml(b.id)}" style="width:auto" /> 📦 ${escHtml(b.name)} <span style="opacity:.6;font-size:.75rem">${escHtml(b.useCase)}</span></label>`).join("") +
+    `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:10px 0 2px">Individual APIs</div>` +
+    (reg.products || [])
     .filter((p) => okClass.has(p.classification))
     .map((p) => `<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0">` +
       `<input type="checkbox" name="products" value="${escHtml(p.id)}" style="width:auto" /> ${escHtml(p.name)}</label>`).join("");
+
+  // Bundle checkbox -> (un)check the product checkboxes it needs. Unchecking
+  // keeps products still required by another checked bundle.
+  const bundleProducts = (id) => {
+    const b = bundles.find((x) => x.id === id);
+    return [...new Set((b && b.steps || []).map((s) => s.product))];
+  };
+  choices.querySelectorAll("[data-bundle]").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const mine = bundleProducts(cb.dataset.bundle);
+      const stillNeeded = new Set([...choices.querySelectorAll("[data-bundle]:checked")]
+        .flatMap((o) => bundleProducts(o.dataset.bundle)));
+      choices.querySelectorAll('input[name="products"]').forEach((p) => {
+        if (cb.checked && mine.includes(p.value)) p.checked = true;
+        if (!cb.checked && mine.includes(p.value) && !stillNeeded.has(p.value)) p.checked = false;
+      });
+    });
+  });
 })();
 
 document.getElementById("access-form").addEventListener("submit", async (ev) => {
