@@ -19,11 +19,13 @@
     partner type when no agent/master record exists: RESELL -> reseller,
     anything else -> agent.
 
-    INTERNAL DOMAINS: @iristel.com / @telehop.com emails are staff. In the
-    first-time flow they must be found in the employee directory or are
-    created there (POST /employees) after asking for first/last name. They
-    never go down the MIND/customer path. The regular employee login flow
-    is unchanged.
+    INTERNAL DOMAINS (Sept 24, 2026): @iristel.com / @telehop.com emails are
+    staff and must ALREADY exist in the employee directory. The portal never
+    creates staff records — self-service creation would let anyone claim an
+    @iristel.com address and grant themselves internal access. An internal
+    email the directory doesn't know is told to contact support, in both
+    login and first-time mode, and never falls through to the MIND/customer
+    checks. The employee login flow itself is unchanged.
 
     API Marketplace additions, all marked "MARKETPLACE" below:
       1. `marketplaceAccess` added to the clear-cookies-on-load list.
@@ -191,8 +193,11 @@
       const resolveEmail = (email) =>
         EMAIL_ALIASES[String(email || '').trim().toLowerCase()] || email;
 
-      // Standard refusal for emails we have no record of.
-      const NO_ACCOUNT_MSG = "You don't have an account. Please sign up or contact support.";
+      // Standard refusal for emails we have no record of. Shown with
+      // innerHTML so the sign-up link is clickable.
+      const NO_ACCOUNT_MSG =
+        'You don\'t have an account. <a href="/sign-up">Sign up</a> or contact support.';
+      const showNoAccount = () => { message.innerHTML = NO_ACCOUNT_MSG; };
 
       // ── API helpers ────────────────────────────────────────────
 
@@ -334,31 +339,16 @@
       const typeFromProvider = (acct) =>
         String((acct && acct.providerCode) || '').trim().toUpperCase() === 'RESELL' ? 'reseller' : 'agent';
 
-      // Internal domains: staff emails. First-time internal logins must be in
-      // the employee directory (or get created there) — never the MIND path.
+      // Internal domains: staff emails. They must already exist in the
+      // employee directory — the portal never creates staff records itself
+      // (self-service creation would let anyone claim an @iristel.com address
+      // and grant themselves internal access). Internal emails also never
+      // fall through to the MIND/customer path.
       const isInternalDomain = (email) =>
         /@(iristel|telehop)\.com$/i.test(String(email || '').trim());
 
-      // Creates the employee-directory record for a first-time internal login
-      // the directory does not know yet.
-      const createEmployee = async (email, firstName, lastName) => {
-        try {
-          const response = await fetch("https://api.iristelx.com/employees", {
-            method: "POST",
-            headers: {
-              "x-api-key": "b1582d78d369685683e090ad37489937",
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              firstName: firstName, lastName: lastName, workEmail: email,
-              positionStatus: "Active", employmentType: "Permanent Salary Full Time"
-            })
-          });
-          if (!response.ok) { console.warn("Employee create failed:", response.status); return null; }
-          console.log("Employee record created for", email);
-          return { email: email, firstName: firstName, lastName: lastName, partnerType: "internal" };
-        } catch (error) { console.warn("Employee create error:", error); return null; }
-      };
+      const NEED_PERMISSION_MSG =
+        "Oops — looks like you need permission. Contact support and we'll set up your access.";
 
       // Creates the auth0 account for a known email.
       const auth0SignUp = async (email, password) => {
@@ -524,9 +514,6 @@
       const passwordInput     = document.getElementById('password');
       const confirmGroup      = document.getElementById('confirmGroup');
       const confirmInput      = document.getElementById('passwordConfirm');
-      const namesGroup        = document.getElementById('namesGroup');
-      const firstNameInput    = document.getElementById('firstName');
-      const lastNameInput     = document.getElementById('lastName');
       const passwordLabel     = document.getElementById('passwordLabel');
       const submitBtn         = document.getElementById('submitBtn');
       const message           = document.getElementById('message');
@@ -537,13 +524,6 @@
       const forgotPasswordLink= document.getElementById('forgotPassword');
 
       let mode = 'login'; // 'login' | 'create'
-
-      const showNamesGroup = (show) => {
-        if (!namesGroup) return;
-        namesGroup.classList.toggle('hidden', !show);
-        if (firstNameInput) firstNameInput.required = show;
-        if (lastNameInput) lastNameInput.required = show;
-      };
 
       const setMode = (newMode) => {
         mode = newMode;
@@ -568,7 +548,6 @@
           submitBtn.textContent = 'Login';
           loginLinksRow.classList.remove('hidden');
           backToLoginLink.classList.add('hidden');
-          showNamesGroup(false);
         }
         submitBtn.disabled = false;
       };
@@ -578,7 +557,7 @@
       // billing account. userType alone never counts.
       const handleAuthFailure = async (email, hasRealRecord) => {
         if (!hasRealRecord) {
-          message.textContent = NO_ACCOUNT_MSG;
+          showNoAccount();
           submitBtn.disabled = false;
           return;
         }
@@ -658,30 +637,17 @@
           message.textContent = 'Verifying your account...';
 
           // ── INTERNAL DOMAINS (@iristel.com / @telehop.com) ───────────
-          // Staff must exist in the employee directory. If not found, ask
-          // for first/last name and create the employee record. Internal
-          // emails never go down the MIND/customer path.
+          // Staff must already exist in the employee directory. The portal
+          // never creates staff records — otherwise anyone could claim an
+          // @iristel.com address and grant themselves internal access.
           let employeeResult = null;
           try { employeeResult = await checkIfEmployee(email); } catch (e) { console.error(e); }
-          let isEmployee = employeeResult && employeeResult.email === email;
+          const isEmployee = employeeResult && employeeResult.email === email;
 
           if (isInternalDomain(email) && !isEmployee) {
-            const fn = (firstNameInput && firstNameInput.value || '').trim();
-            const ln = (lastNameInput && lastNameInput.value || '').trim();
-            if (!fn || !ln) {
-              showNamesGroup(true);
-              message.textContent = 'Internal email — enter your first and last name to create your employee record.';
-              submitBtn.disabled = false;
-              return;
-            }
-            message.textContent = 'Creating your employee record...';
-            employeeResult = await createEmployee(email, fn, ln);
-            if (!employeeResult) {
-              message.textContent = 'Could not create your employee record. Please contact support.';
-              submitBtn.disabled = false;
-              return;
-            }
-            isEmployee = true;
+            message.textContent = NEED_PERMISSION_MSG;
+            submitBtn.disabled = false;
+            return;
           }
 
           // ── Customers / partners: a real record is required ──────────
@@ -696,7 +662,7 @@
             if (!hasUnifiedRecord) mindAccount = await accountByEmail(email);
 
             if (!hasUnifiedRecord && !mindAccount) {
-              message.textContent = NO_ACCOUNT_MSG;
+              showNoAccount();
               submitBtn.disabled = false;
               return;
             }
@@ -761,6 +727,15 @@
           return;
         }
 
+        // Internal domain with no employee record: stop here. Staff access is
+        // granted by support, never self-served, and internal emails never
+        // continue to the MIND/customer checks below.
+        if (isInternalDomain(email)) {
+          message.textContent = NEED_PERMISSION_MSG;
+          submitBtn.disabled = false;
+          return;
+        }
+
         // 2nd check: unified login (agent / master / customer contact).
         let loginResult = null;
         try { loginResult = await unifiedLogin(email, password); } catch (e) { console.error(e); }
@@ -790,7 +765,7 @@
           return;
         }
 
-        message.textContent = NO_ACCOUNT_MSG;
+        showNoAccount();
         submitBtn.disabled = false;
       });
     });
@@ -822,14 +797,6 @@
         <input type="password" id="passwordConfirm" name="passwordConfirm" autocomplete="new-password">
       </div>
 
-      <!-- Internal first-time only: shown when an @iristel.com/@telehop.com
-           email is not in the employee directory yet. -->
-      <div id="namesGroup" class="hidden">
-        <label for="firstName">First Name</label>
-        <input type="text" id="firstName" name="firstName" autocomplete="given-name">
-        <label for="lastName">Last Name</label>
-        <input type="text" id="lastName" name="lastName" autocomplete="family-name">
-      </div>
 
       <button type="submit" id="submitBtn">Login</button>
 
