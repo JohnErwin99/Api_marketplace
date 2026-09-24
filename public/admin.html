@@ -91,6 +91,11 @@
   .tablehead h2{margin:0}
   .csv{margin-left:auto;font:600 12px var(--sans);color:var(--accent-soft);text-decoration:none;border:1px solid var(--line-strong);border-radius:8px;padding:5px 11px}
   .csv:hover{border-color:var(--accent)}
+  .ctl{font:700 12px var(--sans);padding:6px 13px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .ctl.approve{border:0;background:var(--ok);color:#fff}
+  .ctl.revoke{background:none;border:1px solid color-mix(in srgb,var(--err) 55%,transparent);color:var(--err)}
+  .ctl:disabled{opacity:.55;cursor:progress}
+  .ctl-err{display:block;color:var(--err);font-size:11px;margin-top:4px;max-width:160px}
   .scroll{overflow-x:auto}
   .note{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 16px}
   .empty{color:var(--muted);font-size:13px;padding:14px 2px}
@@ -397,15 +402,43 @@
         extra: p.errors ? p.errors + ' failed' : 'all succeeded'
       })), c2, 'calls');
 
-    // Access table
+    // Access table — the Control column flips the CRM approved switch.
+    const crmOk = d.sources.crm.available;
     $('#t-grants').innerHTML = d.grants.length
-      ? '<thead><tr><th>Organization</th><th>Primary contact</th><th>Access</th><th>APIs granted</th><th>Requested</th><th>Application</th></tr></thead><tbody>' +
-        d.grants.map(g => '<tr><td>' + esc(g.organization) + '</td><td>' + esc(g.email) + '</td>' +
+      ? '<thead><tr><th>Control</th><th>Organization</th><th>Primary contact</th><th>Access</th><th>APIs granted</th><th>Requested</th><th>Application</th></tr></thead><tbody>' +
+        d.grants.map(g => '<tr>' +
+          '<td>' + (crmOk
+            ? '<button type="button" class="ctl ' + (g.approved ? 'revoke' : 'approve') +
+              '" data-account="' + esc(g.accountId) + '" data-next="' + (!g.approved) + '">' +
+              (g.approved ? 'Revoke' : 'Approve') + '</button><span class="ctl-err"></span>'
+            : '<span style="color:var(--muted);font-size:11px">CRM offline</span>') + '</td>' +
+          '<td>' + esc(g.organization) + '</td><td>' + esc(g.email) + '</td>' +
           '<td><span class="pill ' + (g.approved ? 'yes' : 'no') + '">' + (g.approved ? 'Approved' : 'No access') + '</span></td>' +
           '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + (g.requested.length ? g.requested.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + esc(g.application) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No accounts have been through the marketplace flow yet.</td></tr></tbody>';
+
+    $('#t-grants').querySelectorAll('.ctl').forEach(btn => {
+      btn.onclick = async () => {
+        const approve = btn.dataset.next === 'true';
+        if (!approve && !confirm('Revoke marketplace access for this account? Their console closes on their next visit.')) return;
+        btn.disabled = true; const label = btn.textContent; btn.textContent = 'Saving…';
+        try {
+          const r = await fetch(GATEWAY + '/marketplace/admin/access?email=' + encodeURIComponent(email), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accountId: btn.dataset.account, approved: approve })
+          });
+          const body = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
+          await load();                       // pill, KPIs and charts move together
+        } catch (err) {
+          btn.disabled = false; btn.textContent = label;
+          const e = btn.parentElement.querySelector('.ctl-err');
+          if (e) e.textContent = err.message;
+        }
+      };
+    });
 
     // Requests table
     $('#t-requests').innerHTML = d.requests.length
