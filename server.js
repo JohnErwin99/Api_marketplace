@@ -34,6 +34,8 @@ const path = require('path');
 app.get('/console', (req, res) => res.sendFile(path.join(__dirname, 'public', 'console.html')));
 // Shared design tokens (light/dark) used by the landing page and the console.
 app.get('/theme.css', (req, res) => res.sendFile(path.join(__dirname, 'public', 'theme.css')));
+// Staff dashboard: who has marketplace access, to what, and usage.
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 // Public landing page: no access-request form, sign-up CTA instead.
 app.get('/public', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index-public.html')));
 // Marketplace-access cookie reader — also embedded standalone in Webflow.
@@ -125,6 +127,9 @@ for (const b of BUNDLES) {
 
 // Onboarding: access-request intake + authorization lookup for the portal.
 require('./lib/onboarding').register(app, PRODUCTS);
+// Usage beacon from the console + the staff access/usage dashboard.
+require('./lib/usage').register(app);
+require('./lib/admin').register(app, PRODUCTS);
 
 function catalogPayload() {
   return {

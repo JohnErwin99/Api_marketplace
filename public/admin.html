@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API Marketplace · Access &amp; Usage</title>
+<script>
+  (() => {
+    let saved = null; try { saved = localStorage.getItem('iristel-api-theme'); } catch {}
+    const preferred = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = saved || preferred;
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="/marketplace-access.js"></script>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f8fafc; --bg2:#f1f5f9; --panel:#ffffff;
+    --ink:#111827; --muted:#667085; --line:#e5e7eb; --line-strong:#cbd5e1;
+    --accent:#2563eb; --accent-soft:#1d4ed8;
+    --ok:#15803d; --warn:#b45309; --err:#b91c1c;
+    --shadow:0 8px 24px rgba(15,23,42,.08);
+    /* chart roles — validated palette (light) */
+    --surface-1:#ffffff;
+    --series-1:#2a78d6;   /* requests / accounts */
+    --series-2:#1baf7a;   /* calls */
+    --grid:#e5e7eb;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  [data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#01111E; --bg2:#050d16; --panel:#0a1628;
+    --ink:#E8F1F8; --muted:#9fb8cc; --line:rgba(62,140,203,.18); --line-strong:rgba(62,140,203,.38);
+    --accent:#3E8CCB; --accent-soft:#9CCBEF;
+    --ok:#a5d6a7; --warn:#f5d98a; --err:#ef9a9a;
+    --shadow:0 10px 30px rgba(62,140,203,.15);
+    --surface-1:#0a1628;
+    --series-1:#3987e5;
+    --series-2:#199e70;
+    --grid:rgba(62,140,203,.18);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;color:#fff;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-soft))}
+  header h1{font:700 15px var(--sans);margin:0}
+  header h1 span{color:var(--muted);font-weight:500}
+  .grow{flex:1}
+  .who{font-size:12px;color:var(--muted)}
+  .theme-toggle{height:32px;padding:0 11px;border:1px solid var(--line-strong);border-radius:8px;background:none;color:var(--ink);font:600 12px var(--sans);cursor:pointer}
+  main{max-width:1240px;margin:0 auto;padding:20px 22px 70px}
+
+  .filters{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+  .filters label{display:flex;flex-direction:column;gap:4px;font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .filters input,.filters select{font:13px var(--sans);padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink)}
+  .filters button{height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:700 13px var(--sans);cursor:pointer}
+  .chips{display:flex;gap:6px}
+  .chip{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);font:600 12px var(--sans);padding:7px 12px;border-radius:999px;cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:#fff}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
+  .kpi .k{font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  .kpi .v{font:800 30px/1.1 var(--sans);margin:6px 0 2px;font-variant-numeric:tabular-nums}
+  .kpi .d{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .kpi .d b{font-weight:700}
+  .kpi .d.up b{color:var(--ok)} .kpi .d.down b{color:var(--err)}
+  .kpi svg{display:block;margin-top:8px}
+
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);min-width:0}
+  .card h2{font:700 14px var(--sans);margin:0 0 2px}
+  .card .sub{font-size:12px;color:var(--muted);margin:0 0 12px}
+  .card figure{margin:0}
+
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th{text-align:left;font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td code{font:11.5px var(--mono);color:var(--accent-soft)}
+  .pill{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:999px;border:1px solid}
+  .pill.yes{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+  .pill.no{color:var(--muted);border-color:var(--line-strong)}
+  .pill.pending{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+  .tablehead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .tablehead h2{margin:0}
+  .csv{margin-left:auto;font:600 12px var(--sans);color:var(--accent-soft);text-decoration:none;border:1px solid var(--line-strong);border-radius:8px;padding:5px 11px}
+  .csv:hover{border-color:var(--accent)}
+  .scroll{overflow-x:auto}
+  .note{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 16px}
+  .empty{color:var(--muted);font-size:13px;padding:14px 2px}
+  .gate{max-width:560px;margin:90px auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:32px;text-align:center;box-shadow:var(--shadow)}
+  .gate h2{margin:0 0 8px;font:700 19px var(--sans)}
+  .gate p{color:var(--muted);margin:0 0 16px}
+  .gate a{color:var(--accent-soft);font-weight:600}
+  [hidden]{display:none!important}
+
+  /* chart bits */
+  .axis text{font:11px var(--sans);fill:var(--muted)}
+  .gridline{stroke:var(--grid);stroke-width:1}
+  .barlabel{font:600 11px var(--sans);fill:var(--ink);font-variant-numeric:tabular-nums}
+  .catlabel{font:12px var(--sans);fill:var(--ink)}
+  .tip{position:fixed;pointer-events:none;z-index:40;background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;box-shadow:var(--shadow);padding:7px 10px;font-size:12px;opacity:0;transition:opacity .1s}
+  .tip b{font-variant-numeric:tabular-nums}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand-mark" aria-hidden="true">I</span>
+  <h1>API Marketplace <span>· Access &amp; Usage</span></h1>
+  <div class="grow"></div>
+  <span class="who" id="who"></span>
+  <button class="theme-toggle" id="theme-toggle" type="button">Theme</button>
+</header>
+
+<main>
+  <div id="gate" class="gate" hidden>
+    <h2>Iristel staff only</h2>
+    <p id="gate-msg">Log in to the partner portal with your Iristel account to view this dashboard.</p>
+    <a href="https://www.iristelpartnerportal.com/login">Go to the partner portal →</a>
+  </div>
+
+  <div id="board" hidden>
+    <div class="filters">
+      <label>From<input type="date" id="from"></label>
+      <label>To<input type="date" id="to"></label>
+      <label>API
+        <select id="product"><option value="">All APIs</option></select>
+      </label>
+      <button id="apply" type="button">Apply</button>
+      <div class="chips" role="group" aria-label="Quick ranges">
+        <button class="chip" data-days="7" type="button">7d</button>
+        <button class="chip" data-days="30" type="button" aria-pressed="true">30d</button>
+        <button class="chip" data-days="90" type="button">90d</button>
+      </div>
+    </div>
+
+    <p class="note" id="source-note"></p>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Access requests per day</h2>
+        <p class="sub" id="req-sub"></p>
+        <figure id="chart-requests"></figure>
+      </div>
+      <div class="card">
+        <h2>API calls per day</h2>
+        <p class="sub" id="calls-sub"></p>
+        <figure id="chart-calls"></figure>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Accounts granted, per API</h2>
+        <p class="sub">How many approved accounts hold each API.</p>
+        <figure id="chart-accounts"></figure>
+      </div>
+      <div class="card">
+        <h2>Calls per API</h2>
+        <p class="sub">Console calls in the selected range.</p>
+        <figure id="chart-product-calls"></figure>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="tablehead"><h2>Who has access</h2><a class="csv" id="csv-grants" href="#">Export CSV</a></div>
+      <div class="scroll"><table id="t-grants"></table></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="tablehead"><h2>Access requests</h2><a class="csv" id="csv-requests" href="#">Export CSV</a></div>
+      <div class="scroll"><table id="t-requests"></table></div>
+    </div>
+
+    <div class="card">
+      <div class="tablehead"><h2>Recent API calls</h2><a class="csv" id="csv-usage" href="#">Export CSV</a></div>
+      <div class="scroll"><table id="t-usage"></table></div>
+    </div>
+  </div>
+</main>
+<div class="tip" id="tip" role="status"></div>
+
+<script>
+(async function(){
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const fmt = n => Number(n || 0).toLocaleString('en-CA');
+  const tip = $('#tip');
+
+  // ---- theme -------------------------------------------------------------
+  $('#theme-toggle').onclick = () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('iristel-api-theme', next); } catch {}
+    if (last) render(last);           // re-draw charts with the new tokens
+  };
+
+  // ---- who is asking -----------------------------------------------------
+  const email = (window.MarketplaceAccess && window.MarketplaceAccess.email()) || '';
+  $('#who').textContent = email || 'not signed in';
+
+  // ---- date range --------------------------------------------------------
+  const iso = d => d.toISOString().slice(0, 10);
+  function setDays(n){
+    const to = new Date();
+    const from = new Date(); from.setDate(from.getDate() - (n - 1));
+    $('#from').value = iso(from); $('#to').value = iso(to);
+  }
+  setDays(30);
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    document.querySelectorAll('.chip').forEach(o => o.setAttribute('aria-pressed', String(o === c)));
+    setDays(+c.dataset.days); load();
+  });
+  $('#apply').onclick = load;
+  $('#product').onchange = load;
+
+  let last = null;
+
+  function query(extra){
+    const p = new URLSearchParams({ email, from: $('#from').value, to: $('#to').value });
+    if ($('#product').value) p.set('product', $('#product').value);
+    Object.entries(extra || {}).forEach(([k, v]) => p.set(k, v));
+    return p.toString();
+  }
+
+  async function load(){
+    try {
+      const r = await fetch('/marketplace/admin/summary?' + query());
+      if (r.status === 403) {
+        const body = await r.json().catch(() => ({}));
+        $('#gate').hidden = false; $('#board').hidden = true;
+        if (body.message) $('#gate-msg').textContent = body.message +
+          (email ? ' (signed in as ' + email + ')' : '');
+        return;
+      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      $('#gate').hidden = true; $('#board').hidden = false;
+      last = data;
+      render(data);
+    } catch (err) {
+      $('#gate').hidden = false; $('#board').hidden = true;
+      $('#gate-msg').textContent = 'Could not load the dashboard: ' + err.message;
+    }
+  }
+
+  // ---- charts ------------------------------------------------------------
+  // Inline SVG, no libraries. One series per chart, so identity never depends
+  // on color; every bar carries its own value label.
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  function showTip(ev, html){
+    tip.innerHTML = html; tip.style.opacity = '1';
+    const pad = 14;
+    tip.style.left = Math.min(ev.clientX + pad, innerWidth - tip.offsetWidth - 8) + 'px';
+    tip.style.top  = Math.max(ev.clientY - tip.offsetHeight - pad, 8) + 'px';
+  }
+  const hideTip = () => { tip.style.opacity = '0'; };
+
+  // Line + area over time, with a crosshair on hover.
+  function lineChart(el, days, values, color, label){
+    const W = 560, H = 190, L = 40, R = 12, T = 12, B = 26;
+    const max = Math.max(1, ...values);
+    const x = i => L + (values.length <= 1 ? 0 : i * (W - L - R) / (values.length - 1));
+    const y = v => T + (H - T - B) * (1 - v / max);
+    const pts = values.map((v, i) => x(i) + ',' + y(v));
+    const ticks = [0, Math.round(max / 2), max].filter((v, i, a) => a.indexOf(v) === i);
+    const short = d => d.slice(5).replace('-', '/');
+
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(label) + '">';
+    ticks.forEach(t => {
+      s += '<line class="gridline" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '"/>' +
+           '<text class="axis" x="' + (L - 8) + '" y="' + (y(t) + 4) + '" text-anchor="end" style="font:11px var(--sans);fill:var(--muted)">' + fmt(t) + '</text>';
+    });
+    s += '<polygon points="' + L + ',' + y(0) + ' ' + pts.join(' ') + ' ' + x(values.length - 1) + ',' + y(0) +
+         '" fill="' + color + '" opacity=".13"/>';
+    s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    // last point emphasised
+    if (values.length) {
+      s += '<circle cx="' + x(values.length - 1) + '" cy="' + y(values[values.length - 1]) +
+           '" r="4" fill="' + color + '" stroke="var(--surface-1)" stroke-width="2"/>';
+    }
+    [0, Math.floor(days.length / 2), days.length - 1].filter((v, i, a) => a.indexOf(v) === i && v >= 0).forEach(i => {
+      s += '<text class="axis" x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" style="font:11px var(--sans);fill:var(--muted)">' + esc(short(days[i])) + '</text>';
+    });
+    // invisible hover columns
+    const w = (W - L - R) / Math.max(1, values.length);
+    values.forEach((v, i) => {
+      s += '<rect x="' + (x(i) - w / 2) + '" y="' + T + '" width="' + w + '" height="' + (H - T - B) +
+           '" fill="transparent" data-i="' + i + '"/>';
+    });
+    s += '</svg>';
+    el.innerHTML = s;
+    el.querySelectorAll('rect[data-i]').forEach(rect => {
+      rect.addEventListener('mousemove', ev => {
+        const i = +rect.dataset.i;
+        showTip(ev, '<div>' + esc(days[i]) + '</div><b>' + fmt(values[i]) + '</b> ' + esc(label));
+      });
+      rect.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  // Horizontal bars: category on the left, value labelled at the end.
+  function barChart(el, rows, color, label){
+    if (!rows.length) { el.innerHTML = '<p class="empty">Nothing in this range yet.</p>'; return; }
+    const rowH = 30, W = 560, L = 150, R = 56, T = 4;
+    const H = T + rows.length * rowH;
+    const max = Math.max(1, ...rows.map(r => r.value));
+    const bw = v => Math.max(2, (W - L - R) * v / max);
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(label) + '">';
+    rows.forEach((r, i) => {
+      const y = T + i * rowH + 5;
+      s += '<text class="catlabel" x="' + (L - 10) + '" y="' + (y + 13) + '" text-anchor="end" style="font:12px var(--sans);fill:var(--ink)">' + esc(r.name) + '</text>';
+      // 4px rounded data-end, anchored to the baseline
+      s += '<rect x="' + L + '" y="' + y + '" width="' + bw(r.value) + '" height="18" rx="4" fill="' + color + '" data-i="' + i + '"/>';
+      s += '<text class="barlabel" x="' + (L + bw(r.value) + 8) + '" y="' + (y + 13) + '" style="font:600 11px var(--sans);fill:var(--ink)">' + fmt(r.value) + '</text>';
+    });
+    s += '</svg>';
+    el.innerHTML = s;
+    el.querySelectorAll('rect[data-i]').forEach(rect => {
+      rect.addEventListener('mousemove', ev => {
+        const r = rows[+rect.dataset.i];
+        showTip(ev, '<div>' + esc(r.name) + '</div><b>' + fmt(r.value) + '</b> ' + esc(label) +
+          (r.extra ? '<div style="color:var(--muted)">' + esc(r.extra) + '</div>' : ''));
+      });
+      rect.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  function sparkline(values, color){
+    if (!values || values.length < 2) return '';
+    const W = 130, H = 26, max = Math.max(1, ...values);
+    const pts = values.map((v, i) => (i * W / (values.length - 1)) + ',' + (H - (H - 3) * v / max)).join(' ');
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true">' +
+      '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  // ---- render ------------------------------------------------------------
+  function kpiCard(k, label, spark, color, showDelta){
+    const d = showDelta && k.prev !== k.value
+      ? '<div class="d ' + (k.change >= 0 ? 'up' : 'down') + '"><b>' + (k.change >= 0 ? '+' : '') + fmt(k.change) +
+        '</b> vs previous period</div>'
+      : '<div class="d">' + (showDelta ? 'no change vs previous period' : 'current total') + '</div>';
+    return '<div class="kpi"><div class="k">' + esc(label) + '</div><div class="v">' + fmt(k.value) + '</div>' +
+      d + (spark ? sparkline(spark, color) : '') + '</div>';
+  }
+
+  function render(d){
+    const c1 = css('--series-1'), c2 = css('--series-2');
+
+    // product filter options (once)
+    const sel = $('#product');
+    if (sel.options.length <= 1 && d.products) {
+      d.products.forEach(p => {
+        const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o);
+      });
+    }
+
+    $('#source-note').innerHTML = (d.sources.crm.available
+      ? 'Access data comes from Dynamics 365 and is permanent. '
+      : '<b>Dynamics is not configured on this gateway</b> — the access table is empty until the D365 environment variables are set. ') +
+      'Requests and usage are stored on the gateway and <b>reset when it redeploys</b>.' +
+      (d.sources.crm.error ? ' CRM error: ' + esc(d.sources.crm.error) : '');
+
+    $('#kpis').innerHTML =
+      kpiCard(d.kpis.approvedAccounts, 'Accounts with access', null, c1, false) +
+      kpiCard(d.kpis.productsGranted, 'APIs granted', null, c1, false) +
+      kpiCard(d.kpis.pendingRequests, 'Requests awaiting review', null, c1, false) +
+      kpiCard(d.kpis.requests, 'Requests in range', d.series.requests, c1, true) +
+      kpiCard(d.kpis.calls, 'API calls in range', d.series.calls, c2, true) +
+      kpiCard(d.kpis.activeUsers, 'People calling APIs', null, c2, true);
+
+    $('#req-sub').textContent = d.range.from + ' to ' + d.range.to;
+    $('#calls-sub').textContent = d.range.from + ' to ' + d.range.to;
+    lineChart($('#chart-requests'), d.series.days, d.series.requests, c1, 'requests');
+    lineChart($('#chart-calls'), d.series.days, d.series.calls, c2, 'calls');
+
+    barChart($('#chart-accounts'),
+      d.byProduct.filter(p => p.accounts > 0).sort((a, b) => b.accounts - a.accounts)
+        .map(p => ({ name: p.name, value: p.accounts })), c1, 'accounts');
+    barChart($('#chart-product-calls'),
+      d.byProduct.filter(p => p.calls > 0).map(p => ({
+        name: p.name, value: p.calls,
+        extra: p.errors ? p.errors + ' failed' : 'all succeeded'
+      })), c2, 'calls');
+
+    // Access table
+    $('#t-grants').innerHTML = d.grants.length
+      ? '<thead><tr><th>Organization</th><th>Primary contact</th><th>Access</th><th>APIs granted</th><th>Requested</th><th>Application</th></tr></thead><tbody>' +
+        d.grants.map(g => '<tr><td>' + esc(g.organization) + '</td><td>' + esc(g.email) + '</td>' +
+          '<td><span class="pill ' + (g.approved ? 'yes' : 'no') + '">' + (g.approved ? 'Approved' : 'No access') + '</span></td>' +
+          '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
+          '<td>' + (g.requested.length ? g.requested.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
+          '<td>' + esc(g.application) + '</td></tr>').join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No accounts have been through the marketplace flow yet.</td></tr></tbody>';
+
+    // Requests table
+    $('#t-requests').innerHTML = d.requests.length
+      ? '<thead><tr><th>Received</th><th>Organization</th><th>Email</th><th>Application</th><th>APIs</th><th>Status</th></tr></thead><tbody>' +
+        d.requests.map(r => '<tr><td>' + esc(String(r.receivedAt).slice(0, 16).replace('T', ' ')) + '</td>' +
+          '<td>' + esc(r.organization) + '</td><td>' + esc(r.email) + '</td><td>' + esc(r.applicationName) + '</td>' +
+          '<td>' + (r.products || []).map(p => '<code>' + esc(p) + '</code>').join(' ') + '</td>' +
+          '<td><span class="pill ' + (r.status === 'pending-review' ? 'pending' : 'yes') + '">' + esc(r.status) + '</span>' +
+          ((r.reasons || []).length ? '<div style="color:var(--muted);font-size:11.5px;margin-top:3px">' + esc(r.reasons.join('; ')) + '</div>' : '') +
+          '</td></tr>').join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No access requests in this range.</td></tr></tbody>';
+
+    // Usage table
+    $('#t-usage').innerHTML = d.usage.length
+      ? '<thead><tr><th>When</th><th>Who</th><th>API</th><th>Endpoint</th><th>Status</th><th class="num">ms</th></tr></thead><tbody>' +
+        d.usage.map(u => '<tr><td>' + esc(String(u.at).slice(0, 19).replace('T', ' ')) + '</td>' +
+          '<td>' + esc(u.email || '—') + '</td><td><code>' + esc(u.product || '—') + '</code></td>' +
+          '<td><code>' + esc((u.method || '') + ' ' + (u.endpoint || '')) + '</code></td>' +
+          '<td>' + (u.status == null ? '—' : '<span class="pill ' + (u.status >= 200 && u.status < 300 ? 'yes' : 'pending') + '">' + u.status + '</span>') + '</td>' +
+          '<td class="num">' + (u.ms == null ? '—' : fmt(u.ms)) + '</td></tr>').join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No API calls recorded in this range. Usage is captured from the console — it starts filling once partners make calls.</td></tr></tbody>';
+
+    $('#csv-grants').href   = '/marketplace/admin/export.csv?' + query({ view: 'grants' });
+    $('#csv-requests').href = '/marketplace/admin/export.csv?' + query({ view: 'requests' });
+    $('#csv-usage').href    = '/marketplace/admin/export.csv?' + query({ view: 'usage' });
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

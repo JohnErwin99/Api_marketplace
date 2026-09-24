@@ -1285,9 +1285,30 @@
       const r=await fetch(c.base+buildPathFrom(root,e),reqOpts);
       const txt=await r.text();
       showResult(e,vals,r.status,txt,performance.now()-t0,inlineEl);
-    }catch(err){showResult(e,vals,0,'Network error: '+err.message,performance.now()-t0,inlineEl);}
+      reportUsage(e,r.status,performance.now()-t0);
+    }catch(err){
+      showResult(e,vals,0,'Network error: '+err.message,performance.now()-t0,inlineEl);
+      reportUsage(e,0,performance.now()-t0);
+    }
     btn.disabled=false;btn.removeAttribute('aria-busy');
   }
+  // ---- usage telemetry --------------------------------------------------
+  // IristelX and 911 calls go straight from this page to their own hosts, so
+  // the gateway can't see them — the console reports every call instead.
+  // Fire-and-forget: never blocks the request or surfaces an error.
+  function reportUsage(e,status,ms){
+    try{
+      const body=JSON.stringify({
+        email:(window.MarketplaceAccess&&window.MarketplaceAccess.email())||null,
+        product:productId, method:e.method, endpoint:e.path,
+        status:status, ms:Math.round(ms)
+      });
+      const url=ORIGIN+'/marketplace/usage';
+      if(navigator.sendBeacon)navigator.sendBeacon(url,body);
+      else fetch(url,{method:'POST',body:body,keepalive:true}).catch(()=>{});
+    }catch(_){/* telemetry must never break the console */}
+  }
+
   // ---- friendly response rendering -------------------------------------
   function humanize(k){
     return String(k).replace(/_/g,' ')
