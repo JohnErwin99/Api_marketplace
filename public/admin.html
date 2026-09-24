@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="/marketplace-access.js"></script>
+<script src="https://api-marketplace-1im9.onrender.com/marketplace-access.js"></script>
 <style>
   :root{
     color-scheme:light;
@@ -190,6 +190,11 @@
 
 <script>
 (async function(){
+  // Works served from the gateway AND copy-pasted into a Webflow embed: call
+  // the gateway absolutely unless this page is already running on it (same
+  // pattern as the landing page).
+  const GATEWAY = (location.hostname.endsWith('onrender.com') || location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? '' : 'https://api-marketplace-1im9.onrender.com';
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const fmt = n => Number(n || 0).toLocaleString('en-CA');
@@ -233,7 +238,7 @@
 
   async function load(){
     try {
-      const r = await fetch('/marketplace/admin/summary?' + query());
+      const r = await fetch(GATEWAY + '/marketplace/admin/summary?' + query());
       if (r.status === 403) {
         const body = await r.json().catch(() => ({}));
         $('#gate').hidden = false; $('#board').hidden = true;
@@ -423,9 +428,9 @@
           '<td class="num">' + (u.ms == null ? '—' : fmt(u.ms)) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No API calls recorded in this range. Usage is captured from the console — it starts filling once partners make calls.</td></tr></tbody>';
 
-    $('#csv-grants').href   = '/marketplace/admin/export.csv?' + query({ view: 'grants' });
-    $('#csv-requests').href = '/marketplace/admin/export.csv?' + query({ view: 'requests' });
-    $('#csv-usage').href    = '/marketplace/admin/export.csv?' + query({ view: 'usage' });
+    $('#csv-grants').href   = GATEWAY + '/marketplace/admin/export.csv?' + query({ view: 'grants' });
+    $('#csv-requests').href = GATEWAY + '/marketplace/admin/export.csv?' + query({ view: 'requests' });
+    $('#csv-usage').href    = GATEWAY + '/marketplace/admin/export.csv?' + query({ view: 'usage' });
   }
 
   load();
