@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!--
+    IRISTEL PARTNER PORTAL — SIGN-UP PAGE (complete Webflow embed, /sign-up)
+
+    What it does on submit:
+      1. Blocks emails that already have a MIND account (Get Account By Email,
+         search key) or an employee-directory match — both are told to log in.
+         Internal domains (@iristel.com / @telehop.com) never sign up here.
+      2. Creates the auth0 credential — same unified/sign-up as the login page.
+         409 (already exists) -> sends a password reset email, points to login.
+      3. Creates the MIND billing account (POST /accounts). The API KEY used
+         is chosen by the account-type radio, because the creating key
+         determines the account's providerCode:
+           Customer  -> agent-side key   (providerCode e.g. EXLNP, type agent)
+           Reseller  -> RESELL key       (providerCode RESELL, type reseller)
+         The response's accountId becomes the partner's account code.
+      4. Completes the session exactly like the login page's completeLogin:
+         same cookies, same marketplaceAccess lookup, same redirect countdown.
+  -->
+
+  <style>
+    .container {
+      width: 430px;
+      background: #fff;
+      padding: 35px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: fadeIn 0.6s ease;
+      text-align: center;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h2 { font-weight: 600; margin-bottom: 4px; color: #333; }
+    #subtitle { font-size: 13px; color: #888; margin-bottom: 20px; }
+    label {
+      text-align: left; display: block; margin-top: 13px;
+      font-weight: 500; color: #333; font-size: 14px;
+    }
+    input, select {
+      width: 100%; padding: 11px; margin-top: 5px; border-radius: 8px;
+      border: 1px solid #ccc; font-size: 15px; box-sizing: border-box;
+      background: #fff;
+    }
+    .two-col { display: flex; gap: 10px; }
+    .two-col > div { flex: 1; }
+    .radio-row {
+      display: flex; gap: 18px; margin-top: 6px; text-align: left;
+    }
+    .radio-row label {
+      display: flex; align-items: center; gap: 7px; margin: 0;
+      font-weight: 500; cursor: pointer;
+    }
+    .radio-row input { width: auto; margin: 0; }
+    .radio-hint { text-align: left; font-size: 12px; color: #888; margin-top: 4px; }
+    button {
+      width: 100%; padding: 14px; margin-top: 22px; border: none;
+      border-radius: 8px; background: #D1155A; color: #fff; font-size: 17px;
+      font-weight: 600; cursor: pointer; transition: 0.3s;
+    }
+    button:hover { background: #3d41a6; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .back-link {
+      display: inline-block; margin-top: 16px; font-size: 13px;
+      color: #888; text-decoration: none; cursor: pointer;
+    }
+    .back-link:hover { text-decoration: underline; }
+    #message {
+      margin-top: 15px; font-weight: 600; color: #333;
+      min-height: 22px; font-size: 14px;
+    }
+    #message a { color: #D1155A; }
+  </style>
+
+  <script>
+    // ── MARKETPLACE ────────────────────────────────────────────
+    const MARKETPLACE_GATEWAY = "https://api-marketplace-1im9.onrender.com";
+
+    // Same clear-cookies-on-load as the login page.
+    ['userEmail','agentId','agentIds','partnerType','code','name',
+     'lastCourseId','startActivationDate','marketplaceAccess'].forEach(function (k) {
+      document.cookie = k + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // ── Keys ───────────────────────────────────────────────────
+      // Search (read-only, Get Account By Email):
+      const MIND_SEARCH_KEY = "jsCf2BiTjz6OkmupgPy4z55esKiZFKyuaKLXeOu9";
+      // Account creation — the key decides the new account's providerCode:
+      const CREATE_KEYS = {
+        customer: "HRT88y2qywc6fwX779zG2D8fJtJQJbvz",   // agent-side provider
+        reseller: "fQJsQkxS8hrhGHMqY3JMLDxgjjguAV"      // RESELL provider
+      };
+      const SHARED_KEY = "b1582d78d369685683e090ad37489937"; // auth0/employees
+
+      const isInternalDomain = (email) =>
+        /@(iristel|telehop)\.com$/i.test(String(email || '').trim());
+
+      const typeFromProvider = (acct) =>
+        String((acct && acct.providerCode) || '').trim().toUpperCase() === 'RESELL' ? 'reseller' : 'agent';
+
+      // ── API helpers (same shapes as the login page) ────────────
+      const accountByEmail = async (email) => {
+        try {
+          // The search lives on the API ROOT (GET /?email=), not /accounts,
+          // and its `body` arrives as a JSON *string*.
+          const response = await fetch(
+            "https://api.iristelx.com/?email=" + encodeURIComponent(email),
+            { headers: { "x-api-key": MIND_SEARCH_KEY } }
+          );
+          if (!response.ok) return null;
+          const data = await response.json();
+          let body = data && data.body;
+          if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = null; } }
+          const accounts = (body && body.accounts) || data.accounts || [];
+          return accounts.length ? accounts[0] : null;
+        } catch (e) { console.warn("Account-by-email error:", e); return null; }
+      };
+
+      const checkIfEmployee = async (email) => {
+        try {
+          const response = await fetch(
+            "https://api.iristelx.com/employees?email=" + encodeURIComponent(email),
+            { headers: { "x-api-key": SHARED_KEY } }
+          );
+          if (!response.ok) return null;
+          const data = await response.json();
+          return (data.data && data.data.length) ? data.data[0] : null;
+        } catch (e) { return null; }
+      };
+
+      const auth0SignUp = async (email, password) => {
+        const response = await fetch("https://api.iristelx.com/unified/sign-up", {
+          method: "POST",
+          headers: { "x-api-key": SHARED_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, password: password })
+        });
+        if (response.status === 409) return { ok: false, exists: true };
+        if (!response.ok) return { ok: false };
+        return { ok: true };
+      };
+
+      const sendResetEmail = async (email) => {
+        try {
+          const response = await fetch("https://api.iristelx.com/unified/forgot-password", {
+            method: "POST",
+            headers: { "x-api-key": SHARED_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email })
+          });
+          const data = await response.json().catch(() => ({}));
+          return { ok: !!(response.ok && data.success) };
+        } catch (e) { return { ok: false }; }
+      };
+
+      // Creates the MIND billing account. The key (per account type) decides
+      // the providerCode; the response carries the new accountId.
+      const createMindAccount = async (accountType, fields) => {
+        const key = CREATE_KEYS[accountType] || CREATE_KEYS.customer;
+        try {
+          const response = await fetch("https://api.iristelx.com/accounts", {
+            method: "POST",
+            headers: {
+              "x-api-key": key,
+              "iristelx-api-key": key,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name: fields.businessName || (fields.fname + ' ' + fields.lname),
+              language: "EN",
+              contact: {
+                fname: fields.fname,
+                lname: fields.lname,
+                address1: fields.address1,
+                city: fields.city,
+                province: fields.province,
+                country: fields.country,
+                postalCode: fields.postalCode,
+                emailAddress: fields.email,
+                phone: fields.phone || undefined
+              }
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+          console.log("Create-account response:", response.status, data);
+          if (!response.ok) return null;
+          const body = data.body || data;
+          const acct = (body.accounts && body.accounts[0]) || body.account || body;
+          return {
+            accountId: acct.accountId || acct.account_code || acct.code || '',
+            id: acct.id || '',
+            providerCode: acct.providerCode || ''
+          };
+        } catch (e) { console.warn("Create-account error:", e); return null; }
+      };
+
+      const setCookie = (name, value, days) => {
+        let expires = "";
+        if (days) {
+          const date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/; SameSite=Strict";
+      };
+
+      // ── MARKETPLACE ─────────────────────────────────────────────
+      const setMarketplaceAccessCookie = async (email) => {
+        try {
+          const response = await fetch(
+            MARKETPLACE_GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email));
+          if (!response.ok) return;
+          const data = await response.json();
+          const ids = (data.products || []).join(",");
+          if (ids) setCookie('marketplaceAccess', ids, 7);
+        } catch (e) { /* marketplace stays hidden */ }
+      };
+
+      const startCountdown = (seconds) => {
+        let counter = seconds;
+        const message = document.getElementById('message');
+        const interval = setInterval(() => {
+          if (counter > 0) {
+            message.textContent = `Redirecting in ${counter} seconds...`;
+          } else {
+            clearInterval(interval);
+            window.location.href = "/home";
+          }
+          counter--;
+        }, 1000);
+        return interval;
+      };
+
+      // Completes the session exactly like the login page's completeLogin.
+      const completeSignupLogin = async (fields, created, accountType) => {
+        setCookie('userEmail', fields.email, 7);
+        const name = [fields.fname, fields.lname].filter(Boolean).join(' ')
+          || String(fields.email).split('@')[0] || 'Partner';
+        setCookie('name', name, 7);
+        // providerCode from the created account when returned, else the
+        // radio choice: RESELL -> reseller, anything else -> agent.
+        const partnerType = created && created.providerCode
+          ? typeFromProvider(created)
+          : (accountType === 'reseller' ? 'reseller' : 'agent');
+        setCookie('partnerType', partnerType, 7);
+        if (created && created.id) {
+          setCookie('agentId',  created.id, 7);
+          setCookie('agentIds', String(created.id), 7);
+        }
+        setCookie('code', (created && created.accountId) || '', 7);
+
+        await setMarketplaceAccessCookie(fields.email);
+
+        document.getElementById('message').textContent = 'Account created! Redirecting...';
+        startCountdown(5);
+      };
+
+      // ── Submit ──────────────────────────────────────────────────
+      const message = document.getElementById('message');
+      const submitBtn = document.getElementById('submitBtn');
+      const val = (id) => (document.getElementById(id).value || '').trim();
+
+      document.getElementById('signupForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const fields = {
+          fname: val('fname'), lname: val('lname'),
+          businessName: val('businessName'),
+          email: val('email').toLowerCase(), phone: val('phone'),
+          address1: val('address1'), city: val('city'),
+          province: val('province'), postalCode: val('postalCode'),
+          country: val('country')
+        };
+        const accountType = (document.querySelector('input[name="accountType"]:checked') || {}).value || 'customer';
+        const password = document.getElementById('password').value;
+        const confirm  = document.getElementById('passwordConfirm').value;
+
+        if (password !== confirm) { message.textContent = 'Passwords do not match.'; return; }
+        if (password.length < 8) { message.textContent = 'Password must be at least 8 characters.'; return; }
+
+        submitBtn.disabled = true;
+
+        // Staff never sign up here.
+        if (isInternalDomain(fields.email)) {
+          message.innerHTML = 'Iristel / Telehop staff don\'t sign up here — use ' +
+            '<a href="/login">the login page</a> ("First time logging in?").';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // 1. Already a customer or employee? -> log in instead.
+        message.textContent = 'Checking your email...';
+        const existing = await accountByEmail(fields.email);
+        if (existing) {
+          message.innerHTML = 'You already have an account (' +
+            (existing.name ? existing.name.replace(/</g, '&lt;') : 'account ' + existing.accountId) +
+            ') — <a href="/login">log in instead</a>.';
+          submitBtn.disabled = false;
+          return;
+        }
+        const employee = await checkIfEmployee(fields.email);
+        if (employee) {
+          message.innerHTML = 'This email is registered as an employee — <a href="/login">log in instead</a>.';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // 2. auth0 credential.
+        message.textContent = 'Creating your credentials...';
+        const signup = await auth0SignUp(fields.email, password);
+        if (!signup.ok) {
+          if (signup.exists) {
+            const reset = await sendResetEmail(fields.email);
+            message.innerHTML = reset.ok
+              ? 'You already have login credentials — we\'ve emailed you a password reset link. <a href="/login">Log in</a> once it\'s set.'
+              : 'You already have login credentials — use "Forgot password?" on the <a href="/login">login page</a>.';
+          } else {
+            message.textContent = 'Could not create your credentials. Please try again.';
+          }
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // 3. MIND billing account — the key chosen by the radio determines
+        // the providerCode (customer -> agent provider, reseller -> RESELL).
+        message.textContent = 'Creating your account...';
+        const created = await createMindAccount(accountType, fields);
+        if (!created || !created.accountId) {
+          // Credentials exist but no billing account: do not strand silently.
+          message.textContent = 'Your login was created, but the account setup did not complete. Please contact support to finish activation.';
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // 4. Same session completion as the login page.
+        await completeSignupLogin(fields, created, accountType);
+      });
+    });
+  </script>
+</head>
+
+<body>
+
+  <div class="container">
+    <div style="text-align:center;">
+      <img
+        src="https://cdn.prod.website-files.com/67ae3dc9346b175361116c60/693b2919992dfa59c54be930_Untitled%20design.png"
+        alt="Logo"
+        style="width:220px; margin-bottom:15px;"
+      />
+    </div>
+    <h2>Create your account</h2>
+    <div id="subtitle">Sign up for the Iristel Partner Portal</div>
+
+    <form id="signupForm">
+      <label>Account type</label>
+      <div class="radio-row">
+        <label><input type="radio" name="accountType" value="customer" checked> Customer</label>
+        <label><input type="radio" name="accountType" value="reseller"> Reseller</label>
+      </div>
+      <p class="radio-hint">Resellers sell Iristel services under their own brand.</p>
+
+      <div class="two-col">
+        <div><label for="fname">First Name</label><input type="text" id="fname" required autocomplete="given-name"></div>
+        <div><label for="lname">Last Name</label><input type="text" id="lname" required autocomplete="family-name"></div>
+      </div>
+
+      <label for="businessName">Business Name</label>
+      <input type="text" id="businessName" autocomplete="organization" placeholder="Optional for individuals">
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" required autocomplete="email">
+
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" autocomplete="tel">
+
+      <label for="address1">Address</label>
+      <input type="text" id="address1" required autocomplete="address-line1">
+
+      <div class="two-col">
+        <div><label for="city">City</label><input type="text" id="city" required autocomplete="address-level2"></div>
+        <div><label for="province">Province</label><input type="text" id="province" required placeholder="ON" autocomplete="address-level1"></div>
+      </div>
+
+      <div class="two-col">
+        <div><label for="postalCode">Postal Code</label><input type="text" id="postalCode" required autocomplete="postal-code"></div>
+        <div><label for="country">Country</label><input type="text" id="country" required value="CA" autocomplete="country"></div>
+      </div>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required autocomplete="new-password">
+
+      <label for="passwordConfirm">Retype Password</label>
+      <input type="password" id="passwordConfirm" required autocomplete="new-password">
+
+      <button type="submit" id="submitBtn">Create Account</button>
+
+      <a href="/login" class="back-link">Already have an account? Log in</a>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+</body>
+</html>

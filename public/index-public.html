@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Standalone offline edition: styles and scripts are embedded. -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Iristel developer guide for API Marketplace customer onboarding, bearer-token access, authorization, logging, and audit." />
+  <title>Iristel API Marketplace</title>
+  <script>
+    (() => {
+      let saved = null; try { saved = localStorage.getItem("iristel-api-theme"); } catch {}
+      const preferred = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = saved || preferred;
+    })();
+  </script>
+  <style>
+:root{--ink:#102237;--muted:#607086;--blue:#0b63ce;--cyan:#18b8c9;--navy:#07192c;--line:#dce5ee;--paper:#f6f9fc;--white:#fff;--green:#0b8f68;--orange:#e36d25;--shadow:0 18px 50px rgba(12,37,64,.09)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--white);font-size:16px;line-height:1.55}.topbar{position:sticky;top:0;z-index:20;height:68px;display:flex;align-items:center;gap:36px;padding:0 max(24px,calc((100vw - 1180px)/2));background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none;white-space:nowrap}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;color:#fff;font-size:20px;font-weight:900;background:linear-gradient(145deg,var(--blue),var(--cyan))}.brand strong{color:var(--blue)}nav{display:flex;gap:24px;margin:auto}nav a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:700}nav a:hover{color:var(--blue)}.version{font-size:.78rem;color:var(--muted)}main>section{max-width:1180px;margin:auto;padding:96px 24px}.intro{display:grid;grid-template-columns:1.5fr .72fr;gap:74px;align-items:end;min-height:580px;background:radial-gradient(circle at 75% 20%,rgba(24,184,201,.12),transparent 32%)}.eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.75rem;font-weight:850;color:var(--blue);margin:0 0 14px}.intro h1{font-size:clamp(3.2rem,7vw,6.6rem);line-height:.91;letter-spacing:-.065em;margin:0 0 30px;max-width:780px}.intro h1 span{color:var(--blue)}.lede{font-size:1.2rem;color:var(--muted);max-width:710px}.rule-card{background:var(--navy);color:#fff;padding:36px;border-radius:3px;box-shadow:var(--shadow);position:relative;overflow:hidden}.rule-card:after{content:"";position:absolute;width:180px;height:180px;border:34px solid rgba(24,184,201,.17);border-radius:50%;right:-80px;bottom:-90px}.rule-icon{font-size:3.8rem;line-height:1;font-weight:900;color:rgba(255,255,255,.12)}.rule-card .eyebrow{color:#58d9e2}.rule-card h2{font-size:1.65rem;line-height:1.15;margin:10px 0}.rule-card p:last-child{color:#b9c8d9}.journey-section{background:var(--paper);max-width:none!important;padding-left:max(24px,calc((100vw - 1180px)/2))!important;padding-right:max(24px,calc((100vw - 1180px)/2))!important}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:36px;margin-bottom:42px}.section-heading h2{font-size:clamp(2rem,4vw,3.3rem);line-height:1;margin:0;letter-spacing:-.04em}.section-heading>p{max-width:440px;color:var(--muted);margin:0}.journey{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid #bfcddd}.journey li{position:relative;padding:24px 13px;border-right:1px solid var(--line)}.journey li:last-child{border:0}.journey li:before{content:"";position:absolute;width:9px;height:9px;background:var(--blue);border-radius:50%;top:-5px}.journey span{font-size:.72rem;color:var(--blue);font-weight:850}.journey strong,.journey small{display:block}.journey strong{font-size:1.04rem;margin-top:14px}.journey small{color:var(--muted);margin-top:3px}.segmented{padding:4px;background:var(--paper);border:1px solid var(--line);border-radius:10px}.segmented button{font:inherit;font-weight:750;border:0;background:transparent;padding:9px 16px;border-radius:7px;color:var(--muted);cursor:pointer}.segmented button.active{color:#fff;background:var(--blue)}.identity-grid{display:grid;grid-template-columns:1fr 1fr .85fr;gap:20px}.type-card,.decision-panel{border:1px solid var(--line);padding:30px;background:#fff}.type-card{opacity:.52;transition:.2s}.type-card.active{opacity:1;border-top:4px solid var(--blue);box-shadow:var(--shadow);transform:translateY(-3px)}.tag{display:inline-block;font-size:.68rem;font-weight:900;letter-spacing:.12em;padding:5px 8px;margin-bottom:18px}.tag.internal{color:var(--blue);background:#e8f1fc}.tag.external{color:var(--orange);background:#fff0e7}.type-card h3,.decision-panel h3{font-size:1.35rem;margin:0 0 8px}.type-card>p{color:var(--muted);min-height:50px}.type-card dl{margin-top:25px}.type-card dl div{border-top:1px solid var(--line);padding:13px 0}.type-card dt{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}.type-card dd{margin:3px 0 0;font-weight:650}.decision-panel{background:var(--paper)}.decision-panel ul,.field-notes ul,.audit-controls ul{padding:0;list-style:none}.decision-panel li,.audit-controls li{padding:11px 0 11px 24px;position:relative;border-bottom:1px solid var(--line)}.decision-panel li:before,.audit-controls li:before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:900}.caution{font-size:.85rem;color:#704520;background:#fff3df;padding:14px;margin-top:24px}.form-section{max-width:none!important;background:var(--navy);color:#fff;padding-left:max(24px,calc((100vw - 1180px)/2))!important;padding-right:max(24px,calc((100vw - 1180px)/2))!important}.form-section .eyebrow{color:#58d9e2}.form-section .section-heading>p{color:#a7b9cc}.form-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:58px}.mock-form{background:#fff;color:var(--ink);padding:30px;display:grid;gap:16px;box-shadow:0 26px 70px rgba(0,0,0,.25)}label,legend{font-size:.78rem;font-weight:800;color:#4b5f76}input,textarea,select{display:block;width:100%;font:inherit;margin-top:6px;padding:12px;border:1px solid var(--line);background:#f9fbfd;color:var(--ink);border-radius:3px}textarea{height:82px;resize:none}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}fieldset{border:1px solid var(--line);padding:12px}fieldset span,.chips span{display:inline-block;background:#e9f2fc;color:var(--blue);font-size:.73rem;font-weight:750;padding:6px 9px;margin:4px}.submit-demo{background:var(--blue);color:#fff;border:0;padding:14px 18px;font:inherit;font-weight:800;display:flex;justify-content:space-between}.field-notes h3{font-size:1.3rem}.field-notes li{display:flex;justify-content:space-between;gap:25px;border-bottom:1px solid #254057;padding:15px 0}.field-notes li span{color:#9fb3c8;text-align:right}.anti-pattern{border-left:3px solid var(--orange);padding:12px 18px;background:#132a40;margin-top:26px}.anti-pattern strong,.anti-pattern span{display:block}.anti-pattern span{color:#aebed0;font-size:.86rem}.token-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:50px;align-items:center}.code-card{background:#0b1724;color:#d8e6f3;border-radius:4px;overflow:hidden;box-shadow:var(--shadow)}.code-title{display:flex;justify-content:space-between;padding:13px 18px;background:#13263a;color:#8facbf;font-size:.78rem}.code-title button{border:0;background:transparent;color:#58d9e2;cursor:pointer}.code-card pre{margin:0;padding:30px;font-size:.9rem;white-space:pre-wrap}.security-rules article{display:flex;gap:20px;padding:17px 0;border-bottom:1px solid var(--line)}.security-rules article>span{font-size:.75rem;font-weight:900;color:var(--blue)}.security-rules h3{margin:0 0 4px}.security-rules p{margin:0;color:var(--muted)}.status-flow{margin-top:45px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:14px;padding:19px;flex-wrap:wrap;font-size:.86rem;font-weight:750}.status-flow b{color:var(--cyan)}.audit-section{max-width:none!important;background:#0a1d31;color:#fff;padding-left:max(24px,calc((100vw - 1180px)/2))!important;padding-right:max(24px,calc((100vw - 1180px)/2))!important}.light .eyebrow{color:#58d9e2}.light>p{color:#a7b9cc}.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px}.event-card{background:#061423;border:1px solid #1d3a54;padding:28px}.event-card pre{color:#c5d4df;overflow:auto;line-height:1.75}.event-card i{color:#63d7de;font-style:normal}.audit-controls h3{margin:0 0 10px}.audit-controls h3:nth-of-type(2){margin-top:28px}.chips span{background:#17334c;color:#b8d2e6;border:1px solid #254866}.audit-controls li{border-color:#203b53;color:#c2cfdb}.never-log{margin-top:25px;padding:16px;border:1px solid #874827;background:#2c211d;color:#e9c3ae}.developer-checklist{display:grid;grid-template-columns:.7fr 1.3fr;gap:70px}.developer-checklist h2{font-size:3rem;line-height:1;margin:0}.checklist{display:grid;grid-template-columns:1fr 1fr;gap:12px}.checklist label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);padding:14px;font-size:.87rem;color:var(--ink);cursor:pointer}.checklist input{width:auto;margin:3px 0 0;accent-color:var(--blue)}footer{padding:28px max(24px,calc((100vw - 1180px)/2));background:var(--paper);display:flex;justify-content:space-between;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line)}@media(max-width:900px){nav,.version{display:none}.intro,.identity-grid,.form-layout,.token-grid,.audit-grid,.developer-checklist{grid-template-columns:1fr}.intro{min-height:auto;padding-top:70px}.journey{grid-template-columns:repeat(3,1fr)}.section-heading{align-items:flex-start;flex-direction:column}.type-card{opacity:1}.developer-checklist{gap:35px}}@media(max-width:580px){main>section{padding:68px 20px}.intro h1{font-size:3.2rem}.journey{grid-template-columns:1fr 1fr}.two-col,.checklist{grid-template-columns:1fr}.field-notes li{display:block}.field-notes li span{display:block;text-align:left;margin-top:4px}.status-flow{align-items:flex-start;flex-direction:column}.status-flow b{transform:rotate(90deg)}footer{display:block}footer span{display:block;margin:4px 0}}
+
+
+:root {
+  color-scheme: light;
+  --ink: #111827;
+  --muted: #667085;
+  --blue: #2563eb;
+  --cyan: #2563eb;
+  --navy: #111827;
+  --line: #e5e7eb;
+  --paper: #f8fafc;
+  --white: #ffffff;
+  --green: #15803d;
+  --orange: #c2410c;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-code: #111827;
+  --header-glass: rgba(255, 255, 255, 0.92);
+  --field: #ffffff;
+  --focus-ring: rgba(37, 99, 235, 0.28);
+  --shadow: none;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f3f4f6;
+  --muted: #9ca3af;
+  --blue: #60a5fa;
+  --cyan: #60a5fa;
+  --navy: #090e16;
+  --line: #293241;
+  --paper: #111827;
+  --white: #0b1018;
+  --green: #4ade80;
+  --orange: #fb923c;
+  --surface: #0b1018;
+  --surface-raised: #111827;
+  --surface-soft: #0f1722;
+  --surface-code: #070b11;
+  --header-glass: rgba(11, 16, 24, 0.92);
+  --field: #0b1018;
+  --focus-ring: rgba(96, 165, 250, 0.34);
+}
+
+html, body { background: var(--surface); }
+body { color: var(--ink); }
+body, .topbar, main > section, .type-card, .decision-panel, .mock-form,
+input, textarea, select, .checklist label, footer {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.topbar { height: 64px; background: var(--header-glass); border-color: var(--line); gap: 28px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 6px; background: var(--ink); font-size: 17px; }
+[data-theme="dark"] .brand-mark { color: #0b1018; background: #f3f4f6; }
+.brand strong, nav a:hover { color: var(--ink); }
+nav { gap: 20px; }
+nav a { font-size: 0.82rem; font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.version { color: var(--muted); }
+
+.theme-toggle {
+  height: 34px; min-width: 78px; display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px;
+  background: transparent; color: var(--ink); font: inherit; font-size: 0.75rem;
+  font-weight: 650; cursor: pointer;
+}
+.theme-toggle:hover { background: var(--surface-soft); }
+.theme-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.theme-toggle .sun { color: #d97706; }
+.theme-toggle .moon { display: none; color: #93c5fd; }
+[data-theme="dark"] .theme-toggle .sun { display: none; }
+[data-theme="dark"] .theme-toggle .moon { display: inline; }
+
+.console-cta {
+  display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px;
+  border-radius: 7px; background: var(--ink); color: var(--surface); text-decoration: none;
+  font-size: 0.8rem; font-weight: 700; white-space: nowrap;
+}
+.console-cta:hover { opacity: 0.88; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.hero-actions .console-cta { height: 48px; padding: 0 24px; font-size: 0.95rem; }
+.hero-actions .ghost {
+  display: inline-flex; align-items: center; height: 48px; padding: 0 24px; border-radius: 7px;
+  border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 0.95rem; font-weight: 700;
+}
+.hero-actions .ghost:hover { background: var(--surface-soft); }
+.signed-out-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+[hidden] { display: none !important; }
+
+main > section { padding-top: 76px; padding-bottom: 76px; }
+.intro { min-height: 470px; grid-template-columns: 1.45fr 0.75fr; gap: 64px; background: none; }
+.intro h1 {
+  max-width: 720px; font-size: clamp(3rem, 6vw, 5.4rem); line-height: 0.98;
+  letter-spacing: -0.055em; margin-bottom: 24px;
+}
+.intro h1 span { color: var(--muted); }
+.lede { max-width: 680px; font-size: 1.08rem; }
+.eyebrow { color: var(--muted); letter-spacing: 0.12em; }
+
+.rule-card {
+  padding: 28px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-raised); color: var(--ink); box-shadow: none;
+}
+.rule-card::after { display: none; }
+.rule-icon { font-size: 0.75rem; color: var(--muted); font-weight: 750; }
+.rule-card .eyebrow { color: var(--muted); }
+.rule-card h2 { font-size: 1.35rem; }
+.rule-card p:last-child { color: var(--muted); }
+
+.journey-section, .form-section, .audit-section {
+  background: var(--surface-soft); color: var(--ink);
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.form-section .eyebrow, .light .eyebrow { color: var(--muted); }
+.form-section .section-heading > p, .light > p { color: var(--muted); }
+.section-heading { margin-bottom: 34px; }
+.section-heading h2 { font-size: clamp(1.85rem, 3vw, 2.65rem); letter-spacing: -0.035em; }
+.journey { border-color: var(--line); }
+.journey li { padding: 20px 12px; }
+.journey li::before { width: 7px; height: 7px; top: -4px; }
+
+.segmented { background: transparent; border-radius: 7px; }
+.segmented button { border-radius: 5px; font-size: 0.82rem; }
+.segmented button.active { background: var(--ink); color: var(--surface); }
+.identity-grid { gap: 16px; }
+.type-card, .decision-panel {
+  padding: 26px; background: var(--surface-raised); border-radius: 8px;
+}
+.type-card { opacity: 0.66; }
+.type-card.active { border-top: 1px solid var(--ink); box-shadow: none; transform: none; opacity: 1; }
+.tag { border-radius: 4px; }
+.tag.internal, fieldset span { background: #eff6ff; color: #1d4ed8; }
+.tag.external { background: #fff7ed; color: #c2410c; }
+[data-theme="dark"] .tag.internal, [data-theme="dark"] fieldset span { background: #172554; color: #93c5fd; }
+[data-theme="dark"] .tag.external { background: #431407; color: #fdba74; }
+.caution { border-radius: 6px; background: #fff7ed; color: #9a3412; }
+[data-theme="dark"] .caution { background: #2a160c; color: #fdba74; }
+
+.form-layout { gap: 42px; }
+.mock-form {
+  padding: 26px; background: var(--surface-raised); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; box-shadow: none;
+}
+label, legend { color: var(--muted); }
+input, textarea, select { background: var(--field); color: var(--ink); border-radius: 6px; }
+fieldset { border-color: var(--line); border-radius: 6px; }
+.submit-demo { border-radius: 6px; background: var(--ink); color: var(--surface); }
+.field-notes li { border-color: var(--line); }
+.field-notes li span { color: var(--muted); }
+.anti-pattern { background: transparent; border-left-color: var(--orange); }
+.anti-pattern span { color: var(--muted); }
+
+.code-card, .event-card { border-radius: 8px; box-shadow: none; background: var(--surface-code); }
+.code-title { background: transparent; border-bottom: 1px solid #263141; }
+.status-flow { border-radius: 8px; }
+.audit-grid { gap: 42px; }
+.event-card { border-color: var(--line); }
+.audit-controls li { border-color: var(--line); color: var(--muted); }
+.chips span { background: transparent; color: var(--muted); border-color: var(--line); border-radius: 4px; }
+.never-log { background: transparent; color: var(--muted); border-color: var(--line); border-radius: 6px; }
+.checklist label { background: var(--surface-raised); color: var(--ink); border-radius: 6px; }
+footer { background: var(--surface); border-color: var(--line); }
+
+@media (max-width: 900px) {
+  .topbar { gap: 14px; }
+  .header-actions { margin-left: auto; }
+  .intro { grid-template-columns: 1fr; min-height: auto; gap: 34px; padding-top: 64px; }
+  .type-card { opacity: 1; }
+}
+
+@media (max-width: 580px) {
+  main > section { padding-top: 56px; padding-bottom: 56px; }
+  .intro h1 { font-size: 3rem; }
+  .theme-toggle { min-width: 38px; width: 38px; padding: 0; }
+  .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body, .topbar, main > section, .type-card, .decision-panel, .mock-form,
+  input, textarea, select, .checklist label, footer { transition: none; }
+}
+
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Iristel API Marketplace guide home">
+      <span class="brand-mark" aria-hidden="true">I</span>
+      <span>Iristel <strong>API Marketplace</strong></span>
+    </a>
+    <div class="header-actions">
+      <span class="version">API Marketplace</span>
+      <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="sun" aria-hidden="true">☀</span>
+        <span class="moon" aria-hidden="true">☾</span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">Know your customer before granting access</p>
+        <h1>One marketplace.<br><span>Two trust paths.</span></h1>
+        <p class="lede">Every API consumer must have a verified identity, an approved business purpose, explicit scopes, and a traceable activity history. “Internal” and “external” change the approval path—not the security baseline.</p>
+        <div class="hero-actions">
+          <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
+          <a class="ghost" href="#packages">Browse the packages</a>
+        </div>
+      </div>
+      <aside class="rule-card" aria-label="Core access rule">
+        <div class="rule-icon">01</div>
+        <p class="eyebrow">Core rule</p>
+        <h2>No customer record, no token.</h2>
+        <p>Create and approve the customer/application record before issuing credentials. Never share a person’s bearer token between applications or teams.</p>
+      </aside>
+    </section>
+
+    <section class="journey-section" id="journey">
+      <div class="section-heading">
+        <div><p class="eyebrow">End-to-end control</p><h2>Access journey</h2></div>
+        <p>Each gate produces an auditable decision or system event.</p>
+      </div>
+      <ol class="journey">
+        <li><span>1</span><div><strong>Identify</strong><small>Internal or external</small></div></li>
+        <li><span>2</span><div><strong>Request</strong><small>Customer submits form</small></div></li>
+        <li><span>3</span><div><strong>Verify</strong><small>Owner, purpose, contacts</small></div></li>
+        <li><span>4</span><div><strong>Approve</strong><small>Scopes and environment</small></div></li>
+        <li><span>5</span><div><strong>Issue</strong><small>Client credentials</small></div></li>
+        <li><span>6</span><div><strong>Operate</strong><small>Monitor and review</small></div></li>
+      </ol>
+    </section>
+
+    <section id="packages">
+      <style>
+        #packages .pk-aud{font:700 12px var(--head,inherit);text-transform:uppercase;letter-spacing:.9px;opacity:.65;margin:22px 0 10px}
+        #packages .pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+        #packages .pk-card{border:1px solid var(--line,#3333);border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;display:block;transition:transform .15s ease}
+        #packages .pk-card:hover{transform:translateY(-2px)}
+        #packages .pk-card h3{margin:0 0 4px;font-size:15px}
+        #packages .pk-card .use{font-size:12.5px;opacity:.75;margin:0 0 8px}
+        #packages .pk-card ul{margin:0;padding-left:16px;font-size:12px;opacity:.85}
+        #packages .pk-card{cursor:default}
+        #packages .pk-sum{font-size:12.5px;opacity:.8;margin:0 0 10px}
+        #packages .pk-steps{margin:0;padding-left:18px;font-size:12px}
+        #packages .pk-steps li{margin:6px 0}
+        #packages .pk-steps code{display:block;opacity:.95}
+        #packages .pk-steps span{display:block;opacity:.7}
+      </style>
+      <div class="section-heading">
+        <div><p class="eyebrow">Bundles &amp; packages</p><h2>Which APIs for which job</h2></div>
+        <p>Curated recipes per business model — each links straight into the guided console.</p>
+      </div>
+      <div id="packages-grid"><p>Loading packages…</p></div>
+    </section>
+
+    <section id="identity">
+      <div class="section-heading">
+        <div><p class="eyebrow">Customer classification</p><h2>Choose the correct trust path</h2></div>
+        <div class="segmented" role="group" aria-label="Customer type">
+          <button class="active" data-view="internal" aria-pressed="true">Internal</button>
+          <button data-view="external" aria-pressed="false">External</button>
+        </div>
+      </div>
+
+      <div class="identity-grid">
+        <article class="type-card active" data-card="internal">
+          <div class="tag internal">INTERNAL</div>
+          <h3>Iristel-owned consumer</h3>
+          <p>An application, automation, team, or service operated by Iristel.</p>
+          <dl>
+            <div><dt>Identity owner</dt><dd>Iristel team + named application owner</dd></div>
+            <div><dt>Verification</dt><dd>Corporate identity, cost centre, system ownership</dd></div>
+            <div><dt>Approval</dt><dd>API owner + security for sensitive scopes</dd></div>
+            <div><dt>Credentials</dt><dd>Non-human service client; never an employee token</dd></div>
+          </dl>
+        </article>
+        <article class="type-card" data-card="external">
+          <div class="tag external">EXTERNAL</div>
+          <h3>Partner or customer consumer</h3>
+          <p>A reseller, carrier, enterprise customer, vendor, or integration partner.</p>
+          <dl>
+            <div><dt>Identity owner</dt><dd>Legal organization + technical and business contacts</dd></div>
+            <div><dt>Verification</dt><dd>Account relationship, domain, agreement, intended use</dd></div>
+            <div><dt>Approval</dt><dd>Business sponsor + API owner + security</dd></div>
+            <div><dt>Credentials</dt><dd>Dedicated client per organization, app, and environment</dd></div>
+          </dl>
+        </article>
+        <aside class="decision-panel">
+          <p class="eyebrow">Classification test</p>
+          <h3 id="decision-title">Internal checklist</h3>
+          <ul id="decision-list">
+            <li>Operated and supported by an Iristel team</li>
+            <li>Named technical and business owners</li>
+            <li>Service account lifecycle tied to the application</li>
+            <li>Production access approved independently</li>
+          </ul>
+          <p class="caution">A developer is not the customer. The consuming organization and application are the customer identity.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="form-section" id="signup">
+      <div class="section-heading">
+        <div><p class="eyebrow">Get started</p><h2>Create your Iristel account</h2></div>
+        <p>Sign up once — your partner account and billing code are created automatically.</p>
+      </div>
+      <div class="form-layout">
+        <div class="mock-form" style="align-content:start">
+          <h3 style="margin:0">What happens after you sign up</h3>
+          <ol style="margin:10px 0 0;padding-left:20px;font-size:.95rem;line-height:2">
+            <li>Your partner account and account code are created instantly.</li>
+            <li>Log in to the Iristel Partner Portal with your new credentials.</li>
+            <li>Request access to the APIs and bundles you need.</li>
+            <li>Approved APIs appear in your console — ready to call.</li>
+          </ol>
+          <a class="console-cta" style="justify-content:center;margin-top:18px;height:48px;font-size:.95rem" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
+        </div>
+        <div class="field-notes">
+          <h3>Why sign up</h3>
+          <ul>
+            <li><strong>One account</strong><span>Portal, billing, and API marketplace</span></li>
+            <li><strong>Instant account code</strong><span>Generated at sign-up, no waiting</span></li>
+            <li><strong>Guided console</strong><span>Try every API with forms, not curl</span></li>
+            <li><strong>Curated bundles</strong><span>Recipes per business model</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="security">
+      <div class="section-heading">
+        <div><p class="eyebrow">Runtime security</p><h2>Bearer token handling</h2></div>
+        <p>OAuth 2.0 client credentials is the default pattern for server-to-server consumers.</p>
+      </div>
+      <div class="token-grid">
+        <div class="code-card">
+          <div class="code-title"><span>Request</span><button id="copy-code" type="button">Copy</button></div>
+          <pre><code id="auth-code">Authorization: Bearer &lt;access_token&gt;
+Content-Type: application/json
+X-Correlation-ID: 8f3a…</code></pre>
+        </div>
+        <div class="security-rules">
+          <article><span>01</span><div><h3>Validate every request</h3><p>Verify issuer, audience, signature, expiry, client identity, and required scope.</p></div></article>
+          <article><span>02</span><div><h3>Keep tokens short-lived</h3><p>Use secure secret storage, rotation, and immediate revocation when ownership or risk changes.</p></div></article>
+          <article><span>03</span><div><h3>Enforce least privilege</h3><p>Authorize the specific operation and customer boundary—not merely a valid token.</p></div></article>
+          <article><span>04</span><div><h3>Never expose secrets</h3><p>Do not place tokens in URLs, logs, tickets, source code, browser storage, or screenshots.</p></div></article>
+        </div>
+      </div>
+      <div class="status-flow" aria-label="Request decision flow">
+        <span>Request</span><b>→</b><span>Token validation</span><b>→</b><span>Scope + customer authorization</span><b>→</b><span>API operation</span><b>→</b><span>Audit event</span>
+      </div>
+    </section>
+
+    <section id="audit" class="audit-section">
+      <div class="section-heading light">
+        <div><p class="eyebrow">Evidence by design</p><h2>Logging & audit</h2></div>
+        <p>Logs support operations. Audit records prove who did what, for which customer, and under which authorization.</p>
+      </div>
+      <div class="audit-grid">
+        <div class="event-card">
+          <p class="eyebrow">Sample event</p>
+          <pre>{
+  <i>"timestamp"</i>: "2026-09-02T14:26:41Z",
+  <i>"correlation_id"</i>: "8f3a…",
+  <i>"customer_id"</i>: "cust_2481",
+  <i>"client_id"</i>: "app_activation_prod",
+  <i>"subject"</i>: "service-account",
+  <i>"scope"</i>: "subscriber.activate",
+  <i>"operation"</i>: "POST /subscribers",
+  <i>"resource_id"</i>: "sub_91…",
+  <i>"outcome"</i>: "success",
+  <i>"source_ip"</i>: "203.0.113.x",
+  <i>"status_code"</i>: 201
+}</pre>
+        </div>
+        <div class="audit-controls">
+          <h3>Capture</h3>
+          <div class="chips"><span>Time</span><span>Customer</span><span>Client</span><span>Actor</span><span>Scope</span><span>Operation</span><span>Resource</span><span>Outcome</span><span>Source</span><span>Correlation ID</span></div>
+          <h3>Protect</h3>
+          <ul><li>Centralize and restrict audit-log access</li><li>Make records tamper-evident and time-synchronized</li><li>Define retention by legal, security, and business needs</li><li>Alert on repeated denial, abnormal volume, and privileged actions</li></ul>
+          <div class="never-log"><strong>Never log:</strong> bearer tokens, client secrets, passwords, authorization codes, full payment data, or unnecessary personal data.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="developer-checklist">
+      <div><p class="eyebrow">Definition of done</p><h2>Before an API goes live</h2></div>
+      <div class="checklist">
+        <label><input type="checkbox"> Customer type and identity verified</label>
+        <label><input type="checkbox"> Business purpose and data classification approved</label>
+        <label><input type="checkbox"> Dedicated client and environment created</label>
+        <label><input type="checkbox"> Scopes enforce least privilege and tenant boundary</label>
+        <label><input type="checkbox"> Token validation and secret rotation tested</label>
+        <label><input type="checkbox"> Logs redact secrets and sensitive payloads</label>
+        <label><input type="checkbox"> Audit events, alerts, retention, and review owner confirmed</label>
+        <label><input type="checkbox"> Revocation and offboarding tested</label>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>Iristel API Marketplace</span><span>Customer identity · Access · Accountability</span></footer>
+  <script>
+const views = {
+  internal: {
+    title: "Internal checklist",
+    items: [
+      "Operated and supported by an Iristel team",
+      "Named technical and business owners",
+      "Service account lifecycle tied to the application",
+      "Production access approved independently"
+    ]
+  },
+  external: {
+    title: "External checklist",
+    items: [
+      "Verified legal organization and account relationship",
+      "Named partner sponsor plus technical and security contacts",
+      "Signed API terms and documented permitted use",
+      "Dedicated sandbox validation before production approval"
+    ]
+  }
+};
+
+const themeToggle = document.getElementById("theme-toggle");
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const isDark = theme === "dark";
+  themeToggle.setAttribute("aria-pressed", String(isDark));
+  themeToggle.setAttribute("aria-label", `Switch to ${isDark ? "light" : "dark"} mode`);
+  themeToggle.querySelector(".theme-label").textContent = isDark ? "Dark" : "Light";
+}
+
+applyTheme(document.documentElement.dataset.theme || "light");
+
+themeToggle.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("iristel-api-theme", next); } catch {}
+  applyTheme(next);
+});
+
+document.querySelectorAll("[data-view]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const view = button.dataset.view;
+    document.querySelectorAll("[data-view]").forEach((item) => {
+      item.classList.toggle("active", item === button);
+      item.setAttribute("aria-pressed", item === button ? "true" : "false");
+    });
+    document.querySelectorAll("[data-card]").forEach((card) => {
+      card.classList.toggle("active", card.dataset.card === view);
+    });
+    document.getElementById("decision-title").textContent = views[view].title;
+    document.getElementById("decision-list").innerHTML = views[view].items.map((item) => `<li>${item}</li>`).join("");
+  });
+});
+
+// ---- Packages section + access-request form (data-driven from the catalog)
+const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// When this page is copied into Webflow, relative fetches would hit the
+// Webflow domain (404) — call the gateway absolutely unless we ARE the gateway.
+const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname === "localhost" || location.hostname === "127.0.0.1")
+  ? "" : "https://api-marketplace-1im9.onrender.com";
+(async () => {
+  let reg;
+  try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
+  catch { document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>"; return; }
+
+  // Packages grid
+  const grid = document.getElementById("packages-grid");
+  const bundles = reg.bundles || [], audiences = reg.audiences || [];
+  // Self-contained cards: every step visible with its explanation, no console
+  // link — visitors without marketplace access can still see how each package
+  // would be used.
+  grid.innerHTML = audiences.map((a) => {
+    const list = bundles.filter((b) => b.audience === a.id);
+    if (!list.length) return "";
+    return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
+      `<div class="pk-card"><h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
+      `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
+      `<ol class="pk-steps">${(b.steps || []).map((s) =>
+        `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
+    ).join("") + `</div>`;
+  }).join("") || "<p>No packages published yet.</p>";
+
+})();
+
+document.getElementById("copy-code").addEventListener("click", async (event) => {
+  try {
+    await navigator.clipboard.writeText(document.getElementById("auth-code").innerText);
+    event.currentTarget.textContent = "Copied";
+    setTimeout(() => { event.currentTarget.textContent = "Copy"; }, 1600);
+  } catch {
+    event.currentTarget.textContent = "Select text";
+  }
+});
+
+  </script>
+</body>
+</html>

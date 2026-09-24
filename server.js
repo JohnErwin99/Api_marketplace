@@ -34,6 +34,8 @@ const path = require('path');
 app.get('/console', (req, res) => res.sendFile(path.join(__dirname, 'public', 'console.html')));
 // Shared design tokens (light/dark) used by the landing page and the console.
 app.get('/theme.css', (req, res) => res.sendFile(path.join(__dirname, 'public', 'theme.css')));
+// Public landing page: no access-request form, sign-up CTA instead.
+app.get('/public', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index-public.html')));
 // Marketplace-access cookie reader — also embedded standalone in Webflow.
 app.get('/marketplace-access.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-access.js')));
 
