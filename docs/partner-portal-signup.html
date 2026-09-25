@@ -338,7 +338,24 @@
           return;
         }
 
-        // 4. Same session completion as the login page.
+        // 4. Mirror the new customer into Dynamics 365 (account + primary
+        // contact + MIND account code) so the relationship is on record from
+        // day one. Fire-and-forget: CRM being down must not block sign-up.
+        fetch(MARKETPLACE_GATEWAY + '/marketplace/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: fields.email, fname: fields.fname, lname: fields.lname,
+            businessName: fields.businessName, phone: fields.phone,
+            address1: fields.address1, city: fields.city, province: fields.province,
+            postalCode: fields.postalCode, country: fields.country,
+            accountType: accountType, mindAccountId: created.accountId
+          })
+        }).then(function (r) {
+          console.log('CRM sign-up mirror:', r.status);
+        }).catch(function (e) { console.warn('CRM sign-up mirror failed:', e); });
+
+        // 5. Same session completion as the login page.
         await completeSignupLogin(fields, created, accountType);
       });
     });

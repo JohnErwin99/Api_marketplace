@@ -338,12 +338,16 @@ footer { background: var(--surface); border-color: var(--line); }
           <label>Primary contact email<input name="email" type="email" required placeholder="you@company.com"
             title="Used as the primary contact on the account created in Dynamics 365 and for the approval email." />
             <small id="email-hint" style="display:none;font-weight:400;color:var(--orange)"></small></label>
-          <label>Business purpose<textarea name="businessPurpose" placeholder="What will this application do?"></textarea></label>
+          <label>Business purpose<textarea name="businessPurpose" required placeholder="What will this application do? Required — every request is reviewed."></textarea></label>
+          <div class="two-col">
+            <label>Business registration number<input name="businessRegNumber" required placeholder="e.g. 123456789" /></label>
+            <label>Business registration document<input name="registrationFile" type="file" required accept=".pdf,.png,.jpg,.jpeg" /></label>
+          </div>
           <div class="two-col">
             <label>Environment<select name="environment"><option value="sandbox">Sandbox → Production</option><option value="sandbox-only">Sandbox only</option></select></label>
             <label>Data classification<select name="dataClassification"><option value="public">Public</option><option value="internal">Internal</option><option value="customer-confidential" selected>Customer confidential</option><option value="restricted">Restricted</option></select></label>
           </div>
-          <fieldset id="product-choices"><legend>Requested APIs</legend><span>Loading catalog…</span></fieldset>
+          <fieldset id="product-choices"><legend>Requested bundles</legend><span>Loading catalog…</span></fieldset>
           <label style="display:flex;gap:8px;align-items:center;font-weight:400">
             <input type="checkbox" name="existingCustomer" style="width:auto" /> I already have an Iristel Partner Portal login
           </label>
@@ -531,6 +535,7 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
   catch { document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>"; return; }
 
   // Packages grid
+  window.__mpCatalog = reg;   // the submit handler reads bundles from here
   const grid = document.getElementById("packages-grid");
   const bundles = reg.bundles || [], audiences = reg.audiences || [];
   // Self-contained cards: every step visible with its explanation, no console
@@ -547,39 +552,25 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
     ).join("") + `</div>`;
   }).join("") || "<p>No packages published yet.</p>";
 
-  // Requested-APIs checkboxes: only partner-exposable products, plus bundle
-  // shortcuts that auto-check the APIs each bundle uses. A bundle shows up in
-  // the console when ALL of its APIs are granted — so requesting every API
-  // unlocks every bundle.
-  const okClass = new Set(["public", "customer-confidential"]);
+  // Requests are BUNDLE-based: partners pick the ready-made packages; the
+  // Other option covers anything else and goes straight to review (as does
+  // everything — all requests are evaluated by the team).
   const choices = document.getElementById("product-choices");
-  choices.innerHTML = "<legend>Requested APIs</legend>" +
-    `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Pick a bundle to select its APIs in one click — a bundle appears in your console once all of its APIs are granted.</p>` +
-    `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:6px 0 2px">Bundles</div>` +
-    bundles.map((b) => `<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0" title="${escHtml((b.steps || []).map((s) => s.product).join(", "))}">` +
-      `<input type="checkbox" data-bundle="${escHtml(b.id)}" style="width:auto" /> 📦 ${escHtml(b.name)} <span style="opacity:.6;font-size:.75rem">${escHtml(b.useCase)}</span></label>`).join("") +
-    `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:10px 0 2px">Individual APIs</div>` +
-    (reg.products || [])
-    .filter((p) => okClass.has(p.classification))
-    .map((p) => `<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0">` +
-      `<input type="checkbox" name="products" value="${escHtml(p.id)}" style="width:auto" /> ${escHtml(p.name)}</label>`).join("");
+  choices.innerHTML = "<legend>Requested bundles</legend>" +
+    `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Every request is reviewed by our team. Pick the bundles that match your use case — or Other and tell us what you need.</p>` +
+    bundles.map((b) => `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0">` +
+      `<input type="checkbox" data-bundle="${escHtml(b.id)}" style="width:auto;margin-top:3px" />` +
+      `<span>📦 <strong>${escHtml(b.name)}</strong> — ${escHtml(b.useCase)}<br>` +
+      `<span style="opacity:.6;font-size:.74rem">APIs: ${escHtml([...new Set((b.steps || []).map((s) => s.product))].join(", "))}</span></span></label>`).join("") +
+    `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:10px 0 4px">` +
+    `<input type="checkbox" id="bundle-other" style="width:auto;margin-top:3px" /><span><strong>Other</strong> — something not covered by a bundle</span></label>` +
+    `<textarea id="other-text" placeholder="Describe what you need and which systems you want to reach…" style="display:none;margin-top:6px"></textarea>`;
 
-  // Bundle checkbox -> (un)check the product checkboxes it needs. Unchecking
-  // keeps products still required by another checked bundle.
-  const bundleProducts = (id) => {
-    const b = bundles.find((x) => x.id === id);
-    return [...new Set((b && b.steps || []).map((s) => s.product))];
-  };
-  choices.querySelectorAll("[data-bundle]").forEach((cb) => {
-    cb.addEventListener("change", () => {
-      const mine = bundleProducts(cb.dataset.bundle);
-      const stillNeeded = new Set([...choices.querySelectorAll("[data-bundle]:checked")]
-        .flatMap((o) => bundleProducts(o.dataset.bundle)));
-      choices.querySelectorAll('input[name="products"]').forEach((p) => {
-        if (cb.checked && mine.includes(p.value)) p.checked = true;
-        if (!cb.checked && mine.includes(p.value) && !stillNeeded.has(p.value)) p.checked = false;
-      });
-    });
+  const otherBox = document.getElementById("bundle-other");
+  const otherText = document.getElementById("other-text");
+  otherBox.addEventListener("change", () => {
+    otherText.style.display = otherBox.checked ? "block" : "none";
+    otherText.required = otherBox.checked;
   });
 })();
 
@@ -588,8 +579,36 @@ document.getElementById("access-form").addEventListener("submit", async (ev) => 
   const form = ev.currentTarget;
   const out = document.getElementById("form-result");
   const data = Object.fromEntries(new FormData(form).entries());
-  data.products = [...form.querySelectorAll('input[name="products"]:checked')].map((i) => i.value);
+  delete data.registrationFile;
   data.existingCustomer = !!form.querySelector('input[name="existingCustomer"]').checked;
+
+  // Bundles selected (+ Other free text). Products derived from the bundles.
+  const reg2 = window.__mpCatalog || {};
+  const selected = [...form.querySelectorAll("[data-bundle]:checked")].map((cb) => {
+    const b = (reg2.bundles || []).find((x) => x.id === cb.dataset.bundle);
+    return b ? { id: b.id, name: b.name, products: [...new Set((b.steps || []).map((s) => s.product))] } : null;
+  }).filter(Boolean);
+  const otherOn = document.getElementById("bundle-other").checked;
+  data.bundles = selected;
+  data.other = otherOn ? document.getElementById("other-text").value.trim() : "";
+  data.products = [...new Set(selected.flatMap((b) => b.products))];
+  if (!selected.length && !data.other) {
+    out.hidden = false; out.textContent = "⚠ Pick at least one bundle, or Other with a description."; return;
+  }
+
+  // Business registration document -> base64 (5 MB cap).
+  const fileInput = form.querySelector('input[name="registrationFile"]');
+  const file = fileInput && fileInput.files[0];
+  if (!file) { out.hidden = false; out.textContent = "⚠ Attach your business registration document."; return; }
+  if (file.size > 5 * 1024 * 1024) { out.hidden = false; out.textContent = "⚠ Document must be 5 MB or smaller."; return; }
+  data.registrationDocument = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve({ name: file.name, type: file.type, dataB64: String(r.result).split(",")[1] || "" });
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  }).catch(() => null);
+  if (!data.registrationDocument) { out.hidden = false; out.textContent = "⚠ Could not read the document — try another file."; return; }
+
   out.hidden = false; out.textContent = "Submitting…";
   try {
     const r = await fetch(GATEWAY + "/marketplace/access-request", {
@@ -597,26 +616,7 @@ document.getElementById("access-form").addEventListener("submit", async (ev) => 
     });
     const res = await r.json();
     if (!r.ok) { out.textContent = "⚠ " + (res.error || "Submission failed."); return; }
-    out.textContent = res.status === "auto-authorized"
-      ? "✓ Approved automatically — " + res.emailMessage
-      : "✓ Received (" + res.id + ") — " + res.emailMessage;
-    // Auto-approved: refresh the marketplaceAccess cookie in place so the
-    // console opens right away — no re-login needed. (This page runs on the
-    // portal domain, so it owns the same cookies the login page sets.)
-    if (res.status === "auto-authorized") {
-      try {
-        const auth = await (await fetch(GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(data.email))).json();
-        const ids = (auth.products || []).join(",");
-        if (ids) {
-          const d = new Date(); d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);
-          document.cookie = "marketplaceAccess=" + encodeURIComponent(ids) + "; expires=" + d.toUTCString() + "; path=/; SameSite=Strict";
-          // Reveal the console buttons without a reload.
-          document.querySelectorAll("[data-auth-only]").forEach((el) => { el.hidden = false; });
-          document.querySelectorAll("[data-guest-only]").forEach((el) => { el.hidden = true; });
-          out.textContent += " Your console access is active now.";
-        }
-      } catch { /* cookie refresh is best-effort; login still sets it */ }
-    }
+    out.textContent = "✓ Received (" + res.id + ") — " + res.emailMessage;
   } catch { out.textContent = "⚠ Could not reach the gateway. Try again."; }
 });
 

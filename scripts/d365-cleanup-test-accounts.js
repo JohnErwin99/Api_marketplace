@@ -13,6 +13,9 @@
 const { api } = require('./d365');
 
 const TEST_ACCOUNTS = [
+  // Sept 25 test requests (IRistel request row lived only on Render's disk;
+  // its CRM account merged into this one by the org-name match):
+  ['c499e342-e5b8-f111-aaad-6045bdccfb22', 'Erwin Test / IRistel (Sept 25 tests)'],
   ['1e21724f-b3b2-f111-aaab-6045bdccfb22', 'Void Co (REQ-MU5QGV2K test)'],
   ['190bf3b8-b6b2-f111-aaab-6045bdccfb22', 'Void (REQ-MU5RC6LB test)'],
   ['30f49f09-55b7-f111-aaad-6045bdccfb22', 'Erwin Test Corp (sign-up test)'],

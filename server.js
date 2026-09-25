@@ -14,7 +14,9 @@ const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.t
 const PORTAL_ORIGIN = 'https://iristel-portal.webflow.io';
 const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? [PORTAL_ORIGIN] : [])])];
 app.use(cors(allowed.length ? { origin: allowed } : {}));
-app.use(express.json());
+// 8 MB: the access-request form sends the business-registration document
+// as base64 JSON (~5 MB file cap plus encoding overhead).
+app.use(express.json({ limit: '8mb' }));
 
 // API-key gate for /api/*. Set GATEWAY_API_KEY in Render's env; clients send
 // X-API-Key: <key>. If GATEWAY_API_KEY is unset the gate is off (local dev).
