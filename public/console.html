@@ -293,6 +293,14 @@
   .bundle-card li code{font:11px var(--mono);color:var(--accent-soft)}
   .bundle-card li small{display:block;color:var(--muted)}
   .pchip.bundles{font-weight:700;border-style:dashed}
+  /* APIs group header in the product rail */
+  .pgroup-head{border:0;background:none;color:var(--muted);font:700 10.5px var(--head);text-transform:uppercase;letter-spacing:1px;text-align:left;padding:10px 4px 2px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .pgroup-head:hover{color:var(--ink)}
+  .pgroup-head .caret{font-size:9px;transition:transform .15s}
+  .pgroup-head[aria-expanded="false"] .caret{transform:rotate(-90deg)}
+  .pgroup-head .cnt{font-weight:600;color:var(--muted);opacity:.7;text-transform:none;letter-spacing:0}
+  #api-group{display:contents}
+  #api-group.collapsed .pchip{display:none}
   .opgrid .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .2s}
   .opgrid .card:hover::before{opacity:1}
   .opgrid .card:hover{border-color:var(--line-strong)}
@@ -498,20 +506,42 @@
     b.onclick=()=>{ productId='bundles'; location.hash='#bundles'; markProduct(); renderProduct(); };
     bar.appendChild(b);
   }
+  // Individual products live under a collapsible "APIs" group.
+  const groupHead=document.createElement('button');
+  groupHead.className='pgroup-head'; groupHead.id='api-group-head'; groupHead.type='button';
+  groupHead.innerHTML='<span class="caret" aria-hidden="true">▾</span> APIs <span class="cnt">('+products.length+')</span>';
+  bar.appendChild(groupHead);
+  const apiGroup=document.createElement('div');
+  apiGroup.id='api-group';
+  bar.appendChild(apiGroup);
+  let groupOpen=true;
+  try{groupOpen=localStorage.getItem('iristel-api-group-open')!=='0';}catch(_){}
+  function setGroupOpen(open){
+    groupOpen=open;
+    apiGroup.classList.toggle('collapsed',!open);
+    groupHead.setAttribute('aria-expanded',String(open));
+    try{localStorage.setItem('iristel-api-group-open',open?'1':'0');}catch(_){}
+  }
+  groupHead.onclick=()=>setGroupOpen(!groupOpen);
+  groupHead.setAttribute('aria-controls','api-group');
+
   products.forEach(p=>{
     const b=document.createElement('button');
     b.className='pchip'; b.dataset.id=p.id; b.setAttribute('role','tab');
     b.innerHTML=esc(p.name)+(p.status==='planned'?'<span class="soon">soon</span>':'');
     b.title=p.summary||'';
     b.onclick=()=>{ productId=p.id; location.hash='#'+p.id; markProduct(); renderProduct(); };
-    bar.appendChild(b);
+    apiGroup.appendChild(b);
   });
+  setGroupOpen(groupOpen||products.some(p=>p.id===productId));
   function markProduct(){
     bar.querySelectorAll('.pchip').forEach(b=>{
       const on=b.dataset.id===productId;
       b.classList.toggle('active',on);
       b.setAttribute('aria-selected',String(on));
     });
+    // Never leave the active product invisible inside a collapsed group.
+    if(!groupOpen&&products.some(p=>p.id===productId))setGroupOpen(true);
   }
   markProduct();
 
@@ -602,6 +632,7 @@
     const q=searchEl.value;
     const scored=searchAll(q);
     if(!scored){clearSearch();return;}
+    if(!groupOpen)setGroupOpen(true);   // results must be visible
     const rank={};scored.forEach((r,i)=>rank[r.id]=i);
     bar.querySelectorAll('.pchip').forEach(b=>{
       const r=rank[b.dataset.id];
