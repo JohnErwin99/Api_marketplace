@@ -277,12 +277,26 @@
           province: val('province'), postalCode: val('postalCode'),
           country: val('country')
         };
+        fields.businessRegNumber = val('businessRegNumber');
         const accountType = (document.querySelector('input[name="accountType"]:checked') || {}).value || 'customer';
         const password = document.getElementById('password').value;
         const confirm  = document.getElementById('passwordConfirm').value;
 
         if (password !== confirm) { message.textContent = 'Passwords do not match.'; return; }
         if (password.length < 8) { message.textContent = 'Password must be at least 8 characters.'; return; }
+        if (!fields.businessRegNumber) { message.textContent = 'Business registration number is required.'; return; }
+
+        // Business registration document (fraud screening) -> base64, <= 5 MB.
+        const regFile = document.getElementById('registrationFile').files[0];
+        if (!regFile) { message.textContent = 'Attach your business registration document.'; return; }
+        if (regFile.size > 5 * 1024 * 1024) { message.textContent = 'Document must be 5 MB or smaller.'; return; }
+        const registrationDocument = await new Promise(function (resolve) {
+          const r = new FileReader();
+          r.onload = function () { resolve({ name: regFile.name, type: regFile.type, dataB64: String(r.result).split(',')[1] || '' }); };
+          r.onerror = function () { resolve(null); };
+          r.readAsDataURL(regFile);
+        });
+        if (!registrationDocument) { message.textContent = 'Could not read the document — try another file.'; return; }
 
         submitBtn.disabled = true;
 
@@ -347,6 +361,8 @@
           body: JSON.stringify({
             email: fields.email, fname: fields.fname, lname: fields.lname,
             businessName: fields.businessName, phone: fields.phone,
+            businessRegNumber: fields.businessRegNumber,
+            registrationDocument: registrationDocument,
             address1: fields.address1, city: fields.city, province: fields.province,
             postalCode: fields.postalCode, country: fields.country,
             accountType: accountType, mindAccountId: created.accountId
@@ -390,6 +406,12 @@
 
       <label for="businessName">Business Name</label>
       <input type="text" id="businessName" autocomplete="organization" placeholder="Optional for individuals">
+
+      <label for="businessRegNumber">Business Registration Number</label>
+      <input type="text" id="businessRegNumber" required placeholder="e.g. 123456789">
+
+      <label for="registrationFile">Business Registration Document</label>
+      <input type="file" id="registrationFile" required accept=".pdf,.png,.jpg,.jpeg">
 
       <label for="email">Email Address</label>
       <input type="email" id="email" required autocomplete="email">
