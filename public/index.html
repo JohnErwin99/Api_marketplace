@@ -552,19 +552,48 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
     ).join("") + `</div>`;
   }).join("") || "<p>No packages published yet.</p>";
 
-  // Requests are BUNDLE-based: partners pick the ready-made packages; the
-  // Other option covers anything else and goes straight to review (as does
-  // everything — all requests are evaluated by the team).
+  // Requests can be BUNDLE-based (ready-made packages), individual APIs, or
+  // Other free text — any mix. Everything is reviewed by the team.
+  const okClass = new Set(["public", "customer-confidential"]);
   const choices = document.getElementById("product-choices");
-  choices.innerHTML = "<legend>Requested bundles</legend>" +
-    `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Every request is reviewed by our team. Pick the bundles that match your use case — or Other and tell us what you need.</p>` +
+  choices.innerHTML = "<legend>Requested access</legend>" +
+    `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Every request is reviewed by our team. Pick the bundles that match your use case, choose individual APIs, or Other and tell us what you need.</p>` +
+    `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:6px 0 2px">Bundles</div>` +
     bundles.map((b) => `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0">` +
       `<input type="checkbox" data-bundle="${escHtml(b.id)}" style="width:auto;margin-top:3px" />` +
       `<span>📦 <strong>${escHtml(b.name)}</strong> — ${escHtml(b.useCase)}<br>` +
       `<span style="opacity:.6;font-size:.74rem">APIs: ${escHtml([...new Set((b.steps || []).map((s) => s.product))].join(", "))}</span></span></label>`).join("") +
-    `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:10px 0 4px">` +
-    `<input type="checkbox" id="bundle-other" style="width:auto;margin-top:3px" /><span><strong>Other</strong> — something not covered by a bundle</span></label>` +
+    `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:12px 0 2px">Individual APIs</div>` +
+    (reg.products || []).filter((p) => okClass.has(p.classification))
+      .map((p) => `<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0">` +
+        `<input type="checkbox" data-api="${escHtml(p.id)}" style="width:auto" /> ${escHtml(p.name)}</label>`).join("") +
+    `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:12px 0 4px">` +
+    `<input type="checkbox" id="bundle-other" style="width:auto;margin-top:3px" /><span><strong>Other</strong> — something not covered above</span></label>` +
     `<textarea id="other-text" placeholder="Describe what you need and which systems you want to reach…" style="display:none;margin-top:6px"></textarea>`;
+
+  // A bundle tick checks its member APIs; unticking releases only members no
+  // other checked bundle needs AND that the user did not tick individually.
+  const userPicks = new Set();
+  choices.querySelectorAll("[data-api]").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      if (cb.checked) userPicks.add(cb.dataset.api); else userPicks.delete(cb.dataset.api);
+    });
+  });
+  const membersOf = (id) => {
+    const b = bundles.find((x) => x.id === id);
+    return [...new Set((b && b.steps || []).map((s) => s.product))];
+  };
+  choices.querySelectorAll("[data-bundle]").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const mine = membersOf(cb.dataset.bundle);
+      const stillNeeded = new Set([...choices.querySelectorAll("[data-bundle]:checked")]
+        .flatMap((o) => membersOf(o.dataset.bundle)));
+      choices.querySelectorAll("[data-api]").forEach((p) => {
+        if (cb.checked && mine.includes(p.dataset.api)) p.checked = true;
+        if (!cb.checked && mine.includes(p.dataset.api) && !stillNeeded.has(p.dataset.api) && !userPicks.has(p.dataset.api)) p.checked = false;
+      });
+    });
+  });
 
   const otherBox = document.getElementById("bundle-other");
   const otherText = document.getElementById("other-text");
@@ -589,11 +618,17 @@ document.getElementById("access-form").addEventListener("submit", async (ev) => 
     return b ? { id: b.id, name: b.name, products: [...new Set((b.steps || []).map((s) => s.product))] } : null;
   }).filter(Boolean);
   const otherOn = document.getElementById("bundle-other").checked;
+  const bundleProducts = new Set(selected.flatMap((b) => b.products));
+  // APIs ticked on their own (outside any selected bundle) travel separately
+  // so CRM and the admin dashboard can show them as a Custom selection.
+  const individual = [...form.querySelectorAll("[data-api]:checked")]
+    .map((cb) => cb.dataset.api).filter((id) => !bundleProducts.has(id));
   data.bundles = selected;
+  data.individualProducts = individual;
   data.other = otherOn ? document.getElementById("other-text").value.trim() : "";
-  data.products = [...new Set(selected.flatMap((b) => b.products))];
-  if (!selected.length && !data.other) {
-    out.hidden = false; out.textContent = "⚠ Pick at least one bundle, or Other with a description."; return;
+  data.products = [...new Set([...bundleProducts, ...individual])];
+  if (!selected.length && !individual.length && !data.other) {
+    out.hidden = false; out.textContent = "⚠ Pick at least one bundle or API, or Other with a description."; return;
   }
 
   // Business registration document -> base64 (5 MB cap).
