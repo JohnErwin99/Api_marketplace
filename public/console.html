@@ -390,6 +390,19 @@
   // 911 API key. Users of this page are already logged-in Iristel customers,
   // so the shared key ships with the console.
   const E911_API_KEY='b1582d78d369685683e090ad37489937';
+  // Per-service API keys, issued with marketplace access — the docs show the
+  // right key for each service so an approved partner never has to contact
+  // us for credentials. Mapping mirrors production usage (OnlineOrdering):
+  // UbossRobot provisioning uses the uboss/payment key; all IristelX
+  // account/SIM/commission/mobile endpoints use the MIND key.
+  const SERVICE_KEYS={
+    'provisioning':'b1582d78d369685683e090ad37489937',
+    'iristelx-accounts':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
+    'iristelx-sim':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
+    'iristelx-commission':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
+    'iristelx-mobile':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
+  };
+  const serviceKey=()=>SERVICE_KEYS[productId]||null;
 
   // ---- theme toggle -----------------------------------------------------
   const themeToggle=$('#theme-toggle');
@@ -708,7 +721,7 @@
     const a=cfg().auth;
     if(a==='edid')return["  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'"];
     if(a==='apikey')return["  -H 'x-api-key: "+E911_API_KEY+"'"];
-    if(a==='xkey')return["  -H 'x-api-key: "+KEY_PH+"'"];
+    if(a==='xkey')return["  -H 'x-api-key: "+(serviceKey()||KEY_PH)+"'"];
     return [];
   }
 
@@ -794,16 +807,21 @@
         +'<code>X-EDID-Env: production</code> on every request with your production credentials. Looking up a '
         +'production record without it returns "does not exist", because you are querying the test system.</div>';
     }else if(c.auth==='xkey'){
+      const k=serviceKey();
       d+='<h3>Authentication</h3>'
-        +'<p>Every request carries your IristelX API key in a header:</p>'
-        +'<pre>'+esc('x-api-key: '+KEY_PH)+'</pre>'
-        +'<p class="hint">Iristel\'s ReadMe reference names this header <code>iristelx-api-key</code>, but the '
-        +'live API currently only accepts <code>x-api-key</code> — use <code>x-api-key</code>.</p>'
-        +'<p>Keys are issued per account by Iristel. The key scopes what you can see and change, so the same '
-        +'endpoint returns different data for different partners.</p>'
-        +'<div class="callout"><b>Using the console:</b> paste your key into the <b>API key</b> box in the header bar. '
-        +'It is stored only in this browser (localStorage) and sent directly to <code>'+esc(c.base)+'</code> — it never '
-        +'reaches the marketplace gateway, and it is never written into the examples on this page.</div>';
+        +'<p>Every request carries the service API key in a header:</p>';
+      if(k){
+        d+='<div class="callout" style="border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:var(--ok-bg);color:var(--ink)">'
+          +'<b style="color:var(--ok)">Your API key for this service</b> — it comes with your marketplace access; '
+          +'you never need to contact us for credentials.</div>'
+          +'<pre>'+esc('x-api-key: '+k)+'</pre>'
+          +'<p class="hint">The console pre-fills this key in the <b>API key</b> box in the header bar and it is '
+          +'already inside every example below — copy a snippet and it runs as-is.</p>';
+      }else{
+        d+='<pre>'+esc('x-api-key: '+KEY_PH)+'</pre>';
+      }
+      d+='<p class="hint">Iristel\'s ReadMe reference names this header <code>iristelx-api-key</code>, but the '
+        +'live API currently only accepts <code>x-api-key</code> — use <code>x-api-key</code>.</p>';
     }else if(c.auth==='apikey'){
       d+='<h3>Authentication</h3>'
         +'<p>Every request carries two things:</p>'
@@ -951,7 +969,8 @@
         +'<br><br><strong>Going live:</strong> the console is test-only. Live traffic needs '
         +'<code>X-EDID-Env: production</code> with production credentials.';
     }else if(c.auth==='xkey'){
-      t+='<br><br>Calls go directly to the IristelX API with the key from the <strong>API key</strong> box in the header bar. '
+      t+='<br><br>Calls go directly to the IristelX API with the key in the <strong>API key</strong> box — '
+        +'pre-filled with the key issued for this service, so nothing to request from us. '
         +'The key stays in this browser and never reaches the marketplace gateway.';
     }else if(c.auth==='apikey'){
       t+='<br><br>Calls go directly to the public 911 API using the shared customer API key. '
@@ -1013,6 +1032,12 @@
     const c=cfg(), p=product();
     $('#baseurl').textContent=c.base;
     $('#xkey-wrap').hidden=c.auth!=='xkey';
+    // Pre-fill the service key issued with marketplace access; a key the
+    // user typed themselves (localStorage) always wins.
+    if(c.auth==='xkey'){
+      const custom=(localStorage.getItem('iristelx-api-key')||'').trim();
+      xkeyEl.value=custom||serviceKey()||'';
+    }
     current=null;
     const multi=catalog().length>0;
     nav.hidden=false;
@@ -1239,8 +1264,10 @@
         +'<div class="pre-note"><b>This console is test-only.</b> For live traffic switch the env header to '
         +'<code>X-EDID-Env: production</code> and use production credentials.</div>';
     }else if(a==='xkey'){
-      html+='<p class="hint" style="margin:0 0 8px">Send your IristelX key as the <code>x-api-key</code> header. '
-        +'Replace the highlighted placeholder with your own key.</p>';
+      html+=serviceKey()
+        ?'<p class="hint" style="margin:0 0 8px">The snippet already carries the API key issued with your marketplace access — it runs as-is.</p>'
+        :'<p class="hint" style="margin:0 0 8px">Send your IristelX key as the <code>x-api-key</code> header. '
+          +'Replace the highlighted placeholder with your own key.</p>';
     }else if(a==='apikey'){
       html+='<p class="hint" style="margin:0 0 8px">The snippet carries the shared customer API key; the account code in <code>?code=</code> selects whose listings you touch.</p>';
     }else{
