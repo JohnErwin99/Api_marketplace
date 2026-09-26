@@ -11,8 +11,12 @@ const app = express();
 // If unset, any origin is allowed (dev convenience).
 const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
 // The partner portal is always allowed — its embedded pages call the gateway.
-const PORTAL_ORIGIN = 'https://iristel-portal.webflow.io';
-const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? [PORTAL_ORIGIN] : [])])];
+const PORTAL_ORIGINS = [
+  'https://iristelpartnerportal.com',
+  'https://www.iristelpartnerportal.com',
+  'https://iristel-portal.webflow.io',
+];
+const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? PORTAL_ORIGINS : [])])];
 app.use(cors(allowed.length ? { origin: allowed } : {}));
 // 8 MB: the access-request form sends the business-registration document
 // as base64 JSON (~5 MB file cap plus encoding overhead).
