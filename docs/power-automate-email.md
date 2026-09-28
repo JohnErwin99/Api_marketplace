@@ -91,18 +91,15 @@ Build it:
    - **Body** (switch the editor to code/HTML view and paste — Iristel-branded,
      Markham footer; the bold token is the dynamic access list):
 
-     Use the branded HTML from `lib/email-template.js` with:
-     title "Your API Marketplace access has been granted", paragraph
-     "Your access for <strong>@{triggerOutputs()?['body/cr57d_apimarketplaceaccess']}</strong>
-     has been granted. Log in to the partner portal and open the API console."
-     CTA "Open the Partner Portal" -> https://www.iristelpartnerportal.com
+     Paste the full contents of **`docs/emails/access-granted.html`** — the
+     branded template with the social footer, the portal link and the
+     "Open the Partner Portal" button; the `@{triggerOutputs()...}` token is
+     the dynamic access list. Regenerate with
+     `node scripts/render-flow2-emails.js` after template changes.
 5. In the **No** branch (access removed), add a second **"Send an email (V2)"**:
    - **To** → dynamic content **Email** (`emailaddress1`)
    - **Subject** → `Your Iristel API Marketplace access has been removed`
-   - **Body**:
-     > Your API Marketplace access has been removed. You will no longer see
-     > the API console in the partner portal. If you believe this is an
-     > error, contact your Iristel representative.
+   - **Body**: paste the full contents of **`docs/emails/access-removed.html`**.
    (The console itself re-validates access against CRM on every load, so the
    revocation takes effect on the partner's next visit regardless of email.)
 6. **Save** and turn the flow on. Nothing to configure on Render for this one

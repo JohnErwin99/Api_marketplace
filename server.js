@@ -39,6 +39,8 @@ app.get('/healthz', (req, res) => res.json({ ok: true }));
 const path = require('path');
 app.get('/console', (req, res) => res.sendFile(path.join(__dirname, 'public', 'console.html')));
 // Shared design tokens (light/dark) used by the landing page and the console.
+// Social icons referenced by the branded email footer (lib/email-template.js).
+app.use('/email', express.static(path.join(__dirname, 'public', 'email')));
 app.get('/theme.css', (req, res) => res.sendFile(path.join(__dirname, 'public', 'theme.css')));
 // Staff dashboard: who has marketplace access, to what, and usage.
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
