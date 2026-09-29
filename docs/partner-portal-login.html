@@ -193,6 +193,12 @@
       };
       const resolveEmail = (email) =>
         EMAIL_ALIASES[String(email || '').trim().toLowerCase()] || email;
+      // Alias targets are customer records that happen to sit on a staff
+      // domain (e.g. accounting@telehop.com). They skip the internal-domain
+      // gate and go through the normal customer checks. Built from the map,
+      // so any alias added later is exempt automatically.
+      const EMAIL_ALIASES_TARGETS = new Set(Object.values(EMAIL_ALIASES).map((e) => e.toLowerCase()));
+      const isAliasTarget = (email) => EMAIL_ALIASES_TARGETS.has(String(email || '').trim().toLowerCase());
 
       // Standard refusal for emails we have no record of. Shown with
       // innerHTML so the sign-up link is clickable.
@@ -670,7 +676,7 @@
           try { employeeResult = await checkIfEmployee(email); } catch (e) { console.error(e); }
           const isEmployee = employeeResult && employeeResult.email === email;
 
-          if (isInternalDomain(email) && !isEmployee) {
+          if (isInternalDomain(email) && !isAliasTarget(email) && !isEmployee) {
             message.textContent = NEED_PERMISSION_MSG;
             submitBtn.disabled = false;
             return;
@@ -755,8 +761,9 @@
 
         // Internal domain with no employee record: stop here. Staff access is
         // granted by support, never self-served, and internal emails never
-        // continue to the MIND/customer checks below.
-        if (isInternalDomain(email)) {
+        // continue to the MIND/customer checks below — except alias targets,
+        // which are customer records.
+        if (isInternalDomain(email) && !isAliasTarget(email)) {
           message.textContent = NEED_PERMISSION_MSG;
           submitBtn.disabled = false;
           return;
