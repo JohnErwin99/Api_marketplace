@@ -1075,10 +1075,13 @@
     try{d=await billingApi('GET');}
     catch(err){body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">'+esc(err.message)+'</p>';return;}
     let h='<h2>💳 Billing &amp; usage</h2>'
-      +'<p class="lead">Usage for '+esc(d.month)+' is charged to your card on file at the start of next month.</p>';
+      +'<p class="lead">'+(d.isAgent?'Your API usage for '+esc(d.month)+'. Agent accounts are not billed.'
+        :'Usage for '+esc(d.month)+' is charged to your card on file at the start of next month.')+'</p>';
     if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through, so paid API calls are paused. Update your card below and our team will retry the payment.</div>';
     h+='<h3>Card on file</h3>';
-    if(!d.mindAccount){
+    if(d.isAgent){
+      h+='<p>Agent accounts aren\'t billed for API usage, so there\'s no card to add. Your calls are still listed below.</p>';
+    }else if(!d.mindAccount){
       h+='<p>Your billing account isn\'t linked yet. Contact Iristel support and we\'ll set it up.</p>';
     }else if(d.card){
       h+='<p><b>'+esc(d.card.type)+'</b> <code>'+esc(d.card.masked)+'</code> · expires '+esc(d.card.expMonth+'/'+d.card.expYear)
@@ -1088,7 +1091,7 @@
     }else{
       h+='<p>No card yet. Add one to use APIs that are billed.</p>';
     }
-    if(d.mindAccount){
+    if(d.mindAccount&&!d.isAgent){
       h+='<form class="card" data-card-form style="max-width:460px;'+(d.card?'display:none':'')+'" autocomplete="on">'
         +'<div class="gfield"><label>Name on card</label><input name="holder" autocomplete="cc-name" required></div>'
         +'<div class="gfield"><label>Card number</label><input name="number" inputmode="numeric" autocomplete="cc-number" required></div>'

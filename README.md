@@ -96,10 +96,12 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 ### Usage billing
 
 - Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`).
-  A call is **billable** when it succeeded (2xx), came from a partner (not staff or
-  an internal key) and hit a live system — Espresso test-environment calls are free.
+  A call is **billable** when it succeeded (2xx), came from a paying partner (not staff,
+  not an agent, not an internal key) and hit a live system — Espresso test-environment calls are free.
 - Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. They are
   all `0` until set; a call with a price needs a card on file (402 otherwise).
+- **Agents are never billed** and have no card on file: they have an agent record
+  (`GET /agents?email=`) and no MIND billing account of their own.
 - Partners add a card in the console under **Billing & usage**. The card goes to MIND
   (`PATCH /billing/{account}/credit-card`); we keep only the token, masked number,
   type, expiry and holder — never the card number or CVV, and nothing is logged.
