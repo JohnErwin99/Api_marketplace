@@ -464,10 +464,10 @@
     code:'', };
 
   // ---- load registry ----------------------------------------------------
-  let products,bundles=[],audiences=[];
+  let products,bundles=[],audiences=[],categories=[];
   try{
     const reg=await (await fetch('/catalog.json')).json();
-    products=reg.products; bundles=reg.bundles||[]; audiences=reg.audiences||[];
+    products=reg.products; bundles=reg.bundles||[]; audiences=reg.audiences||[]; categories=reg.categories||[];
   }
   catch(e){
     const msg='Could not load <code>GET /catalog.json</code>. Is the gateway running?';
@@ -1016,7 +1016,9 @@
       if(!list.length)return;
       h+='<div class="bundle-aud">'+esc(a.label)+'</div><div class="bundle-grid">';
       list.forEach(b=>{
-        h+='<div class="bundle-card" id="bundle-'+esc(b.id)+'"><h3><a href="#bundle-'+esc(b.id)+'" data-bopen="'+esc(b.id)+'">'+esc(b.name)+' →</a></h3>'
+        const cat=(categories.find(c=>c.id===b.category)||{}).label;
+        h+='<div class="bundle-card" id="bundle-'+esc(b.id)+'">'+(cat?'<div class="pgroup-sub" style="padding:0 0 4px">'+esc(cat)+'</div>':'')
+          +'<h3><a href="#bundle-'+esc(b.id)+'" data-bopen="'+esc(b.id)+'">'+esc(b.name)+' →</a></h3>'
           +'<p class="buse">'+esc(b.useCase)+'</p><p>'+esc(b.summary)+'</p><ol>';
         (b.steps||[]).forEach((s,i)=>{
           const p=products.find(x=>x.id===s.product);

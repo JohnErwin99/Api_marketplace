@@ -123,7 +123,7 @@ for (const p of PRODUCTS) {
 // Bundles: curated use-case packages. Validate references at startup and drop
 // any step that points at a missing product or one classified internal /
 // restricted — bundles must only expose partner-safe products.
-const { AUDIENCES, ACCOUNT_TYPES, BUNDLES } = require('./lib/catalogs/bundles');
+const { AUDIENCES, CATEGORIES, ACCOUNT_TYPES, BUNDLES } = require('./lib/catalogs/bundles');
 const EXPOSABLE = new Set(['public', 'customer-confidential']);
 for (const b of BUNDLES) {
   b.steps = b.steps.filter((s) => {
@@ -165,6 +165,7 @@ function catalogPayload() {
       flow: p.flow, images: p.images, ui: p.ui,
     })),
     audiences: AUDIENCES,
+    categories: CATEGORIES,
     accountTypes: ACCOUNT_TYPES,
     bundles: BUNDLES,
     // Kept for older clients that read the flat DID list.

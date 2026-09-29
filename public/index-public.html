@@ -266,6 +266,10 @@ footer { background: var(--surface); border-color: var(--line); }
         #packages .pk-steps li{margin:6px 0}
         #packages .pk-steps code{display:block;opacity:.95}
         #packages .pk-steps span{display:block;opacity:.7}
+        #packages .pk-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+        #packages .pk-filter button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+        #packages .pk-filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface,#fff);border-color:var(--ink)}
+        #packages .pk-cat{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
       </style>
       <div class="section-heading">
         <div><p class="eyebrow">Bundles &amp; packages</p><h2>Which APIs for which job</h2></div>
@@ -532,16 +536,31 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
   // Self-contained cards: every step visible with its explanation, no console
   // link — visitors without marketplace access can still see how each package
   // would be used.
-  grid.innerHTML = audiences.map((a) => {
-    const list = bundles.filter((b) => b.audience === a.id);
-    if (!list.length) return "";
-    return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
-      `<div class="pk-card"><h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
-      `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
-      `<ol class="pk-steps">${(b.steps || []).map((s) =>
-        `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
-    ).join("") + `</div>`;
-  }).join("") || "<p>No packages published yet.</p>";
+  // Filter by what the bundle does (category); grouped by who it's for.
+  const categories = reg.categories || [];
+  const catLabel = (id) => (categories.find((c) => c.id === id) || {}).label || "";
+  let activeCat = "";
+  const drawPackages = () => {
+    const filter = categories.length
+      ? `<div class="pk-filter" role="group" aria-label="Filter bundles">` +
+        [{ id: "", label: "All" }, ...categories].map((c) =>
+          `<button type="button" data-cat="${escHtml(c.id)}" aria-pressed="${c.id === activeCat}">${escHtml(c.label)}</button>`).join("") +
+        `</div>`
+      : "";
+    grid.innerHTML = filter + (audiences.map((a) => {
+      const list = bundles.filter((b) => b.audience === a.id && (!activeCat || b.category === activeCat));
+      if (!list.length) return "";
+      return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
+        `<div class="pk-card">${b.category ? `<span class="pk-cat">${escHtml(catLabel(b.category))}</span>` : ""}` +
+        `<h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
+        `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
+        `<ol class="pk-steps">${(b.steps || []).map((s) =>
+          `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
+      ).join("") + `</div>`;
+    }).join("") || "<p>No packages published yet.</p>");
+    grid.querySelectorAll("[data-cat]").forEach((btn) => btn.addEventListener("click", () => { activeCat = btn.dataset.cat; drawPackages(); }));
+  };
+  drawPackages();
 
 })();
 
