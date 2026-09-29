@@ -90,6 +90,25 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 | `D365_*` | Dynamics 365 (approvals are read from here) |
 | `ADMIN_EMAILS` | Optional staff list override |
 | `GATEWAY_API_KEY` | Optional internal override key |
+| `DATA_DIR` | Folder for the SQLite ledger (usage, cards on file, charges). **Set to the Render persistent disk mount, e.g. `/var/data`** — without a disk the data is wiped on every deploy. |
+| `PAYMENT_API_KEY` | IristelX payment key used to charge saved cards (`POST /bot/{account}/payment`) |
+
+### Usage billing
+
+- Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`).
+  A call is **billable** when it succeeded (2xx), came from a partner (not staff or
+  an internal key) and hit a live system — Espresso test-environment calls are free.
+- Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. They are
+  all `0` until set; a call with a price needs a card on file (402 otherwise).
+- Partners add a card in the console under **Billing & usage**. The card goes to MIND
+  (`PATCH /billing/{account}/credit-card`); we keep only the token, masked number,
+  type, expiry and holder — never the card number or CVV, and nothing is logged.
+  The card number does pass through the gateway once, so the gateway is in PCI scope;
+  a hosted card field (e.g. Moneris Hosted Tokenization) would remove that.
+- Staff run the monthly charge from `/admin` → **Billing** → *Run charges*. Each
+  partner is charged once per month (`MKT-{account}-{YYYYMM}`); paid and unknown
+  charges are never repeated automatically. A failed charge marks the partner past
+  due, which pauses billed calls until it's resolved.
 
 Environment (`test` vs `production`) resolves from the `X-EDID-Env` header,
 `?env=` query param, or `EDID_ENV` on the server (defaults to `test`).

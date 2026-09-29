@@ -525,7 +525,8 @@
   const bundleOf=id=>bundles.find(b=>'bundle:'+b.id===id);
   const hashFor=id=>isBundleId(id)?'bundle-'+id.slice(7):id;
   const hashBundle=(hashProduct||'').startsWith('bundle-')?'bundle:'+hashProduct.slice(7):null;
-  let productId=(hashProduct==='bundles'&&bundles.length)?'bundles'
+  let productId=hashProduct==='billing'?'billing'
+    :(hashProduct==='bundles'&&bundles.length)?'bundles'
     :(hashBundle&&bundleOf(hashBundle))?hashBundle
     :products.some(p=>p.id===hashProduct)?hashProduct
     :(products.find(p=>p.status==='live')||products[0]).id;
@@ -593,6 +594,16 @@
     apiGroup.appendChild(b);
   });
   setGroupOpen(groupOpen||products.some(p=>p.id===productId));
+  // Billing & usage: the partner's card on file, this month's usage and past
+  // charges (lib/billing.js).
+  {
+    const b=document.createElement('button');
+    b.className='pchip'; b.dataset.id='billing'; b.setAttribute('role','tab');
+    b.innerHTML='💳 Billing &amp; usage'; b.title='Your card on file, usage this month and past charges';
+    b.style.marginTop='10px';
+    b.onclick=()=>{ productId='billing'; location.hash='#billing'; markProduct(); renderProduct(); };
+    bar.appendChild(b);
+  }
   function markProduct(){
     bar.querySelectorAll('.pchip').forEach(b=>{
       const on=b.dataset.id===productId;
@@ -1041,6 +1052,88 @@
     showTab('docs');
   }
 
+  // ---- billing & usage ---------------------------------------------------
+  const cad=c=>'$'+(Number(c||0)/100).toFixed(2);
+  const productName=id=>(products.find(p=>p.id===id)||{name:id}).name;
+  async function billingApi(method,body){
+    const r=await fetch(ORIGIN+'/marketplace/billing'+(method==='GET'?'':'/card'),{
+      method,headers:Object.assign({Authorization:'Bearer '+mpSession()},body?{'Content-Type':'application/json'}:{}),
+      body:body?JSON.stringify(body):undefined});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.error==='login_required'?'Your portal login has expired. Log in again and reopen the console.':(d.error||'HTTP '+r.status));
+    return d;
+  }
+  async function renderBillingView(){
+    $('#baseurl').textContent=ORIGIN;
+    nav.innerHTML='<div class="railnote" style="border:0;margin:0"><strong>Billing &amp; usage</strong><br>'
+      +'API calls are billed per successful call to your Iristel billing account. Calls to the Espresso test system are free.</div>';
+    $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
+    const body=$('#docs-body');
+    body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">Loading…</p>';
+    showTab('docs');
+    let d;
+    try{d=await billingApi('GET');}
+    catch(err){body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">'+esc(err.message)+'</p>';return;}
+    let h='<h2>💳 Billing &amp; usage</h2>'
+      +'<p class="lead">Usage for '+esc(d.month)+' is charged to your card on file at the start of next month.</p>';
+    if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through, so paid API calls are paused. Update your card below and our team will retry the payment.</div>';
+    h+='<h3>Card on file</h3>';
+    if(!d.mindAccount){
+      h+='<p>Your billing account isn\'t linked yet. Contact Iristel support and we\'ll set it up.</p>';
+    }else if(d.card){
+      h+='<p><b>'+esc(d.card.type)+'</b> <code>'+esc(d.card.masked)+'</code> · expires '+esc(d.card.expMonth+'/'+d.card.expYear)
+        +' · '+esc(d.card.holder)+'</p>'
+        +'<p><button class="btn" type="button" data-card-edit>Replace card</button> '
+        +'<button class="btn danger" type="button" data-card-remove>Remove card</button></p>';
+    }else{
+      h+='<p>No card yet. Add one to use APIs that are billed.</p>';
+    }
+    if(d.mindAccount){
+      h+='<form class="card" data-card-form style="max-width:460px;'+(d.card?'display:none':'')+'" autocomplete="on">'
+        +'<div class="gfield"><label>Name on card</label><input name="holder" autocomplete="cc-name" required></div>'
+        +'<div class="gfield"><label>Card number</label><input name="number" inputmode="numeric" autocomplete="cc-number" required></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+        +'<div class="gfield"><label>Month (MM)</label><input name="expMonth" inputmode="numeric" maxlength="2" autocomplete="cc-exp-month" required></div>'
+        +'<div class="gfield"><label>Year (YYYY)</label><input name="expYear" inputmode="numeric" maxlength="4" autocomplete="cc-exp-year" required></div>'
+        +'<div class="gfield"><label>CVV</label><input name="cvv" inputmode="numeric" maxlength="4" autocomplete="cc-csc" required></div></div>'
+        +'<div class="row"><button class="btn" type="submit">Save card</button><span class="hint" data-card-msg></span></div>'
+        +'<p class="hint" style="margin:8px 0 0">Your card is sent securely to Iristel\'s billing system. We keep only the last 4 digits and expiry.</p>'
+        +'</form>';
+    }
+    h+='<h3>Usage this month</h3>';
+    if(d.usage.length){
+      h+='<table><tr><th>API</th><th>Calls</th><th>Billed calls</th><th>Amount</th></tr>'
+        +d.usage.map(u=>'<tr><td>'+esc(productName(u.product))+'</td><td>'+u.calls+'</td><td>'+u.billableCalls+'</td><td>'+cad(u.cents)+'</td></tr>').join('')
+        +'<tr><td><b>Estimated total</b></td><td></td><td></td><td><b>'+cad(d.estimatedCents)+' CAD</b></td></tr></table>';
+    }else h+='<p>No API calls yet this month.</p>';
+    h+='<h3>Past charges</h3>';
+    h+=d.charges.length
+      ?'<table><tr><th>Month</th><th>Amount</th><th>Status</th><th>Reference</th></tr>'
+        +d.charges.map(c=>'<tr><td>'+esc(c.month)+'</td><td>'+cad(c.cents)+'</td><td>'+esc(c.status)+'</td><td><code>'+esc(c.reference||'')+'</code></td></tr>').join('')+'</table>'
+      :'<p>No charges yet.</p>';
+    body.innerHTML=h;
+
+    const form=body.querySelector('[data-card-form]');
+    const edit=body.querySelector('[data-card-edit]');
+    if(edit)edit.onclick=()=>{form.style.display='';form.querySelector('input').focus();};
+    const remove=body.querySelector('[data-card-remove]');
+    if(remove)remove.onclick=async()=>{
+      if(!confirm('Remove this card? APIs that are billed will stop working until you add a new one.'))return;
+      try{await billingApi('DELETE');renderBillingView();}catch(err){alert(err.message);}
+    };
+    if(form)form.onsubmit=async ev=>{
+      ev.preventDefault();
+      const msg=form.querySelector('[data-card-msg]'),btn=form.querySelector('button');
+      const v=Object.fromEntries(new FormData(form).entries());
+      btn.disabled=true;msg.textContent='Saving…';
+      try{
+        await billingApi('PUT',v);
+        form.reset();                      // never leave card details in the page
+        renderBillingView();
+      }catch(err){msg.textContent=err.message;btn.disabled=false;form.querySelector('[name=cvv]').value='';}
+    };
+  }
+
   // ---- one bundle: its steps, in order, as live operation cards ----------
   // Values returned by a step (accountId, id, pon, iccid…) fill matching empty
   // fields in later steps. Fields the user typed in are never overwritten.
@@ -1145,6 +1238,7 @@
 
   function renderProduct(){
     if(productId==='bundles')return renderBundlesView();
+    if(productId==='billing')return renderBillingView();
     if(isBundleId(productId)){const b=bundleOf(productId);if(b)return renderBundleConsole(b);}
     const c=cfg(), p=product();
     $('#baseurl').textContent=c.base;
@@ -1447,31 +1541,12 @@
       const r=await fetch(c.base+buildPathFrom(root,e),reqOpts);
       const txt=await r.text();
       showResult(e,vals,r.status,txt,performance.now()-t0,inlineEl);
-      reportUsage(e,r.status,performance.now()-t0);
       if(opts.onResult)opts.onResult(r.status,txt);
     }catch(err){
       showResult(e,vals,0,'Network error: '+err.message,performance.now()-t0,inlineEl);
-      reportUsage(e,0,performance.now()-t0);
     }
     btn.disabled=false;btn.removeAttribute('aria-busy');
   }
-  // ---- usage telemetry --------------------------------------------------
-  // IristelX and 911 calls go straight from this page to their own hosts, so
-  // the gateway can't see them — the console reports every call instead.
-  // Fire-and-forget: never blocks the request or surfaces an error.
-  function reportUsage(e,status,ms){
-    try{
-      const body=JSON.stringify({
-        session:(window.MarketplaceAccess&&window.MarketplaceAccess.session())||null,
-        product:e.pid||productId, method:e.method, endpoint:e.path,
-        status:status, ms:Math.round(ms)
-      });
-      const url=ORIGIN+'/marketplace/usage';
-      if(navigator.sendBeacon)navigator.sendBeacon(url,body);
-      else fetch(url,{method:'POST',body:body,keepalive:true}).catch(()=>{});
-    }catch(_){/* telemetry must never break the console */}
-  }
-
   // ---- friendly response rendering -------------------------------------
   function humanize(k){
     return String(k).replace(/_/g,' ')

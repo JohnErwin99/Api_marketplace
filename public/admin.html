@@ -185,9 +185,25 @@
       <div class="scroll"><table id="t-requests"></table></div>
     </div>
 
-    <div class="card">
+    <div class="card" style="margin-bottom:16px">
       <div class="tablehead"><h2>Recent API calls</h2><a class="csv" id="csv-usage" href="#">Export CSV</a></div>
       <div class="scroll"><table id="t-usage"></table></div>
+    </div>
+
+    <div class="card" id="billing-card">
+      <div class="tablehead"><h2>Billing</h2>
+        <input type="month" id="bill-month" style="margin-left:auto;font:600 12px var(--sans);padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
+        <button type="button" class="ctl approve" id="bill-run">Run charges</button>
+      </div>
+      <p id="bill-note" style="color:var(--muted);font-size:12px;margin:0 0 8px"></p>
+      <div class="scroll"><table id="t-billing"></table></div>
+      <form id="bill-account" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:12px;color:var(--muted)">
+        Link a partner to a MIND billing account:
+        <input name="email" type="email" placeholder="partner email" required style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
+        <input name="mindAccount" placeholder="MIND account #" required style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
+        <button type="submit" class="ctl revoke" style="color:var(--ink)">Save</button>
+        <span id="bill-account-msg"></span>
+      </form>
     </div>
   </div>
 </main>
@@ -466,7 +482,7 @@
           '<td><code>' + esc((u.method || '') + ' ' + (u.endpoint || '')) + '</code></td>' +
           '<td>' + (u.status == null ? '—' : '<span class="pill ' + (u.status >= 200 && u.status < 300 ? 'yes' : 'pending') + '">' + u.status + '</span>') + '</td>' +
           '<td class="num">' + (u.ms == null ? '—' : fmt(u.ms)) + '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No API calls recorded in this range. Usage is captured from the console — it starts filling once partners make calls.</td></tr></tbody>';
+      : '<tbody><tr><td class="empty">No API calls recorded in this range. Every call through the gateway is counted, from the console or a partner\'s own app.</td></tr></tbody>';
 
     // Downloads go through fetch so the session token rides in a header.
     ['grants', 'requests', 'usage'].forEach(view => {
@@ -484,6 +500,53 @@
   }
 
   load();
+
+  // ---- billing ------------------------------------------------------------
+  const cad = c => '$' + (Number(c || 0) / 100).toFixed(2);
+  const billMonth = $('#bill-month');
+  billMonth.value = new Date().toISOString().slice(0, 7);
+  const STATUS_PILL = { paid: 'yes', declined: 'pending', unknown: 'pending', pending: 'pending', no_card: 'no', no_account: 'no' };
+  async function loadBilling(){
+    const r = await fetch(GATEWAY + '/marketplace/admin/billing?month=' + encodeURIComponent(billMonth.value), { headers: auth });
+    if (!r.ok) { $('#billing-card').hidden = true; return; }
+    const d = await r.json();
+    $('#bill-note').textContent = 'Total billable for ' + d.month + ': ' + cad(d.totalCents) + ' CAD. ' +
+      'Charges go to each partner\'s card on file through MIND. Running again never repeats a paid or unknown charge.';
+    $('#t-billing').innerHTML = d.rows.length
+      ? '<thead><tr><th>Partner</th><th>MIND account</th><th class="num">Calls</th><th class="num">Billed</th><th class="num">Amount</th><th>Card</th><th>Charge</th></tr></thead><tbody>' +
+        d.rows.map(x => '<tr><td>' + esc(x.email) + (x.pastDue ? ' <span class="pill pending">past due</span>' : '') + '</td>' +
+          '<td>' + (x.mindAccount ? '<code>' + esc(x.mindAccount) + '</code>' : '<span style="color:var(--muted)">not linked</span>') + '</td>' +
+          '<td class="num">' + fmt(x.calls) + '</td><td class="num">' + fmt(x.billableCalls) + '</td><td class="num">' + cad(x.cents) + '</td>' +
+          '<td>' + (x.card ? '<code>' + esc(x.card) + '</code>' : '<span style="color:var(--muted)">none</span>') + '</td>' +
+          '<td>' + (x.charge ? '<span class="pill ' + (STATUS_PILL[x.charge.status] || 'no') + '">' + esc(x.charge.status.replace('_', ' ')) + '</span> ' + cad(x.charge.cents) : '<span style="color:var(--muted)">—</span>') + '</td></tr>').join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No API usage recorded for this month.</td></tr></tbody>';
+  }
+  billMonth.onchange = loadBilling;
+  $('#bill-run').onclick = async () => {
+    const m = billMonth.value;
+    if (!confirm('Charge every partner for their ' + m + ' usage now? Paid charges are never repeated.')) return;
+    const btn = $('#bill-run'); btn.disabled = true; btn.textContent = 'Charging…';
+    try {
+      const r = await fetch(GATEWAY + '/marketplace/admin/billing/run', {
+        method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ month: m }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      const errs = (d.results || []).filter(x => x.status === 'error');
+      alert((d.results || []).length + ' partner(s) processed.' + (errs.length ? '\n' + errs.map(x => x.email + ': ' + x.error).join('\n') : ''));
+    } catch (err) { alert('Charge run failed: ' + err.message); }
+    btn.disabled = false; btn.textContent = 'Run charges';
+    loadBilling();
+  };
+  $('#bill-account').onsubmit = async (ev) => {
+    ev.preventDefault();
+    const body = Object.fromEntries(new FormData(ev.target).entries());
+    const r = await fetch(GATEWAY + '/marketplace/admin/billing/account', {
+      method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    $('#bill-account-msg').textContent = r.ok ? 'Saved.' : (d.error || 'HTTP ' + r.status);
+    if (r.ok) { ev.target.reset(); loadBilling(); }
+  };
+  loadBilling();
 })();
 </script>
 </body>

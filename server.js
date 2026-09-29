@@ -186,6 +186,9 @@ app.get('/', (req, res) => {
 // IristelX-backed products (provisioning, 911, accounts, SIM, commissions,
 // mobile): proxied so the upstream keys never leave the server.
 app.use('/api/ix', require('./lib/routes/ix')(PRODUCTS));
+// Per-call prices (all $0 until set) and usage billing / card on file.
+require('./lib/catalogs/pricing').init(PRODUCTS);
+require('./lib/billing').register(app);
 
 // Number Porting — Enterprise (LNP, Espresso v4)
 app.use('/api/lnp', require('./lib/routes/lnp')(resolveContext, h));
