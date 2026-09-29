@@ -187,7 +187,8 @@
                   country: fields.country,
                   postalCode: fields.postalCode,
                   emailAddress: fields.email,
-                  phone: fields.phone || undefined
+                  // MIND wants the phone as an object, not a string.
+                  phone: fields.phone ? { mobile: fields.phone } : undefined
                 }
               }
             })
