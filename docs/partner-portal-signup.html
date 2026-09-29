@@ -105,6 +105,19 @@
         'white-label': 'whitelabel', consumer: 'consumer'
       };
 
+      // Canadian postal codes: MIND only accepts "A1A 1A1" / "A1A1A1". Returns
+      // the code formatted as "A1A 1A1", or null when it isn't valid. Other
+      // countries pass through trimmed.
+      const normalizeCountry = (c) => {
+        const v = String(c || '').trim().toUpperCase();
+        return v === 'CANADA' ? 'CA' : v;
+      };
+      const normalizePostal = (pc, country) => {
+        if (normalizeCountry(country) !== 'CA') return String(pc || '').trim();
+        const v = String(pc || '').toUpperCase().replace(/\s+/g, '');
+        return /^[A-Z]\d[A-Z]\d[A-Z]\d$/.test(v) ? v.slice(0, 3) + ' ' + v.slice(3) : null;
+      };
+
       const isInternalDomain = (email) =>
         /@(iristel|telehop)\.com$/i.test(String(email || '').trim());
 
@@ -195,7 +208,8 @@
           });
           const data = await response.json().catch(() => ({}));
           console.log("Create-account response:", response.status, data);
-          if (!response.ok) return null;
+          // Keep MIND's reason (e.g. "Invalid postalCode format") to show it.
+          if (!response.ok) return { error: (data.errors && data.errors[0] && data.errors[0].message) || data.message || data.error || '' };
           const body = data.body || data;
           const acct = (body.accounts && body.accounts[0]) || body.account || body;
           return {
@@ -313,6 +327,13 @@
 
         if (password !== confirm) { message.textContent = 'Passwords do not match.'; return; }
         if (password.length < 8) { message.textContent = 'Password must be at least 8 characters.'; return; }
+        // Check the address MIND will validate BEFORE anything is created, so
+        // a typo can't leave a login without a billing account.
+        fields.country = normalizeCountry(fields.country);
+        fields.province = fields.province.toUpperCase();
+        const postal = normalizePostal(fields.postalCode, fields.country);
+        if (postal === null) { message.textContent = 'Postal code should look like A1A 1A1.'; return; }
+        fields.postalCode = postal;
         // Consumers are individuals: no business registration to give.
         const isConsumer = accountType === 'consumer';
         if (!fields.businessRegNumber && REQUIRE_REGISTRATION && !isConsumer) { message.textContent = 'Business registration number is required.'; return; }
@@ -377,8 +398,9 @@
         message.textContent = 'Creating your account...';
         const created = await createMindAccount(accountType, fields, password);
         if (!created || !created.accountId) {
+          const why = created && created.error ? ' (' + created.error.trim() + ')' : '';
           // Credentials exist but no billing account: do not strand silently.
-          message.textContent = 'Your login was created, but the account setup did not complete. Please contact support to finish activation.';
+          message.textContent = 'Your login was created, but we couldn\'t set up your billing account' + why + '. Please contact support to finish activation.';
           submitBtn.disabled = false;
           return;
         }
