@@ -84,6 +84,9 @@
   <script>
     // ── MARKETPLACE ────────────────────────────────────────────
     const MARKETPLACE_GATEWAY = "https://api-marketplace-1im9.onrender.com";
+    // Business registration number + document: optional while testing. Set
+    // to true to require them again (consumers never need them).
+    const REQUIRE_REGISTRATION = false;
 
     // Same clear-cookies-on-load as the login page.
     ['userEmail','agentId','agentIds','partnerType','code','name',
@@ -281,7 +284,7 @@
       // Business registration is optional for consumers.
       const syncRegRequired = () => {
         const consumer = ((document.querySelector('input[name="accountType"]:checked') || {}).value) === 'consumer';
-        ['businessRegNumber', 'registrationFile'].forEach(function (id) { document.getElementById(id).required = !consumer; });
+        ['businessRegNumber', 'registrationFile'].forEach(function (id) { document.getElementById(id).required = REQUIRE_REGISTRATION && !consumer; });
       };
       document.querySelectorAll('input[name="accountType"]').forEach(function (r) { r.addEventListener('change', syncRegRequired); });
       syncRegRequired();
@@ -311,11 +314,11 @@
         if (password.length < 8) { message.textContent = 'Password must be at least 8 characters.'; return; }
         // Consumers are individuals: no business registration to give.
         const isConsumer = accountType === 'consumer';
-        if (!fields.businessRegNumber && !isConsumer) { message.textContent = 'Business registration number is required.'; return; }
+        if (!fields.businessRegNumber && REQUIRE_REGISTRATION && !isConsumer) { message.textContent = 'Business registration number is required.'; return; }
 
         // Business registration document (fraud screening) -> base64, <= 5 MB.
         const regFile = document.getElementById('registrationFile').files[0];
-        if (!regFile && !isConsumer) { message.textContent = 'Attach your business registration document.'; return; }
+        if (!regFile && REQUIRE_REGISTRATION && !isConsumer) { message.textContent = 'Attach your business registration document.'; return; }
         if (regFile && regFile.size > 5 * 1024 * 1024) { message.textContent = 'Document must be 5 MB or smaller.'; return; }
         const registrationDocument = !regFile ? null : await new Promise(function (resolve) {
           const r = new FileReader();
@@ -442,10 +445,10 @@
       <input type="text" id="businessName" autocomplete="organization" placeholder="Optional for individuals">
 
       <label for="businessRegNumber">Business Registration Number</label>
-      <input type="text" id="businessRegNumber" required placeholder="e.g. 123456789">
+      <input type="text" id="businessRegNumber" placeholder="e.g. 123456789">
 
       <label for="registrationFile">Business Registration Document</label>
-      <input type="file" id="registrationFile" required accept=".pdf,.png,.jpg,.jpeg">
+      <input type="file" id="registrationFile" accept=".pdf,.png,.jpg,.jpeg">
 
       <label for="email">Email Address</label>
       <input type="email" id="email" required autocomplete="email">
