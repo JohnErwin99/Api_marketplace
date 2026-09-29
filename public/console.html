@@ -297,8 +297,15 @@
   .pgroup-head .caret{font-size:9px;transition:transform .15s}
   .pgroup-head[aria-expanded="false"] .caret{transform:rotate(-90deg)}
   .pgroup-head .cnt{font-weight:600;color:var(--muted);opacity:.7;text-transform:none;letter-spacing:0}
-  #api-group{display:contents}
-  #api-group.collapsed .pchip{display:none}
+  #api-group,#bundle-group{display:contents}
+  #api-group.collapsed .pchip,#bundle-group.collapsed .pchip,#bundle-group.collapsed .pgroup-sub{display:none}
+  .pgroup-sub{font:600 10px var(--head);color:var(--muted);opacity:.75;padding:6px 6px 0;text-transform:uppercase;letter-spacing:.6px}
+  .pchip.bstep{font-weight:600}
+  .step-badge{display:inline-flex;gap:8px;align-items:center;font:700 10.5px var(--head);text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:6px}
+  .step-badge .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--grad);color:#fff;font-size:11px;letter-spacing:0}
+  .step-badge .prod{color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0}
+  .step-note{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+  .carried{outline:2px solid var(--ok);outline-offset:1px;transition:outline-color 1.5s}
   .opgrid .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .2s}
   .opgrid .card:hover::before{opacity:1}
   .opgrid .card:hover{border-color:var(--line-strong)}
@@ -316,6 +323,7 @@
     .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
     .products{flex-direction:row;flex-wrap:wrap;align-items:center;overflow-x:auto;overflow-y:visible;border-right:0;border-bottom:1px solid var(--line);padding:10px 16px;max-height:40vh}
     .pchip{flex:none;white-space:nowrap;border-radius:999px;justify-content:flex-start}
+    .pgroup-sub{display:none}
     #product-search{width:100%}
     #search-results{width:100%}
     main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}.field{grid-template-columns:1fr}.field .fd{grid-column:1}header{gap:10px}
@@ -443,6 +451,10 @@
     'iristelx-mobile':{auth:'ix',base:IX('iristelx-mobile'), group:p=>/service-now/.test(p)?'Support tickets':/esim|qr/.test(p)?'eSIM':/port-in/.test(p)?'Port in':/notification/.test(p)?'Notifications':/payment/.test(p)?'Payment':'Plans & usage'},
   };
   const cfg=()=>PRODUCT_CFG[productId]||{auth:'proxy',base:ORIGIN,group:()=>'Endpoints'};
+  // Config of the product an endpoint belongs to (e.pid, set at load). Bundle
+  // consoles mix products on one page, so card code must not rely on the
+  // global productId.
+  const cfgOf=e=>(e&&PRODUCT_CFG[e.pid])||cfg();
 
   const DEFAULTS={ name:'ping', profile:'Profile 2542', id:'DID1205280200006',
     from:'2026-08-01 00:00:00', to:'2026-08-18 23:59:59',
@@ -504,20 +516,54 @@
     }
   }
 
+  products.forEach(p=>(p.endpoints||[]).forEach(e=>{e.pid=p.id;}));
+
   // ---- product menu -----------------------------------------------------
   const bar=$('#product-bar');
   const hashProduct=(location.hash.match(/#([a-z0-9-]+)/)||[])[1];
+  const isBundleId=id=>String(id).startsWith('bundle:');
+  const bundleOf=id=>bundles.find(b=>'bundle:'+b.id===id);
+  const hashFor=id=>isBundleId(id)?'bundle-'+id.slice(7):id;
+  const hashBundle=(hashProduct||'').startsWith('bundle-')?'bundle:'+hashProduct.slice(7):null;
   let productId=(hashProduct==='bundles'&&bundles.length)?'bundles'
+    :(hashBundle&&bundleOf(hashBundle))?hashBundle
     :products.some(p=>p.id===hashProduct)?hashProduct
     :(products.find(p=>p.status==='live')||products[0]).id;
 
+  // Bundles: a collapsible group — an Overview page plus one guided console
+  // per bundle (productId 'bundle:<id>', hash #bundle-<id>).
+  let bundleOpen=true, setBundleOpen=()=>{};
   if(bundles.length){
-    const b=document.createElement('button');
-    b.className='pchip bundles'; b.dataset.id='bundles'; b.setAttribute('role','tab');
-    b.innerHTML='📦 Bundles';
-    b.title='Curated packages: which APIs to use for each use case';
-    b.onclick=()=>{ productId='bundles'; location.hash='#bundles'; markProduct(); renderProduct(); };
-    bar.appendChild(b);
+    const bHead=document.createElement('button');
+    bHead.className='pgroup-head'; bHead.type='button'; bHead.setAttribute('aria-controls','bundle-group');
+    bHead.innerHTML='<span class="caret" aria-hidden="true">▾</span> 📦 Bundles <span class="cnt">('+bundles.length+')</span>';
+    bar.appendChild(bHead);
+    const bGroup=document.createElement('div');
+    bGroup.id='bundle-group';
+    bar.appendChild(bGroup);
+    const chip=(id,label,title)=>{
+      const b=document.createElement('button');
+      b.className='pchip'; b.dataset.id=id; b.setAttribute('role','tab');
+      b.innerHTML=label; b.title=title||'';
+      b.onclick=()=>{ productId=id; location.hash='#'+hashFor(id); markProduct(); renderProduct(); };
+      bGroup.appendChild(b);
+    };
+    chip('bundles','Overview','Every bundle and what it is for');
+    audiences.forEach(a=>{
+      const list=bundles.filter(b=>b.audience===a.id);
+      if(!list.length)return;
+      const sub=document.createElement('div');sub.className='pgroup-sub';sub.textContent=a.label;bGroup.appendChild(sub);
+      list.forEach(b=>chip('bundle:'+b.id,esc(b.name),b.useCase));
+    });
+    try{bundleOpen=localStorage.getItem('iristel-bundle-group-open')!=='0';}catch(_){}
+    setBundleOpen=open=>{
+      bundleOpen=open;
+      bGroup.classList.toggle('collapsed',!open);
+      bHead.setAttribute('aria-expanded',String(open));
+      try{localStorage.setItem('iristel-bundle-group-open',open?'1':'0');}catch(_){}
+    };
+    bHead.onclick=()=>setBundleOpen(!bundleOpen);
+    setBundleOpen(bundleOpen||isBundleId(productId));
   }
   // Individual products live under a collapsible "APIs" group.
   const groupHead=document.createElement('button');
@@ -555,6 +601,7 @@
     });
     // Never leave the active product invisible inside a collapsed group.
     if(!groupOpen&&products.some(p=>p.id===productId))setGroupOpen(true);
+    if(!bundleOpen&&(productId==='bundles'||isBundleId(productId)))setBundleOpen(true);
   }
   markProduct();
 
@@ -665,10 +712,7 @@
       const btn=document.createElement('button');
       btn.className='sres';
       btn.innerHTML='<span>📦 '+esc(x.b.name)+'</span><small>Bundle · '+esc(x.b.useCase)+'</small>';
-      btn.onclick=()=>{
-        productId='bundles';location.hash='#bundles';markProduct();renderProduct();clearSearch();
-        const card=$('#bundle-'+x.b.id);if(card)card.scrollIntoView({block:'start',behavior:'smooth'});
-      };
+      btn.onclick=()=>{clearSearch();openBundle(x.b.id);};
       frag.appendChild(btn);
     });
     let shown=0;
@@ -717,9 +761,9 @@
   showTab(location.hash.includes('console')?'console':'docs');
 
   // ---- auth snippet helpers --------------------------------------------
-  function authHeaderLines(env){
+  function authHeaderLines(env,e){
     const L=["  -H 'Authorization: Bearer "+KEY_PH+"'"];
-    if(cfg().auth==='edid')L.push("  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'");
+    if(cfgOf(e).auth==='edid')L.push("  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'");
     return L;
   }
 
@@ -963,20 +1007,20 @@
   // ---- bundles view -----------------------------------------------------
   function renderBundlesView(){
     $('#baseurl').textContent=ORIGIN;
-    nav.innerHTML='<div class="empty" style="padding:14px">Bundles are guided packages — pick a step to jump into its console.</div>';
+    nav.innerHTML='<div class="empty" style="padding:14px">Pick a bundle in the menu to run its steps in a guided console.</div>';
     $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
     let h='<h2>Bundles &amp; packages</h2>'
-      +'<p class="lead">Curated recipes per business model: the exact APIs to call, in order, for each use case. Click a step to open it in the console.</p>';
+      +'<p class="lead">Curated recipes per business model: the exact APIs to call, in order, for each use case. Open a bundle to run its steps in a guided console.</p>';
     audiences.forEach(a=>{
       const list=bundles.filter(b=>b.audience===a.id);
       if(!list.length)return;
       h+='<div class="bundle-aud">'+esc(a.label)+'</div><div class="bundle-grid">';
       list.forEach(b=>{
-        h+='<div class="bundle-card" id="bundle-'+esc(b.id)+'"><h3>'+esc(b.name)+'</h3>'
+        h+='<div class="bundle-card" id="bundle-'+esc(b.id)+'"><h3><a href="#bundle-'+esc(b.id)+'" data-bopen="'+esc(b.id)+'">'+esc(b.name)+' →</a></h3>'
           +'<p class="buse">'+esc(b.useCase)+'</p><p>'+esc(b.summary)+'</p><ol>';
-        (b.steps||[]).forEach(s=>{
+        (b.steps||[]).forEach((s,i)=>{
           const p=products.find(x=>x.id===s.product);
-          h+='<li><a href="#'+esc(s.product)+'" data-bstep data-pid="'+esc(s.product)+'" data-ep="'+esc(s.endpoint)+'">'
+          h+='<li><a href="#bundle-'+esc(b.id)+'" data-bstep data-bid="'+esc(b.id)+'" data-step="'+i+'">'
             +'<code>'+esc(s.endpoint)+'</code>'
             +'<small>'+esc((p?p.name+' — ':'')+(s.note||''))+'</small></a></li>';
         });
@@ -986,21 +1030,120 @@
     });
     const body=$('#docs-body');
     body.innerHTML=h;
+    body.querySelectorAll('[data-bopen]').forEach(a=>{
+      a.onclick=ev=>{ev.preventDefault();openBundle(a.dataset.bopen);};
+    });
     body.querySelectorAll('[data-bstep]').forEach(a=>{
-      a.onclick=ev=>{
-        ev.preventDefault();
-        const pid=a.dataset.pid,key=a.dataset.ep;
-        const p=products.find(x=>x.id===pid);
-        if(!p)return;
-        const e=(p.endpoints||[]).find(x=>x.method+' '+x.path===key);
-        if(e)openEndpoint(pid,e);else openProduct(pid);
-      };
+      a.onclick=ev=>{ev.preventDefault();openBundle(a.dataset.bid,+a.dataset.step);};
     });
     showTab('docs');
   }
 
+  // ---- one bundle: its steps, in order, as live operation cards ----------
+  // Values returned by a step (accountId, id, pon, iccid…) fill matching empty
+  // fields in later steps. Fields the user typed in are never overwritten.
+  // Field names match ignoring case, "_" and "-" (AGENT_ID fills agentId).
+  const carryKey=k=>String(k).toLowerCase().replace(/[_-]/g,'');
+  function collectScalars(v,out,depth){
+    if(depth>6||v==null)return out;
+    if(Array.isArray(v)){v.forEach(x=>collectScalars(x,out,depth+1));return out;}
+    if(typeof v==='object'){
+      Object.entries(v).forEach(([k,x])=>{
+        if(x!==null&&typeof x!=='object'){const key=carryKey(k);if(!(key in out)&&String(x)!=='')out[key]=String(x);}
+        else collectScalars(x,out,depth+1);
+      });
+    }
+    return out;
+  }
+  function renderBundleConsole(b){
+    $('#baseurl').textContent=ORIGIN;
+    current=null;
+    nav.hidden=false;
+    $('#req').hidden=true;$('#resp-card').hidden=true;
+    const steps=(b.steps||[]).map(st=>{
+      const p=products.find(x=>x.id===st.product);
+      const e=p&&(p.endpoints||[]).find(x=>x.method+' '+x.path===st.endpoint);
+      return e?{st,p,e}:null;
+    }).filter(Boolean);
+
+    // Docs tab: what the bundle is for and its ordered steps.
+    let d='<h2>📦 '+esc(b.name)+'</h2><p class="lead">'+esc(b.useCase)+'</p><p>'+esc(b.summary||'')+'</p>'
+      +'<h3>Steps</h3><ol>';
+    steps.forEach(({st,p,e},i)=>{
+      d+='<li><a href="#'+esc(hashFor(productId))+'" data-bjump="'+i+'"><code>'+esc(e.method+' '+e.path)+'</code></a> — '
+        +esc(p.name)+(st.note?'<br><small>'+esc(st.note)+'</small>':'')+'</li>';
+    });
+    d+='</ol><p class="hint">Open the <b>Console</b> tab to run the steps in order.</p>';
+    const docs=$('#docs-body');docs.innerHTML=d;
+    docs.querySelectorAll('[data-bjump]').forEach(a=>a.onclick=ev=>{ev.preventDefault();showTab('console');jump(+a.dataset.bjump);});
+
+    // Console: intro + one card per step.
+    $('#op-intro').hidden=false;$('#opgrid').hidden=false;
+    $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">📦 '+esc(b.name)+'</h2>'
+      +'<p class="hint" style="margin:0;font-size:13px">'+esc(b.useCase)+' — '+steps.length+' steps. '
+      +'Run them in order: values returned by one step fill in the next ones automatically.</p>';
+    const grid=$('#opgrid');grid.innerHTML='';
+    const cards=[];
+    const carryFrom=(idx,status,txt)=>{
+      if(status<200||status>=300)return;
+      let data;try{data=JSON.parse(txt);}catch(_){return;}
+      // Values returned by the step win; values the step was sent with
+      // (e.g. a date range) fill in anything the response didn't have.
+      const carry=collectScalars(data,{},0);
+      Object.entries(formValues(cards[idx])).forEach(([k,v])=>{const key=carryKey(k);if(v!==''&&!(key in carry))carry[key]=v;});
+      cards.slice(idx+1).forEach(card=>{
+        card.querySelectorAll('[data-path],[data-query],[data-body]').forEach(i=>{
+          const name=carryKey(i.dataset.path||i.dataset.query||i.dataset.body||'');
+          if(i.dataset.touched||!(name in carry))return;
+          if(String(i.value)===carry[name])return;
+          i.value=carry[name];
+          i.dispatchEvent(new Event('input'));
+          i.classList.add('carried');setTimeout(()=>i.classList.remove('carried'),2500);
+        });
+      });
+    };
+    steps.forEach(({st,p,e},i)=>{
+      const card=buildOpCard(e,{
+        before:'<div class="step-badge"><span class="num">'+(i+1)+'</span>Step '+(i+1)+' of '+steps.length
+          +' <span class="prod">· '+esc(p.name)+'</span></div>'
+          +(st.note?'<p class="step-note">'+esc(st.note)+'</p>':''),
+        opts:{onResult:(status,txt)=>carryFrom(i,status,txt)},
+      });
+      card.dataset.step=i;
+      // Remember fields the user typed in (trusted events only).
+      card.querySelectorAll('[data-path],[data-query],[data-body]').forEach(inp=>{
+        inp.addEventListener('input',ev=>{if(ev.isTrusted)inp.dataset.touched='1';});
+      });
+      cards.push(card);grid.appendChild(card);
+    });
+
+    // Left rail: numbered jump list.
+    nav.innerHTML='<div class="group">'+esc(b.name)+'</div>';
+    steps.forEach(({e,p},i)=>{
+      const btn=document.createElement('button');
+      btn.innerHTML='<span class="m '+e.method+'">'+(i+1)+'</span><span>'+esc(hintFor(e).title||autoTitle(e))
+        +'<br><small style="opacity:.65">'+esc(p.name)+'</small></span>';
+      btn.onclick=()=>jump(i);
+      nav.appendChild(btn);
+    });
+    const rail=document.createElement('div');rail.className='railnote';
+    rail.innerHTML='<strong>Base URL:</strong> <code>'+esc(ORIGIN)+'</code><br>Each step calls its own API through the gateway; '
+      +'the curl example on every card shows the full URL.';
+    nav.appendChild(rail);
+    function jump(i){
+      nav.querySelectorAll('button').forEach((x,j)=>x.classList.toggle('active',j===i));
+      if(cards[i])cards[i].scrollIntoView({block:'start',behavior:'smooth'});
+    }
+    showTab('console');
+  }
+  function openBundle(id,step){
+    productId='bundle:'+id;location.hash='#bundle-'+id;markProduct();renderProduct();
+    if(step!=null){const c=$('#opgrid [data-step="'+step+'"]');if(c)c.scrollIntoView({block:'start',behavior:'smooth'});}
+  }
+
   function renderProduct(){
     if(productId==='bundles')return renderBundlesView();
+    if(isBundleId(productId)){const b=bundleOf(productId);if(b)return renderBundleConsole(b);}
     const c=cfg(), p=product();
     $('#baseurl').textContent=c.base;
     current=null;
@@ -1035,6 +1178,24 @@
     }
     return '<details class="adv"><summary>Developer details</summary>'+d+'</details>';
   }
+  // One self-contained operation card: title, form, developer details and an
+  // inline response. `extra.before` is HTML placed above the title (bundle
+  // step badge); `extra.opts` goes to wireForm/sendFrom.
+  function buildOpCard(e,extra){
+    extra=extra||{};
+    const h=hintFor(e);
+    const card=document.createElement('div');
+    card.className='card';card.dataset.ep=e.method+' '+e.path;
+    card.innerHTML=(extra.before||'')
+      +'<h2 class="op-title"><span class="op-icon" aria-hidden="true">'+(h.icon||AUTO_ICON[e.method]||'⚙')+'</span>'
+      +esc(h.title||autoTitle(e))+'</h2>'
+      +(e.description?'<p class="desc" style="font-size:12.5px;color:var(--muted)">'+esc(e.description)+'</p>':'')
+      +formHtml(e,{compact:true})
+      +devDetailsHtml(e)
+      +'<div class="op-resp"></div>';
+    wireForm(card,e,Object.assign({inline:true},extra.opts||{}));
+    return card;
+  }
   function renderOpGrid(p){
     const ui=p.ui||{}, c=cfg();
     $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">'+esc(ui.title||p.name)+'</h2>'
@@ -1046,19 +1207,7 @@
       if(order.length>1){
         const hd=document.createElement('div');hd.className='opgroup';hd.textContent=g;grid.appendChild(hd);
       }
-      groups[g].forEach(e=>{
-        const h=hintFor(e);
-        const card=document.createElement('div');
-        card.className='card';card.dataset.ep=e.method+' '+e.path;
-        card.innerHTML='<h2 class="op-title"><span class="op-icon" aria-hidden="true">'+(h.icon||AUTO_ICON[e.method]||'⚙')+'</span>'
-          +esc(h.title||autoTitle(e))+'</h2>'
-          +(e.description?'<p class="desc" style="font-size:12.5px;color:var(--muted)">'+esc(e.description)+'</p>':'')
-          +formHtml(e,{compact:true})
-          +devDetailsHtml(e)
-          +'<div class="op-resp"></div>';
-        grid.appendChild(card);
-        wireForm(card,e,{inline:true});
-      });
+      groups[g].forEach(e=>grid.appendChild(buildOpCard(e)));
     });
   }
 
@@ -1163,8 +1312,8 @@
     return JSON.stringify(out);
   }
   function curlTextFor(root,e){
-    const L=["curl -s -X "+e.method+" '"+cfg().base+buildPathFrom(root,e)+"'",
-             ...authHeaderLines(cfg().auth==='edid'?CONSOLE_ENV:null)];
+    const L=["curl -s -X "+e.method+" '"+cfgOf(e).base+buildPathFrom(root,e)+"'",
+             ...authHeaderLines(cfgOf(e).auth==='edid'?CONSOLE_ENV:null,e)];
     if(e.upload){L.push("  -F '"+(e.upload.field||'file')+"=@listings.csv'");}
     else{
       let b;try{b=buildBodyFrom(root,e);}catch(_){b=undefined;}
@@ -1176,7 +1325,7 @@
     }
     // Comments lead the snippet: after a '\' continuation a trailing '#' line
     // would reach curl as an argument, not a comment.
-    const head=cfg().auth==='edid'
+    const head=cfgOf(e).auth==='edid'
       ?"# Test environment. For live traffic, use X-EDID-Env: production\n# with your production Espresso credentials.\n":"";
     return head+L.join(" \\\n");
   }
@@ -1266,7 +1415,7 @@
     const confirmMsg=h.confirm||(e.method==='DELETE'?'This permanently deletes the record. Continue?':null);
     if(confirmMsg&&!window.confirm(interp(confirmMsg,vals)))return;
 
-    const c=cfg();
+    const c=cfgOf(e);
     const headers={};
     if(c.auth==='edid')headers['X-EDID-Env']=CONSOLE_ENV;
     const session=mpSession();
@@ -1297,6 +1446,7 @@
       const txt=await r.text();
       showResult(e,vals,r.status,txt,performance.now()-t0,inlineEl);
       reportUsage(e,r.status,performance.now()-t0);
+      if(opts.onResult)opts.onResult(r.status,txt);
     }catch(err){
       showResult(e,vals,0,'Network error: '+err.message,performance.now()-t0,inlineEl);
       reportUsage(e,0,performance.now()-t0);
@@ -1311,7 +1461,7 @@
     try{
       const body=JSON.stringify({
         session:(window.MarketplaceAccess&&window.MarketplaceAccess.session())||null,
-        product:productId, method:e.method, endpoint:e.path,
+        product:e.pid||productId, method:e.method, endpoint:e.path,
         status:status, ms:Math.round(ms)
       });
       const url=ORIGIN+'/marketplace/usage';

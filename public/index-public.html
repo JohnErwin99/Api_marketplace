@@ -415,6 +415,67 @@ themeToggle.addEventListener("click", () => {
   applyTheme(next);
 });
 
+// Built-in copy of the account types (same text as ACCOUNT_TYPES in
+// lib/catalogs/bundles.js) so "Choose your path" still renders when the
+// catalog can't be loaded.
+const FALLBACK_ACCOUNT_TYPES = [
+  {
+    "id": "customer",
+    "label": "Business customer",
+    "short": "Your business uses Iristel services for itself.",
+    "description": "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
+    "build": [
+      "Order SIP trunks and phone numbers",
+      "Keep your numbers when you move to Iristel",
+      "Keep your 911 addresses up to date"
+    ]
+  },
+  {
+    "id": "reseller",
+    "label": "Reseller",
+    "short": "You sell Iristel services to your own customers.",
+    "description": "Carriers, ISPs, MSPs, VARs and UCaaS providers who sell Iristel services — including co-branded partners — and bill their own customers.",
+    "build": [
+      "Activate subscribers end to end",
+      "Order numbers at scale",
+      "Port your customers onto the network"
+    ]
+  },
+  {
+    "id": "agent",
+    "label": "Agent",
+    "short": "You sign up customers and earn commission.",
+    "description": "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
+    "build": [
+      "Sign customers up from your own tools",
+      "Assign SIMs and eSIMs",
+      "Track your commissions"
+    ]
+  },
+  {
+    "id": "white-label",
+    "label": "White-label partner",
+    "short": "You sell under your own brand and own support.",
+    "description": "Iristel services under your brand: you set prices, run support and own the customer relationship, with Iristel's network behind you.",
+    "build": [
+      "Provision voice services under your brand",
+      "Supply numbers and 911 to your customers",
+      "Activate mobile subscribers"
+    ]
+  },
+  {
+    "id": "consumer",
+    "label": "Consumer",
+    "short": "You use Iristel services personally.",
+    "description": "An individual with Iristel mobile, eSIM or phone service who wants to connect their own app or tools to their account.",
+    "build": [
+      "See your plan and usage",
+      "Manage your eSIM",
+      "Get account notifications"
+    ]
+  }
+];
+
 // ---- "Choose your path": the five account types from the catalog --------
 function renderAccountTypes(reg) {
   const types = reg.accountTypes || [];
@@ -458,7 +519,11 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
 (async () => {
   let reg;
   try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
-  catch { document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>"; return; }
+  catch {
+    document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
+    renderAccountTypes({ accountTypes: FALLBACK_ACCOUNT_TYPES });
+    return;
+  }
 
   // Packages grid
   renderAccountTypes(reg);

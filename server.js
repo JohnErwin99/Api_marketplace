@@ -12,11 +12,15 @@ app.set('trust proxy', 1);
 // CORS: set ALLOWED_ORIGINS="https://portal.example.com,https://www.example.com" in prod.
 // If unset, any origin is allowed (dev convenience).
 const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
-// The partner portal is always allowed — its embedded pages call the gateway.
+// Iristel sites that embed marketplace pages are always allowed: the partner
+// portal and the public site (its landing page loads /catalog.json).
 const PORTAL_ORIGINS = [
   'https://iristelpartnerportal.com',
   'https://www.iristelpartnerportal.com',
   'https://iristel-portal.webflow.io',
+  'https://iristel.webflow.io',
+  'https://iristel.com',
+  'https://www.iristel.com',
 ];
 const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? PORTAL_ORIGINS : [])])];
 app.use(cors(allowed.length ? { origin: allowed } : {}));
