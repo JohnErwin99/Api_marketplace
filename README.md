@@ -39,36 +39,57 @@ auto-generating the console UI.
 
 ## Credentials & environment
 
-**Who is authenticating to Espresso?**
+**Who may call `/api/*`?** Every call must identify an approved caller
+(`lib/entitlements.js`):
 
-- **The test console** (`/console`) always uses the **shared default account** —
-  the `EDID_USER` / `EDID_PASS` set on the server. Partners open it from inside
-  the (already login-protected) partner portal and don't enter Espresso
-  credentials. The console does not expose username/password fields.
-- **Calling the API directly** (your own app, scripts, server-to-server): a
-  caller with their **own Espresso account** should send their credentials as
-  headers `X-EDID-Username` / `X-EDID-Password` (or HTTP Basic auth). Anyone who
-  does **not** send credentials falls back to the shared default account
-  configured on the server.
+- **The test console** sends the partner's portal login session
+  (`Authorization: Bearer <session>`), issued by `POST /marketplace/session`
+  after a real password check.
+- **A partner's own application** sends their personal marketplace key,
+  `Authorization: Bearer mk_...` or `X-Marketplace-Key: mk_...`. Approved
+  partners get it from **Show my API key** in the console
+  (`POST /marketplace/api-key`).
+- **Iristel's own services** can send `X-API-Key: <GATEWAY_API_KEY>`.
 
-Resolution order, per request:
+The product the path belongs to must be one the caller's CRM account is
+approved for (`cr57d_apimarketplaceapproved` plus the product fields); staff
+(`ADMIN_EMAILS`) may call everything. Otherwise the gateway answers 401 (no or
+bad key) or 403 (not approved for that product). Revoking access in CRM
+disables the key within a minute.
 
-1. Headers `X-EDID-Username` / `X-EDID-Password`
-2. HTTP Basic auth (`Authorization: Basic ...`)
-3. Server defaults (`EDID_USER` / `EDID_PASS`)
+**Upstream keys never leave the server.** IristelX-backed products
+(provisioning, 911, accounts, SIM, commissions, mobile) are proxied at
+`/api/ix/<product>/<path>`, and only the paths in that product's catalog are
+forwarded. The portal login and sign-up pages call `/portal/*` for the same
+reason.
 
-So `EDID_USER` / `EDID_PASS` on the server are the **fallback / shared** account.
-Leave them set if you want a shared default; unset them if you require every
-caller to bring their own Espresso login.
-
-Direct call with your own Espresso account:
+**Espresso login (DIDs, LNP).** Send your own credentials as
+`X-EDID-Username` / `X-EDID-Password` (Basic auth also works when the
+marketplace key goes in `X-Marketplace-Key`). Without them the gateway uses
+the shared `EDID_USER` / `EDID_PASS` account, but **only on the test
+system**; production calls without your own login get 401.
 
 ```bash
 curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
+  -H 'Authorization: Bearer mk_...' \
   -H 'X-EDID-Username: partner@example.com' \
   -H 'X-EDID-Password: their-espresso-password' \
   -H 'X-EDID-Env: production'
 ```
+
+**Server environment (Render):**
+
+| Variable | Used for |
+|---|---|
+| `SESSION_SECRET` | Signs login sessions and partner keys. Changing it logs everyone out and rotates every partner key. |
+| `IRISTELX_API_KEY` | Unified log-in / sign-up / forgot-password, employee lookup, provisioning and 911 |
+| `MIND_API_KEY` | IristelX accounts, SIM, commissions, mobile; creating customer billing accounts |
+| `MIND_RESELL_KEY` | Creating reseller billing accounts (RESELL provider) |
+| `MIND_SEARCH_KEY` | Get Account By Email |
+| `EDID_USER` / `EDID_PASS` / `EDID_ENV` | Shared Espresso test account |
+| `D365_*` | Dynamics 365 (approvals are read from here) |
+| `ADMIN_EMAILS` | Optional staff list override |
+| `GATEWAY_API_KEY` | Optional internal override key |
 
 Environment (`test` vs `production`) resolves from the `X-EDID-Env` header,
 `?env=` query param, or `EDID_ENV` on the server (defaults to `test`).
@@ -103,9 +124,11 @@ Environment (`test` vs `production`) resolves from the `X-EDID-Env` header,
 
 ```bash
 BASE=http://localhost:3000
+# Every /api call needs your marketplace key; add -H "$AUTH" to each example.
+AUTH='Authorization: Bearer mk_...'
 
 # health / auth
-curl -s "$BASE/api/ping?name=hello"
+curl -s "$BASE/api/ping?name=hello" -H "$AUTH"
 
 # product catalog
 curl -s "$BASE/api/catalog"
@@ -166,7 +189,7 @@ Every error is JSON with an HTTP status. Espresso's numeric app codes (1–8,
 
 ## Notes for the console build
 
-- **CORS** is wide open (`cors()`) for dev — restrict `origin` before production.
+- **CORS**: any origin when `ALLOWED_ORIGINS` is unset (dev); otherwise that list plus the partner portal origins.
 - `GET /` gives the endpoint catalog as JSON; the console can render forms from it.
 - The two **array** methods (`didOrderDids`, `didOrderEdit`) build rpc/encoded
   arrays by hand. The shape matches the PDF, but if the live server rejects the

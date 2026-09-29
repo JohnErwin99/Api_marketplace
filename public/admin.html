@@ -215,6 +215,8 @@
 
   // ---- who is asking -----------------------------------------------------
   const email = (window.MarketplaceAccess && window.MarketplaceAccess.email()) || '';
+  const session = (window.MarketplaceAccess && window.MarketplaceAccess.session()) || '';
+  const auth = session ? { Authorization: 'Bearer ' + session } : {};
   $('#who').textContent = email || 'not signed in';
 
   // ---- date range --------------------------------------------------------
@@ -235,7 +237,7 @@
   let last = null;
 
   function query(extra){
-    const p = new URLSearchParams({ email, from: $('#from').value, to: $('#to').value });
+    const p = new URLSearchParams({ from: $('#from').value, to: $('#to').value });
     if ($('#product').value) p.set('product', $('#product').value);
     Object.entries(extra || {}).forEach(([k, v]) => p.set(k, v));
     return p.toString();
@@ -243,8 +245,8 @@
 
   async function load(){
     try {
-      const r = await fetch(GATEWAY + '/marketplace/admin/summary?' + query());
-      if (r.status === 403) {
+      const r = await fetch(GATEWAY + '/marketplace/admin/summary?' + query(), { headers: auth });
+      if (r.status === 401 || r.status === 403) {
         const body = await r.json().catch(() => ({}));
         $('#gate').hidden = false; $('#board').hidden = true;
         if (body.message) $('#gate-msg').textContent = body.message +
@@ -427,8 +429,8 @@
         if (!approve && !confirm('Revoke marketplace access for this account? Their console closes on their next visit.')) return;
         btn.disabled = true; const label = btn.textContent; btn.textContent = 'Saving…';
         try {
-          const r = await fetch(GATEWAY + '/marketplace/admin/access?email=' + encodeURIComponent(email), {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+          const r = await fetch(GATEWAY + '/marketplace/admin/access', {
+            method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
             body: JSON.stringify({ accountId: btn.dataset.account, approved: approve })
           });
           const body = await r.json().catch(() => ({}));
@@ -466,9 +468,19 @@
           '<td class="num">' + (u.ms == null ? '—' : fmt(u.ms)) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No API calls recorded in this range. Usage is captured from the console — it starts filling once partners make calls.</td></tr></tbody>';
 
-    $('#csv-grants').href   = GATEWAY + '/marketplace/admin/export.csv?' + query({ view: 'grants' });
-    $('#csv-requests').href = GATEWAY + '/marketplace/admin/export.csv?' + query({ view: 'requests' });
-    $('#csv-usage').href    = GATEWAY + '/marketplace/admin/export.csv?' + query({ view: 'usage' });
+    // Downloads go through fetch so the session token rides in a header.
+    ['grants', 'requests', 'usage'].forEach(view => {
+      $('#csv-' + view).onclick = async (ev) => {
+        ev.preventDefault();
+        const r = await fetch(GATEWAY + '/marketplace/admin/export.csv?' + query({ view }), { headers: auth });
+        if (!r.ok) { alert('Export failed: HTTP ' + r.status); return; }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(await r.blob());
+        a.download = 'marketplace-' + view + '.csv';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      };
+    });
   }
 
   load();

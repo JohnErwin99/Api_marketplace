@@ -90,15 +90,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
 
-      // ── Keys ───────────────────────────────────────────────────
-      // Search (read-only, Get Account By Email):
-      const MIND_SEARCH_KEY = "jsCf2BiTjz6OkmupgPy4z55esKiZFKyuaKLXeOu9";
-      // Account creation — the key decides the new account's providerCode:
-      const CREATE_KEYS = {
-        customer: "HRT88y2qywc6fwX779zG2D8fJtJQJbvz",   // agent-side provider
-        reseller: "fQJsQkxS8hrhGHMqY3JMLDxgjjguAV"      // RESELL provider
-      };
-      const SHARED_KEY = "b1582d78d369685683e090ad37489937"; // auth0/employees
+      // No API keys in this page: every IristelX call goes through the
+      // marketplace gateway (/portal/*), which holds the keys.
 
       const isInternalDomain = (email) =>
         /@(iristel|telehop)\.com$/i.test(String(email || '').trim());
@@ -112,8 +105,7 @@
           // The search lives on the API ROOT (GET /?email=), not /accounts,
           // and its `body` arrives as a JSON *string*.
           const response = await fetch(
-            "https://api.iristelx.com/?email=" + encodeURIComponent(email),
-            { headers: { "x-api-key": MIND_SEARCH_KEY } }
+            MARKETPLACE_GATEWAY + "/portal/account?email=" + encodeURIComponent(email)
           );
           if (!response.ok) return null;
           const data = await response.json();
@@ -127,8 +119,7 @@
       const checkIfEmployee = async (email) => {
         try {
           const response = await fetch(
-            "https://api.iristelx.com/employees?email=" + encodeURIComponent(email),
-            { headers: { "x-api-key": SHARED_KEY } }
+            MARKETPLACE_GATEWAY + "/portal/employee?email=" + encodeURIComponent(email)
           );
           if (!response.ok) return null;
           const data = await response.json();
@@ -137,9 +128,9 @@
       };
 
       const auth0SignUp = async (email, password) => {
-        const response = await fetch("https://api.iristelx.com/unified/sign-up", {
+        const response = await fetch(MARKETPLACE_GATEWAY + "/portal/sign-up", {
           method: "POST",
-          headers: { "x-api-key": SHARED_KEY, "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email, password: password })
         });
         if (response.status === 409) return { ok: false, exists: true };
@@ -149,9 +140,9 @@
 
       const sendResetEmail = async (email) => {
         try {
-          const response = await fetch("https://api.iristelx.com/unified/forgot-password", {
+          const response = await fetch(MARKETPLACE_GATEWAY + "/portal/forgot-password", {
             method: "POST",
-            headers: { "x-api-key": SHARED_KEY, "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: email })
           });
           const data = await response.json().catch(() => ({}));
@@ -161,29 +152,31 @@
 
       // Creates the MIND billing account. The key (per account type) decides
       // the providerCode; the response carries the new accountId.
-      const createMindAccount = async (accountType, fields) => {
-        const key = CREATE_KEYS[accountType] || CREATE_KEYS.customer;
+      const createMindAccount = async (accountType, fields, password) => {
         try {
-          const response = await fetch("https://api.iristelx.com/accounts", {
+          // The gateway re-checks the new login (email + password) before
+          // creating the account, and picks the key for the account type.
+          const response = await fetch(MARKETPLACE_GATEWAY + "/portal/accounts", {
             method: "POST",
-            headers: {
-              "x-api-key": key,
-              "iristelx-api-key": key,
-              "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: fields.businessName || (fields.fname + ' ' + fields.lname),
-              language: "EN",
-              contact: {
-                fname: fields.fname,
-                lname: fields.lname,
-                address1: fields.address1,
-                city: fields.city,
-                province: fields.province,
-                country: fields.country,
-                postalCode: fields.postalCode,
-                emailAddress: fields.email,
-                phone: fields.phone || undefined
+              accountType: accountType,
+              email: fields.email,
+              password: password,
+              account: {
+                name: fields.businessName || (fields.fname + ' ' + fields.lname),
+                language: "EN",
+                contact: {
+                  fname: fields.fname,
+                  lname: fields.lname,
+                  address1: fields.address1,
+                  city: fields.city,
+                  province: fields.province,
+                  country: fields.country,
+                  postalCode: fields.postalCode,
+                  emailAddress: fields.email,
+                  phone: fields.phone || undefined
+                }
               }
             })
           });
@@ -211,10 +204,28 @@
       };
 
       // ── MARKETPLACE ─────────────────────────────────────────────
-      const setMarketplaceAccessCookie = async (email) => {
+      // Signed gateway session (same as the login page): proves the new
+      // password, and is required by the access lookup below.
+      const setMarketplaceSessionCookie = async (email, password) => {
         try {
+          const response = await fetch(MARKETPLACE_GATEWAY + "/marketplace/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, password: password })
+          });
+          if (!response.ok) return null;
+          const data = await response.json();
+          if (data.token) setCookie('marketplaceSession', data.token, 1);
+          return data.token || null;
+        } catch (e) { return null; }
+      };
+
+      const setMarketplaceAccessCookie = async (email, session) => {
+        try {
+          if (!session) return;
           const response = await fetch(
-            MARKETPLACE_GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email));
+            MARKETPLACE_GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email),
+            { headers: { "Authorization": "Bearer " + session } });
           if (!response.ok) return;
           const data = await response.json();
           const ids = (data.products || []).join(",");
@@ -238,7 +249,7 @@
       };
 
       // Completes the session exactly like the login page's completeLogin.
-      const completeSignupLogin = async (fields, created, accountType) => {
+      const completeSignupLogin = async (fields, created, accountType, password) => {
         setCookie('userEmail', fields.email, 7);
         const name = [fields.fname, fields.lname].filter(Boolean).join(' ')
           || String(fields.email).split('@')[0] || 'Partner';
@@ -255,7 +266,8 @@
         }
         setCookie('code', (created && created.accountId) || '', 7);
 
-        await setMarketplaceAccessCookie(fields.email);
+        const session = await setMarketplaceSessionCookie(fields.email, password);
+        await setMarketplaceAccessCookie(fields.email, session);
 
         document.getElementById('message').textContent = 'Account created! Redirecting...';
         startCountdown(5);
@@ -344,7 +356,7 @@
         // 3. MIND billing account — the key chosen by the radio determines
         // the providerCode (customer -> agent provider, reseller -> RESELL).
         message.textContent = 'Creating your account...';
-        const created = await createMindAccount(accountType, fields);
+        const created = await createMindAccount(accountType, fields, password);
         if (!created || !created.accountId) {
           // Credentials exist but no billing account: do not strand silently.
           message.textContent = 'Your login was created, but the account setup did not complete. Please contact support to finish activation.';
@@ -372,7 +384,7 @@
         }).catch(function (e) { console.warn('CRM sign-up mirror failed:', e); });
 
         // 5. Same session completion as the login page.
-        await completeSignupLogin(fields, created, accountType);
+        await completeSignupLogin(fields, created, accountType, password);
       });
     });
   </script>

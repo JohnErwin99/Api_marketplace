@@ -79,8 +79,6 @@
   header label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
   header select,header input{font:13px var(--mono);padding:6px 9px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink);max-width:210px}
   header select:focus-visible,header input:focus{outline:2px solid var(--accent);outline-offset:1px}
-  #xkey-clear{border:1px solid var(--line);background:none;color:var(--muted);border-radius:7px;font:12px var(--sans);padding:5px 8px;cursor:pointer}
-  #xkey-clear:hover{color:var(--err);border-color:rgba(239,154,154,.5)}
   .tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
   .tab{border:0;background:none;font:600 13px var(--head);color:var(--muted);padding:7px 16px;border-radius:999px;cursor:pointer;transition:color .15s,background .15s}
   .tab:hover{color:var(--ink)}
@@ -338,11 +336,6 @@
   <div class="base"><b>Base URL</b><code id="baseurl">—</code></div>
   <div class="grow"></div>
   <span class="badge tier" id="partner-badge" hidden></span>
-  <label id="xkey-wrap" hidden>API key
-    <input id="xkey" type="password" placeholder="x-api-key" autocomplete="off"
-      title="Your IristelX API key. Stored only in this browser (localStorage), sent as the x-api-key header.">
-    <button id="xkey-clear" type="button" title="Forget the stored key" aria-label="Clear API key">✕</button>
-  </label>
   <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
     <span class="sun" aria-hidden="true">☀</span>
     <span class="moon" aria-hidden="true">☾</span>
@@ -386,23 +379,27 @@
   const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const nav=$('#nav'), reqEl=$('#req'), respBody=$('#resp-body'), statusEl=$('#status'), timeEl=$('#time');
   const ORIGIN=location.origin;
-  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD', KEY_PH='YOUR_API_KEY';
-  // 911 API key. Users of this page are already logged-in Iristel customers,
-  // so the shared key ships with the console.
-  const E911_API_KEY='b1582d78d369685683e090ad37489937';
-  // Per-service API keys, issued with marketplace access — the docs show the
-  // right key for each service so an approved partner never has to contact
-  // us for credentials. Mapping mirrors production usage (OnlineOrdering):
-  // UbossRobot provisioning uses the uboss/payment key; all IristelX
-  // account/SIM/commission/mobile endpoints use the MIND key.
-  const SERVICE_KEYS={
-    'provisioning':'b1582d78d369685683e090ad37489937',
-    'iristelx-accounts':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
-    'iristelx-sim':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
-    'iristelx-commission':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
-    'iristelx-mobile':'HRT88y2qywc6fwX779zG2D8fJtJQJbvz',
-  };
-  const serviceKey=()=>SERVICE_KEYS[productId]||null;
+  const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD', KEY_PH='YOUR_MARKETPLACE_KEY';
+  // No upstream API keys live in this page. IristelX and 911 calls go through
+  // the gateway (/api/ix/<product>), which holds the keys server-side. Every
+  // call carries the portal login session; from their own application a
+  // partner sends their personal marketplace key instead ("Show my API key").
+  const mpSession=()=>(window.MarketplaceAccess&&window.MarketplaceAccess.session())||'';
+
+  // "Show my API key": the partner's personal key for their own application,
+  // issued by the gateway to a logged-in, approved account.
+  document.addEventListener('click',async ev=>{
+    const btn=ev.target.closest('[data-getkey]');
+    if(!btn)return;
+    const out=btn.closest('p').nextElementSibling;
+    out.hidden=false;out.textContent='Loading…';
+    try{
+      const r=await fetch(ORIGIN+'/marketplace/api-key',{method:'POST',headers:{Authorization:'Bearer '+mpSession()}});
+      const d=await r.json().catch(()=>({}));
+      out.textContent=r.ok?'Authorization: Bearer '+d.key
+        :(r.status===401?'Your portal login has expired. Log in again and reopen the console.':(d.message||d.error||'HTTP '+r.status));
+    }catch(err){out.textContent='Could not load your key: '+err.message;}
+  });
 
   // ---- theme toggle -----------------------------------------------------
   const themeToggle=$('#theme-toggle');
@@ -427,9 +424,10 @@
 
   // ---- per-product behaviour -------------------------------------------
   // auth: 'edid'  -> Espresso creds via X-EDID-* headers, env switch applies
-  //       'proxy' -> gateway injects the upstream key; caller sends nothing
-  //       'apikey'-> caller sends x-api-key (public 911 API, direct base URL)
-  const IX='https://api.iristelx.com';
+  //       'proxy' -> private WLNP API; gateway injects the upstream key
+  //       'ix'    -> IristelX API; gateway injects the upstream key
+  // Every product also needs the caller's marketplace session or key.
+  const IX=id=>ORIGIN+'/api/ix/'+id;
   // The console only ever talks to the Espresso test system; production is
   // reached from the caller's own app by sending X-EDID-Env: production.
   const CONSOLE_ENV='test';
@@ -437,12 +435,12 @@
     'dids':           {auth:'edid',  base:ORIGIN, group:p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System'},
     'lnp-enterprise': {auth:'edid',  base:ORIGIN, group:p=>p.includes('/pons')||p.includes('/numbers')?'Porting requests (PONs)':'Reference'},
     'lnp-wireless':   {auth:'proxy', base:ORIGIN, group:p=>p.includes('/portin')?'Port In':p.includes('/portout')?'Port Out':p.includes('/cancel-svc')?'Cancel Service':'Grids & health'},
-    'e911':           {auth:'apikey',base:IX, group:()=>'Listings'},
-    'provisioning':   {auth:'xkey', base:IX, group:p=>/email|welcome/.test(p)?'Welcome letters':'Trunk provisioning'},
-    'iristelx-accounts':{auth:'xkey',base:IX, group:p=>/\/plans?(\/|$)/.test(p)?'Plans':/canada-post|address/.test(p)?'Addresses':/siptrunk/.test(p)?'SIP trunks':/service/.test(p)?'Services':'Accounts'},
-    'iristelx-sim':     {auth:'xkey',base:IX, group:p=>/esim/i.test(p)?'eSIM':'SIM cards'},
-    'iristelx-commission':{auth:'xkey',base:IX, group:()=>'Commissions'},
-    'iristelx-mobile':  {auth:'xkey',base:IX, group:p=>/service-now/.test(p)?'Support tickets':/esim|qr/.test(p)?'eSIM':/port-in/.test(p)?'Port in':/notification/.test(p)?'Notifications':/payment/.test(p)?'Payment':'Plans & usage'},
+    'e911':           {auth:'ix',base:IX('e911'), group:()=>'Listings'},
+    'provisioning':{auth:'ix',base:IX('provisioning'), group:p=>/email|welcome/.test(p)?'Welcome letters':'Trunk provisioning'},
+    'iristelx-accounts':{auth:'ix',base:IX('iristelx-accounts'), group:p=>/\/plans?(\/|$)/.test(p)?'Plans':/canada-post|address/.test(p)?'Addresses':/siptrunk/.test(p)?'SIP trunks':/service/.test(p)?'Services':'Accounts'},
+    'iristelx-sim':{auth:'ix',base:IX('iristelx-sim'), group:p=>/esim/i.test(p)?'eSIM':'SIM cards'},
+    'iristelx-commission':{auth:'ix',base:IX('iristelx-commission'), group:()=>'Commissions'},
+    'iristelx-mobile':{auth:'ix',base:IX('iristelx-mobile'), group:p=>/service-now/.test(p)?'Support tickets':/esim|qr/.test(p)?'eSIM':/port-in/.test(p)?'Port in':/notification/.test(p)?'Notifications':/payment/.test(p)?'Payment':'Plans & usage'},
   };
   const cfg=()=>PRODUCT_CFG[productId]||{auth:'proxy',base:ORIGIN,group:()=>'Endpoints'};
 
@@ -482,7 +480,9 @@
   const mpEmail=window.MarketplaceAccess?window.MarketplaceAccess.email():null;
   if(mpEmail){
     try{
-      const live=await (await fetch(ORIGIN+'/marketplace/authorizations?email='+encodeURIComponent(mpEmail))).json();
+      const mpSession=window.MarketplaceAccess.session();
+      const live=await (await fetch(ORIGIN+'/marketplace/authorizations?email='+encodeURIComponent(mpEmail),
+        {headers:mpSession?{Authorization:'Bearer '+mpSession}:{}})).json();
       if(Array.isArray(live.products)){
         mpAuth=live.products;
         const d=new Date();d.setTime(d.getTime()+7*24*60*60*1000);
@@ -718,22 +718,11 @@
 
   // ---- auth snippet helpers --------------------------------------------
   function authHeaderLines(env){
-    const a=cfg().auth;
-    if(a==='edid')return["  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'"];
-    if(a==='apikey')return["  -H 'x-api-key: "+E911_API_KEY+"'"];
-    if(a==='xkey')return["  -H 'x-api-key: "+(serviceKey()||KEY_PH)+"'"];
-    return [];
+    const L=["  -H 'Authorization: Bearer "+KEY_PH+"'"];
+    if(cfg().auth==='edid')L.push("  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'");
+    return L;
   }
 
-  // IristelX key: user-entered, kept in this browser only.
-  const xkeyEl=$('#xkey');
-  xkeyEl.value=localStorage.getItem('iristelx-api-key')||'';
-  xkeyEl.addEventListener('input',()=>localStorage.setItem('iristelx-api-key',xkeyEl.value.trim()));
-  $('#xkey-clear').onclick=()=>{
-    xkeyEl.value='';
-    localStorage.removeItem('iristelx-api-key');
-    xkeyEl.focus();
-  };
   function highlight(t){
     return esc(t)
       .replace(USER_PH,'<span class="cred">'+USER_PH+'</span>')
@@ -795,47 +784,35 @@
     d+='<h3>Base URL</h3><pre>'+esc(c.base)+'</pre>'
       +'<p>All paths in this reference are relative to it.</p>';
 
+    d+='<h3>Authentication</h3>'
+      +'<p>Every request carries your personal marketplace API key:</p>'
+      +'<pre>'+esc('Authorization: Bearer '+KEY_PH)+'</pre>'
+      +'<p><button class="btn" type="button" data-getkey>Show my API key</button></p>'
+      +'<pre data-mykey hidden></pre>'
+      +'<p class="hint">Keep it secret, like a password. It works for the APIs your account is approved for, '
+      +'and stops working if your marketplace access is removed. This console uses your portal login instead, '
+      +'so you don\'t need the key here.</p>';
+
     if(c.auth==='edid'){
-      d+='<h3>Authentication</h3>'
-        +'<p>Send your Espresso username and password on <strong>every</strong> request, as headers:</p>'
+      d+='<h3>Espresso login</h3>'
+        +'<p>Also send your Espresso username and password on <strong>every</strong> request, as headers:</p>'
         +'<pre>'+esc('X-EDID-Username: '+USER_PH+'\nX-EDID-Password: '+PASS_PH)+'</pre>'
-        +'<p>HTTP Basic auth works too. Requests with no credentials fall back to a shared account intended '
-        +'only for this console — do not rely on it from your own code.</p>'
+        +'<p>Requests without an Espresso login use a shared <strong>test</strong> account, which is how this '
+        +'console works. Production requests without your own login are refused.</p>'
         +'<h3>Environments</h3>'
         +'<p>Espresso runs two completely separate systems — test and production share no data and have separate credentials.</p>'
         +'<div class="callout"><b>Going live:</b> the gateway defaults to <code>test</code>. For real traffic send '
         +'<code>X-EDID-Env: production</code> on every request with your production credentials. Looking up a '
         +'production record without it returns "does not exist", because you are querying the test system.</div>';
-    }else if(c.auth==='xkey'){
-      const k=serviceKey();
-      d+='<h3>Authentication</h3>'
-        +'<p>Every request carries the service API key in a header:</p>';
-      if(k){
-        d+='<div class="callout" style="border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:var(--ok-bg);color:var(--ink)">'
-          +'<b style="color:var(--ok)">Your API key for this service</b> — it comes with your marketplace access; '
-          +'you never need to contact us for credentials.</div>'
-          +'<pre>'+esc('x-api-key: '+k)+'</pre>'
-          +'<p class="hint">The console pre-fills this key in the <b>API key</b> box in the header bar and it is '
-          +'already inside every example below — copy a snippet and it runs as-is.</p>';
-      }else{
-        d+='<pre>'+esc('x-api-key: '+KEY_PH)+'</pre>';
-      }
-      d+='<p class="hint">Iristel\'s ReadMe reference names this header <code>iristelx-api-key</code>, but the '
-        +'live API currently only accepts <code>x-api-key</code> — use <code>x-api-key</code>.</p>';
-    }else if(c.auth==='apikey'){
-      d+='<h3>Authentication</h3>'
-        +'<p>Every request carries two things:</p>'
-        +'<table><tr><th>Where</th><th>Name</th><th>Description</th></tr>'
-        +'<tr><td>header</td><td><code>x-api-key</code></td><td>The shared customer API key (already in every example below).</td></tr>'
-        +'<tr><td>query</td><td><code>code</code></td><td>The account code the listing belongs to. In the partner portal this is read from the <code>code</code> cookie.</td></tr></table>'
+    }else if(p.id==='e911'){
+      d+='<h3>Account code</h3>'
+        +'<p>Every request also carries <code>?code=</code>, the account code the listing belongs to. In the partner '
+        +'portal this is read from the <code>code</code> cookie.</p>'
         +'<div class="callout"><b>Note:</b> this API may answer <code>200</code> even on failures, with the detail in an '
         +'<code>errors</code> array or a null <code>data</code> field — check the body, not just the HTTP status. '
         +'These are live emergency records: a wrong address here is what dispatch sees on a 911 call.</div>';
-    }else{
-      d+='<h3>Authentication</h3>'
-        +'<p>None from the caller. The gateway holds the upstream API key server-side and injects it on every '
-        +'proxied request — the upstream service and its key are never exposed to the client.</p>'
-        +'<div class="callout"><b>Private upstream.</b> The WLNP Workflow API runs on a private network. The gateway '
+    }else if(c.auth==='proxy'){
+      d+='<div class="callout"><b>Private upstream.</b> The WLNP Workflow API runs on a private network. The gateway '
         +'republishes it under <code>'+esc(c.base)+'/api/wlnp/…</code>; if the gateway itself has no route to that '
         +'network you will get a <code>504 upstream_unreachable</code>.</div>';
     }
@@ -968,16 +945,12 @@
         +'own <code>X-EDID-Username</code> / <code>X-EDID-Password</code> headers.'
         +'<br><br><strong>Going live:</strong> the console is test-only. Live traffic needs '
         +'<code>X-EDID-Env: production</code> with production credentials.';
-    }else if(c.auth==='xkey'){
-      t+='<br><br>Calls go directly to the IristelX API with the key in the <strong>API key</strong> box — '
-        +'pre-filled with the key issued for this service, so nothing to request from us. '
-        +'The key stays in this browser and never reaches the marketplace gateway.';
-    }else if(c.auth==='apikey'){
-      t+='<br><br>Calls go directly to the public 911 API using the shared customer API key. '
-        +'These are live emergency records — dispatch sees what you save here.';
+    }else if(c.auth==='ix'){
+      t+='<br><br>Calls go through the marketplace gateway, which adds the IristelX key on the server — '
+        +'no IristelX key is needed from you.'
+        +(productId==='e911'?' These are live emergency records — dispatch sees what you save here.':'');
     }else{
-      t+='<br><br>Requests are proxied to the private WLNP Workflow API; the gateway injects the upstream key, so no '
-        +'credentials are needed from you.';
+      t+='<br><br>Requests are proxied to the private WLNP Workflow API; the gateway injects the upstream key.';
     }
     rail.innerHTML=t;
     nav.appendChild(rail);
@@ -990,7 +963,6 @@
   // ---- bundles view -----------------------------------------------------
   function renderBundlesView(){
     $('#baseurl').textContent=ORIGIN;
-    $('#xkey-wrap').hidden=true;
     nav.innerHTML='<div class="empty" style="padding:14px">Bundles are guided packages — pick a step to jump into its console.</div>';
     $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
     let h='<h2>Bundles &amp; packages</h2>'
@@ -1031,13 +1003,6 @@
     if(productId==='bundles')return renderBundlesView();
     const c=cfg(), p=product();
     $('#baseurl').textContent=c.base;
-    $('#xkey-wrap').hidden=c.auth!=='xkey';
-    // Pre-fill the service key issued with marketplace access; a key the
-    // user typed themselves (localStorage) always wins.
-    if(c.auth==='xkey'){
-      const custom=(localStorage.getItem('iristelx-api-key')||'').trim();
-      xkeyEl.value=custom||serviceKey()||'';
-    }
     current=null;
     const multi=catalog().length>0;
     nav.hidden=false;
@@ -1257,21 +1222,16 @@
     html+=formHtml(e);
 
     const a=cfg().auth;
-    html+='<div class="doc"><h3>Call this from your own app</h3>';
+    html+='<div class="doc"><h3>Call this from your own app</h3>'
+      +'<p class="hint" style="margin:0 0 8px">Replace <code>'+KEY_PH+'</code> with your marketplace API key '
+      +'(<b>Show my API key</b> on the Docs tab).</p>';
     if(a==='edid'){
-      html+='<p class="hint" style="margin:0 0 8px">Send your Espresso login as the '
+      html+='<p class="hint" style="margin:0 0 8px">Also send your Espresso login as the '
         +'<code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers.</p>'
         +'<div class="pre-note"><b>This console is test-only.</b> For live traffic switch the env header to '
         +'<code>X-EDID-Env: production</code> and use production credentials.</div>';
-    }else if(a==='xkey'){
-      html+=serviceKey()
-        ?'<p class="hint" style="margin:0 0 8px">The snippet already carries the API key issued with your marketplace access — it runs as-is.</p>'
-        :'<p class="hint" style="margin:0 0 8px">Send your IristelX key as the <code>x-api-key</code> header. '
-          +'Replace the highlighted placeholder with your own key.</p>';
-    }else if(a==='apikey'){
-      html+='<p class="hint" style="margin:0 0 8px">The snippet carries the shared customer API key; the account code in <code>?code=</code> selects whose listings you touch.</p>';
-    }else{
-      html+='<p class="hint" style="margin:0 0 8px">No credentials needed — the gateway injects the upstream key.</p>';
+    }else if(productId==='e911'){
+      html+='<p class="hint" style="margin:0 0 8px">The account code in <code>?code=</code> selects whose listings you touch.</p>';
     }
     html+='<div class="snippet"><button class="copy" data-copy>Copy</button><pre data-curl></pre></div></div>';
 
@@ -1309,16 +1269,9 @@
     const c=cfg();
     const headers={};
     if(c.auth==='edid')headers['X-EDID-Env']=CONSOLE_ENV;
-    if(c.auth==='apikey')headers['x-api-key']=E911_API_KEY;
-    if(c.auth==='xkey'){
-      const k=xkeyEl.value.trim();
-      if(!k){fail('Enter your IristelX API key in the header bar first — it is sent as the x-api-key header and stored only in this browser.');return;}
-      // The ReadMe docs declare iristelx-api-key, but the live gateway only
-      // accepts x-api-key. Send both so we keep working if they fix the docs
-      // mismatch on their side.
-      headers['x-api-key']=k;
-      headers['iristelx-api-key']=k;
-    }
+    const session=mpSession();
+    if(!session){fail('Your portal login has expired. Log in to the partner portal again and reopen the console.');return;}
+    headers['Authorization']='Bearer '+session;
     const reqOpts={method:e.method,headers};
     if(e.upload){
       const f=root.querySelector('[data-upload]');
@@ -1357,7 +1310,7 @@
   function reportUsage(e,status,ms){
     try{
       const body=JSON.stringify({
-        email:(window.MarketplaceAccess&&window.MarketplaceAccess.email())||null,
+        session:(window.MarketplaceAccess&&window.MarketplaceAccess.session())||null,
         product:productId, method:e.method, endpoint:e.path,
         status:status, ms:Math.round(ms)
       });

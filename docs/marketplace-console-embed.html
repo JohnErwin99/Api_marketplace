@@ -9,7 +9,7 @@
     2. If the visitor has no marketplace access, shows a message pointing at
        the access-request form instead of the console.
     3. Otherwise renders the console in a full-height iframe, forwarding the
-       access cookies as URL params (?mpa=&mpe=) — required because the
+       access cookies as URL params (?mpa=&mpe=&mps=) — required because the
        marketplace domain cannot read the portal's cookies from inside the
        iframe. The console filters its product list to exactly those ids.
 
@@ -61,6 +61,7 @@
     var wrap = document.getElementById("mp-console-wrap");
     var access = (getCookie("marketplaceAccess") || "").trim();
     var email = (getCookie("userEmail") || "").trim();
+    var session = (getCookie("marketplaceSession") || "").trim();
 
     if (!email || !access) {
       // Not logged in, or logged in without any authorized API products.
@@ -79,7 +80,8 @@
     // the portal's cookies). The console persists these as its own cookies.
     var src = MARKETPLACE_GATEWAY + "/console" +
       "?mpa=" + encodeURIComponent(access) +
-      "&mpe=" + encodeURIComponent(email);
+      "&mpe=" + encodeURIComponent(email) +
+      (session ? "&mps=" + encodeURIComponent(session) : "");
 
     var iframe = document.createElement("iframe");
     iframe.src = src;

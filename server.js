@@ -7,6 +7,8 @@ const soap = require('./lib/soap');
 const { AppError, call, str, requestItems, orderRequestArray } = soap;
 
 const app = express();
+// Render sits behind one proxy — needed for a real req.ip in rate limits.
+app.set('trust proxy', 1);
 // CORS: set ALLOWED_ORIGINS="https://portal.example.com,https://www.example.com" in prod.
 // If unset, any origin is allowed (dev convenience).
 const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -22,15 +24,11 @@ app.use(cors(allowed.length ? { origin: allowed } : {}));
 // as base64 JSON (~5 MB file cap plus encoding overhead).
 app.use(express.json({ limit: '8mb' }));
 
-// API-key gate for /api/*. Set GATEWAY_API_KEY in Render's env; clients send
-// X-API-Key: <key>. If GATEWAY_API_KEY is unset the gate is off (local dev).
-app.use('/api', (req, res, next) => {
-  const required = process.env.GATEWAY_API_KEY;
-  if (!required) return next();
-  const got = req.get('X-API-Key') || (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
-  if (got && got === required) return next();
-  return res.status(401).json({ error: 'unauthorized', message: 'Missing or invalid X-API-Key' });
-});
+// Every /api/* call must come from an approved caller: a console session or
+// a partner API key, checked against the CRM approval for the product the
+// path belongs to (lib/entitlements.js). GATEWAY_API_KEY stays as an
+// internal override for Iristel's own services.
+app.use('/api', require('./lib/entitlements').requireEntitlement());
 
 // Health check for Render
 app.get('/healthz', (req, res) => res.json({ ok: true }));
@@ -69,14 +67,22 @@ function resolveContext(req) {
     }
   }
 
-  username = username || process.env.EDID_USER;
-  password = password || process.env.EDID_PASS;
-
   const env =
     (req.get('X-EDID-Env') || req.query.env || process.env.EDID_ENV || 'test')
       .toLowerCase() === 'production'
       ? 'production'
       : 'test';
+
+  // The shared server account is only for the test system (the console).
+  // Production calls must bring the caller's own Espresso credentials.
+  if (!username || !password) {
+    if (env === 'production' && !(req.marketplace && req.marketplace.internal)) {
+      throw new AppError(401, 'credentials_required',
+        'Production calls need your own Espresso login in the X-EDID-Username and X-EDID-Password headers.');
+    }
+    username = username || process.env.EDID_USER;
+    password = password || process.env.EDID_PASS;
+  }
 
   return { creds: { username, password }, env };
 }
@@ -135,6 +141,10 @@ for (const b of BUNDLES) {
 
 // Onboarding: access-request intake + authorization lookup for the portal.
 require('./lib/onboarding').register(app, PRODUCTS);
+// Signed login sessions (staff dashboard).
+require('./lib/session').register(app);
+// Portal login / sign-up helpers (keep the IristelX keys server-side).
+require('./lib/portal').register(app);
 // Usage beacon from the console + the staff access/usage dashboard.
 require('./lib/usage').register(app);
 require('./lib/admin').register(app, PRODUCTS);
@@ -166,6 +176,10 @@ app.get('/', (req, res) => {
   if (req.accepts(['html', 'json']) === 'json') return res.json(catalogPayload());
   return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// IristelX-backed products (provisioning, 911, accounts, SIM, commissions,
+// mobile): proxied so the upstream keys never leave the server.
+app.use('/api/ix', require('./lib/routes/ix')(PRODUCTS));
 
 // Number Porting — Enterprise (LNP, Espresso v4)
 app.use('/api/lnp', require('./lib/routes/lnp')(resolveContext, h));

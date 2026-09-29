@@ -17,7 +17,9 @@ const emails = {
   'access-granted.html': render({
     title: 'Your API Marketplace access has been granted',
     paragraphs: [
-      "Your access for <strong>@{triggerOutputs()?['body/cr57d_apimarketplaceaccess']}</strong> has been granted.",
+      'Your API Marketplace access has been granted.',
+      "Bundles: <strong>@{coalesce(triggerOutputs()?['body/cr57d_apimarketplacebundles'], '—')}</strong><br>" +
+        "Individual APIs: <strong>@{coalesce(triggerOutputs()?['body/cr57d_apimarketplaceaccess'], '—')}</strong>",
       'Log in to the Iristel Partner Portal and open the API Marketplace to start using the console.',
       `Partner Portal: ${link}`,
     ],

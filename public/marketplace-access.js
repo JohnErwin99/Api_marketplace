@@ -8,11 +8,13 @@
  *   marketplaceAccess — comma-separated authorized product ids ("e911,dids"),
  *                       sourced from the CRM field cr57d_apimarketplaceaccess.
  *   userEmail         — the logged-in partner's email.
+ *   marketplaceSession — signed login token (?mps=), sent as a Bearer token
+ *                       to the staff-only /marketplace/admin/* routes.
  * No cookie => no portal login context; callers decide the open/default view.
  *
  * Cross-origin embeds: when the console runs inside an iframe on the portal
  * (Webflow) domain, the marketplace domain cannot see the portal cookies.
- * The embed script forwards them as URL params instead — ?mpa=<ids>&mpe=<email>
+ * The embed script forwards them as URL params instead — ?mpa=<ids>&mpe=<email>&mps=<token>
  * — which take precedence here and are persisted as first-party cookies so
  * in-console navigation keeps working.
  */
@@ -21,11 +23,15 @@
   try { params = new URLSearchParams(root.location ? root.location.search : ''); } catch (e) { /* older engines */ }
   var urlAccess = params ? params.get('mpa') : null;
   var urlEmail = params ? params.get('mpe') : null;
+  var urlSession = params ? params.get('mps') : null;
   if (urlAccess !== null) {
     document.cookie = 'marketplaceAccess=' + encodeURIComponent(urlAccess) + '; path=/; SameSite=None; Secure';
   }
   if (urlEmail) {
     document.cookie = 'userEmail=' + encodeURIComponent(urlEmail) + '; path=/; SameSite=None; Secure';
+  }
+  if (urlSession) {
+    document.cookie = 'marketplaceSession=' + encodeURIComponent(urlSession) + '; path=/; SameSite=None; Secure';
   }
   function getCookie(name) {
     var nameEQ = name + '=';
@@ -46,6 +52,8 @@
       return v.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     },
     email: function () { return (urlEmail || getCookie('userEmail') || '').trim() || null; },
+    // Signed login token from POST /marketplace/session (staff dashboard).
+    session: function () { return (urlSession || getCookie('marketplaceSession') || '').trim() || null; },
     partnerType: function () { return (getCookie('partnerType') || '').trim() || null; },
   };
 })(window);
