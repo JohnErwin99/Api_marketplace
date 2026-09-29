@@ -533,7 +533,7 @@
 
   // Bundles: a collapsible group — an Overview page plus one guided console
   // per bundle (productId 'bundle:<id>', hash #bundle-<id>).
-  let bundleOpen=true, setBundleOpen=()=>{};
+  let bundleOpen=false, setBundleOpen=()=>{};
   if(bundles.length){
     const bHead=document.createElement('button');
     bHead.className='pgroup-head'; bHead.type='button'; bHead.setAttribute('aria-controls','bundle-group');
@@ -556,14 +556,17 @@
       const sub=document.createElement('div');sub.className='pgroup-sub';sub.textContent=a.label;bGroup.appendChild(sub);
       list.forEach(b=>chip('bundle:'+b.id,esc(b.name),b.useCase));
     });
-    try{bundleOpen=localStorage.getItem('iristel-bundle-group-open')!=='0';}catch(_){}
+    // Collapsed by default; only a manual open (saved on click) is remembered.
+    try{bundleOpen=localStorage.getItem('iristel-bundle-group-open-v2')==='1';}catch(_){}
     setBundleOpen=open=>{
       bundleOpen=open;
       bGroup.classList.toggle('collapsed',!open);
       bHead.setAttribute('aria-expanded',String(open));
-      try{localStorage.setItem('iristel-bundle-group-open',open?'1':'0');}catch(_){}
     };
-    bHead.onclick=()=>setBundleOpen(!bundleOpen);
+    bHead.onclick=()=>{
+      setBundleOpen(!bundleOpen);
+      try{localStorage.setItem('iristel-bundle-group-open-v2',bundleOpen?'1':'0');}catch(_){}
+    };
     setBundleOpen(bundleOpen||isBundleId(productId));
   }
   // Individual products live under a collapsible "APIs" group.
