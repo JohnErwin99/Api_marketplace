@@ -58,6 +58,9 @@
       font-weight: 500; cursor: pointer;
     }
     .radio-row input { width: auto; margin: 0; }
+    .type-list { display: grid; gap: 8px; margin-top: 6px; text-align: left; }
+    .type-list label { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 13px; line-height: 1.4; border: 1px solid #e3e8ef; border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+    .type-list input { width: auto; margin: 3px 0 0; }
     .radio-hint { text-align: left; font-size: 12px; color: #888; margin-top: 4px; }
     button {
       width: 100%; padding: 14px; margin-top: 22px; border: none;
@@ -92,6 +95,12 @@
 
       // No API keys in this page: every IristelX call goes through the
       // marketplace gateway (/portal/*), which holds the keys.
+
+      // Account type -> partnerType cookie value the portal nav understands.
+      const PARTNER_TYPE_COOKIE = {
+        customer: 'customer', reseller: 'reseller', agent: 'agent',
+        'white-label': 'whitelabel', consumer: 'consumer'
+      };
 
       const isInternalDomain = (email) =>
         /@(iristel|telehop)\.com$/i.test(String(email || '').trim());
@@ -254,12 +263,8 @@
         const name = [fields.fname, fields.lname].filter(Boolean).join(' ')
           || String(fields.email).split('@')[0] || 'Partner';
         setCookie('name', name, 7);
-        // providerCode from the created account when returned, else the
-        // radio choice: RESELL -> reseller, anything else -> agent.
-        const partnerType = created && created.providerCode
-          ? typeFromProvider(created)
-          : (accountType === 'reseller' ? 'reseller' : 'agent');
-        setCookie('partnerType', partnerType, 7);
+        // The type chosen on this form, in the portal nav's vocabulary.
+        setCookie('partnerType', PARTNER_TYPE_COOKIE[accountType] || 'customer', 7);
         if (created && created.id) {
           setCookie('agentId',  created.id, 7);
           setCookie('agentIds', String(created.id), 7);
@@ -272,6 +277,14 @@
         document.getElementById('message').textContent = 'Account created! Redirecting...';
         startCountdown(5);
       };
+
+      // Business registration is optional for consumers.
+      const syncRegRequired = () => {
+        const consumer = ((document.querySelector('input[name="accountType"]:checked') || {}).value) === 'consumer';
+        ['businessRegNumber', 'registrationFile'].forEach(function (id) { document.getElementById(id).required = !consumer; });
+      };
+      document.querySelectorAll('input[name="accountType"]').forEach(function (r) { r.addEventListener('change', syncRegRequired); });
+      syncRegRequired();
 
       // ── Submit ──────────────────────────────────────────────────
       const message = document.getElementById('message');
@@ -296,19 +309,21 @@
 
         if (password !== confirm) { message.textContent = 'Passwords do not match.'; return; }
         if (password.length < 8) { message.textContent = 'Password must be at least 8 characters.'; return; }
-        if (!fields.businessRegNumber) { message.textContent = 'Business registration number is required.'; return; }
+        // Consumers are individuals: no business registration to give.
+        const isConsumer = accountType === 'consumer';
+        if (!fields.businessRegNumber && !isConsumer) { message.textContent = 'Business registration number is required.'; return; }
 
         // Business registration document (fraud screening) -> base64, <= 5 MB.
         const regFile = document.getElementById('registrationFile').files[0];
-        if (!regFile) { message.textContent = 'Attach your business registration document.'; return; }
-        if (regFile.size > 5 * 1024 * 1024) { message.textContent = 'Document must be 5 MB or smaller.'; return; }
-        const registrationDocument = await new Promise(function (resolve) {
+        if (!regFile && !isConsumer) { message.textContent = 'Attach your business registration document.'; return; }
+        if (regFile && regFile.size > 5 * 1024 * 1024) { message.textContent = 'Document must be 5 MB or smaller.'; return; }
+        const registrationDocument = !regFile ? null : await new Promise(function (resolve) {
           const r = new FileReader();
           r.onload = function () { resolve({ name: regFile.name, type: regFile.type, dataB64: String(r.result).split(',')[1] || '' }); };
           r.onerror = function () { resolve(null); };
           r.readAsDataURL(regFile);
         });
-        if (!registrationDocument) { message.textContent = 'Could not read the document — try another file.'; return; }
+        if (regFile && !registrationDocument) { message.textContent = 'Could not read the document — try another file.'; return; }
 
         submitBtn.disabled = true;
 
@@ -405,11 +420,18 @@
 
     <form id="signupForm">
       <label>Account type</label>
-      <div class="radio-row">
-        <label><input type="radio" name="accountType" value="customer" checked> Customer</label>
-        <label><input type="radio" name="accountType" value="reseller"> Reseller</label>
+      <div class="type-list">
+        <label><input type="radio" name="accountType" value="customer" checked>
+          <span><strong>Business customer</strong> — my business uses Iristel services (calling, SIP trunks, numbers, Teams/Webex, SMS, 911) for itself.</span></label>
+        <label><input type="radio" name="accountType" value="reseller">
+          <span><strong>Reseller</strong> — we sell Iristel services to our own customers and bill them ourselves (carriers, ISPs, MSPs, VARs, UCaaS, co-branded).</span></label>
+        <label><input type="radio" name="accountType" value="agent">
+          <span><strong>Agent</strong> — I sign customers up and earn commission; Iristel handles billing and support.</span></label>
+        <label><input type="radio" name="accountType" value="white-label">
+          <span><strong>White-label partner</strong> — we sell under our own brand, set our prices and own support.</span></label>
+        <label><input type="radio" name="accountType" value="consumer">
+          <span><strong>Consumer</strong> — I use Iristel services personally (mobile, eSIM, phone number).</span></label>
       </div>
-      <p class="radio-hint">Resellers sell Iristel services under their own brand.</p>
 
       <div class="two-col">
         <div><label for="fname">First Name</label><input type="text" id="fname" required autocomplete="given-name"></div>

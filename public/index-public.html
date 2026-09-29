@@ -220,34 +220,34 @@ footer { background: var(--surface); border-color: var(--line); }
   <main id="top">
     <section class="intro">
       <div>
-        <p class="eyebrow">Know your customer before granting access</p>
-        <h1>One marketplace.<br><span>Two trust paths.</span></h1>
-        <p class="lede">Every API consumer must have a verified identity, an approved business purpose, explicit scopes, and a traceable activity history. “Internal” and “external” change the approval path—not the security baseline.</p>
+        <p class="eyebrow">Iristel API Marketplace</p>
+        <h1>Build on Canada’s<br><span>largest CLEC.</span></h1>
+        <p class="lede">Order phone numbers and SIP trunks, move numbers to Iristel, keep 911 addresses current, activate mobile subscribers and manage eSIMs — straight from your own apps and tools. Built for businesses, partners and the people who use Iristel every day.</p>
         <div class="hero-actions">
           <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
           <a class="ghost" href="#packages">Browse the packages</a>
         </div>
       </div>
-      <aside class="rule-card" aria-label="Core access rule">
-        <div class="rule-icon">01</div>
-        <p class="eyebrow">Core rule</p>
-        <h2>No customer record, no token.</h2>
-        <p>Create and approve the customer/application record before issuing credentials. Never share a person’s bearer token between applications or teams.</p>
+      <aside class="rule-card" aria-label="Who it is for">
+        <div class="rule-icon">5</div>
+        <p class="eyebrow">Built for</p>
+        <h2>Businesses, partners and consumers.</h2>
+        <p>Business customers, resellers, agents, white-label partners and individual consumers each get the APIs that fit how they work with Iristel.</p>
       </aside>
     </section>
 
     <section class="journey-section" id="journey">
       <div class="section-heading">
-        <div><p class="eyebrow">End-to-end control</p><h2>Access journey</h2></div>
-        <p>Each gate produces an auditable decision or system event.</p>
+        <div><p class="eyebrow">Getting started</p><h2>From sign-up to live</h2></div>
+        <p>Every request is reviewed by our team, so you only get access that fits what you’re building.</p>
       </div>
       <ol class="journey">
-        <li><span>1</span><div><strong>Identify</strong><small>Internal or external</small></div></li>
-        <li><span>2</span><div><strong>Request</strong><small>Customer submits form</small></div></li>
-        <li><span>3</span><div><strong>Verify</strong><small>Owner, purpose, contacts</small></div></li>
-        <li><span>4</span><div><strong>Approve</strong><small>Scopes and environment</small></div></li>
-        <li><span>5</span><div><strong>Issue</strong><small>Client credentials</small></div></li>
-        <li><span>6</span><div><strong>Operate</strong><small>Monitor and review</small></div></li>
+        <li><span>1</span><div><strong>Sign up</strong><small>Create your Iristel account</small></div></li>
+        <li><span>2</span><div><strong>Ask</strong><small>Tell us what you need</small></div></li>
+        <li><span>3</span><div><strong>Review</strong><small>Our team checks your request</small></div></li>
+        <li><span>4</span><div><strong>Try</strong><small>Test in the console</small></div></li>
+        <li><span>5</span><div><strong>Connect</strong><small>Get your API key</small></div></li>
+        <li><span>6</span><div><strong>Go live</strong><small>Run it in production</small></div></li>
       </ol>
     </section>
 
@@ -275,47 +275,36 @@ footer { background: var(--surface); border-color: var(--line); }
     </section>
 
     <section id="identity">
+      <style>
+        #identity .segmented{display:flex;flex-wrap:wrap;gap:4px}
+        #identity .at-grid{display:grid;grid-template-columns:1.6fr .9fr;gap:20px}
+        #identity .type-card{opacity:1}
+        #identity .type-card ul{padding-left:18px;margin:8px 0 0}
+        #identity .type-card li{margin:5px 0}
+        #identity .at-bundles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+        #identity .at-bundles span{background:#e9f2fc;color:var(--blue);font-size:.76rem;font-weight:750;padding:6px 9px}
+        [data-theme="dark"] #identity .at-bundles span{background:#172554;color:#93c5fd}
+        #identity .decision-panel ol{padding-left:20px;margin:10px 0 0}
+        #identity .decision-panel ol li{margin:8px 0;padding:6px 0 8px 4px}
+        #identity .decision-panel ol li:before{content:none}
+        @media(max-width:900px){#identity .at-grid{grid-template-columns:1fr}}
+      </style>
       <div class="section-heading">
-        <div><p class="eyebrow">Customer classification</p><h2>Choose the correct trust path</h2></div>
-        <div class="segmented" role="group" aria-label="Customer type">
-          <button class="active" data-view="internal" aria-pressed="true">Internal</button>
-          <button data-view="external" aria-pressed="false">External</button>
-        </div>
+        <div><p class="eyebrow">Who you are</p><h2>Choose your path</h2></div>
+        <div class="segmented" role="group" aria-label="Account type" id="at-buttons"></div>
       </div>
-
-      <div class="identity-grid">
-        <article class="type-card active" data-card="internal">
-          <div class="tag internal">INTERNAL</div>
-          <h3>Iristel-owned consumer</h3>
-          <p>An application, automation, team, or service operated by Iristel.</p>
-          <dl>
-            <div><dt>Identity owner</dt><dd>Iristel team + named application owner</dd></div>
-            <div><dt>Verification</dt><dd>Corporate identity, cost centre, system ownership</dd></div>
-            <div><dt>Approval</dt><dd>API owner + security for sensitive scopes</dd></div>
-            <div><dt>Credentials</dt><dd>Non-human service client; never an employee token</dd></div>
-          </dl>
-        </article>
-        <article class="type-card" data-card="external">
-          <div class="tag external">EXTERNAL</div>
-          <h3>Partner or customer consumer</h3>
-          <p>A reseller, carrier, enterprise customer, vendor, or integration partner.</p>
-          <dl>
-            <div><dt>Identity owner</dt><dd>Legal organization + technical and business contacts</dd></div>
-            <div><dt>Verification</dt><dd>Account relationship, domain, agreement, intended use</dd></div>
-            <div><dt>Approval</dt><dd>Business sponsor + API owner + security</dd></div>
-            <div><dt>Credentials</dt><dd>Dedicated client per organization, app, and environment</dd></div>
-          </dl>
-        </article>
+      <div class="at-grid">
+        <article class="type-card active" id="at-card" aria-live="polite"><p>Loading…</p></article>
         <aside class="decision-panel">
-          <p class="eyebrow">Classification test</p>
-          <h3 id="decision-title">Internal checklist</h3>
-          <ul id="decision-list">
-            <li>Operated and supported by an Iristel team</li>
-            <li>Named technical and business owners</li>
-            <li>Service account lifecycle tied to the application</li>
-            <li>Production access approved independently</li>
-          </ul>
-          <p class="caution">A developer is not the customer. The consuming organization and application are the customer identity.</p>
+          <p class="eyebrow">What happens next</p>
+          <h3>How approval works</h3>
+          <ol>
+            <li>Tell us who you are and what you want to build.</li>
+            <li>We check your business details and registration.</li>
+            <li>You get an email when your access is approved.</li>
+            <li>Try every API in the test console, then connect your app.</li>
+          </ol>
+          <p class="caution">Consumers don’t need a business registration — tell us your Iristel account instead.</p>
         </aside>
       </div>
     </section>
@@ -323,26 +312,26 @@ footer { background: var(--surface); border-color: var(--line); }
     <section class="form-section" id="signup">
       <div class="section-heading">
         <div><p class="eyebrow">Get started</p><h2>Create your Iristel account</h2></div>
-        <p>Sign up once — your partner account and billing code are created automatically.</p>
+        <p>Sign up once as a business customer, reseller, agent, white-label partner or consumer.</p>
       </div>
       <div class="form-layout">
         <div class="mock-form" style="align-content:start">
           <h3 style="margin:0">What happens after you sign up</h3>
           <ol style="margin:10px 0 0;padding-left:20px;font-size:.95rem;line-height:2">
-            <li>Your partner account and account code are created instantly.</li>
-            <li>Log in to the Iristel Partner Portal with your new credentials.</li>
-            <li>Request access to the APIs and bundles you need.</li>
-            <li>Approved APIs appear in your console — ready to call.</li>
+            <li>Choose who you are and create your login.</li>
+            <li>Log in to the Iristel Partner Portal.</li>
+            <li>Tell us which APIs you need — our team reviews every request.</li>
+            <li>Once approved, your APIs appear in the console, ready to try.</li>
           </ol>
           <a class="console-cta" style="justify-content:center;margin-top:18px;height:48px;font-size:.95rem" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
         </div>
         <div class="field-notes">
           <h3>Why sign up</h3>
           <ul>
-            <li><strong>One account</strong><span>Portal, billing, and API marketplace</span></li>
-            <li><strong>Instant account code</strong><span>Generated at sign-up, no waiting</span></li>
-            <li><strong>Guided console</strong><span>Try every API with forms, not curl</span></li>
-            <li><strong>Curated bundles</strong><span>Recipes per business model</span></li>
+            <li><strong>One login</strong><span>Partner portal, your Iristel account and the API console</span></li>
+            <li><strong>A path for you</strong><span>Suggested APIs for how you work with Iristel</span></li>
+            <li><strong>Guided console</strong><span>Try every API with simple forms, no code needed</span></li>
+            <li><strong>Your own API key</strong><span>Connect your app once you’re approved</span></li>
           </ul>
         </div>
       </div>
@@ -350,97 +339,63 @@ footer { background: var(--surface); border-color: var(--line); }
 
     <section id="security">
       <div class="section-heading">
-        <div><p class="eyebrow">Runtime security</p><h2>Bearer token handling</h2></div>
-        <p>OAuth 2.0 client credentials is the default pattern for server-to-server consumers.</p>
+        <div><p class="eyebrow">How access works</p><h2>One key, only what you’re approved for</h2></div>
+        <p>Your portal login opens the console. Your personal API key connects your own app.</p>
       </div>
       <div class="token-grid">
         <div class="code-card">
-          <div class="code-title"><span>Request</span><button id="copy-code" type="button">Copy</button></div>
-          <pre><code id="auth-code">Authorization: Bearer &lt;access_token&gt;
-Content-Type: application/json
-X-Correlation-ID: 8f3a…</code></pre>
+          <div class="code-title"><span>Call an API from your app</span><button id="copy-code" type="button">Copy</button></div>
+          <pre><code id="auth-code">curl https://api-marketplace-1im9.onrender.com/api/ping \
+  -H 'Authorization: Bearer YOUR_MARKETPLACE_KEY'</code></pre>
         </div>
         <div class="security-rules">
-          <article><span>01</span><div><h3>Validate every request</h3><p>Verify issuer, audience, signature, expiry, client identity, and required scope.</p></div></article>
-          <article><span>02</span><div><h3>Keep tokens short-lived</h3><p>Use secure secret storage, rotation, and immediate revocation when ownership or risk changes.</p></div></article>
-          <article><span>03</span><div><h3>Enforce least privilege</h3><p>Authorize the specific operation and customer boundary—not merely a valid token.</p></div></article>
-          <article><span>04</span><div><h3>Never expose secrets</h3><p>Do not place tokens in URLs, logs, tickets, source code, browser storage, or screenshots.</p></div></article>
+          <article><span>01</span><div><h3>Try it in the console</h3><p>Log in to the partner portal and every approved API is ready to try with simple forms — no code needed.</p></div></article>
+          <article><span>02</span><div><h3>Get your API key</h3><p>Approved accounts get a personal key from the console to use in their own apps and scripts.</p></div></article>
+          <article><span>03</span><div><h3>Access follows your approval</h3><p>Your key only works for the APIs you’re approved for, and stops working if access is removed.</p></div></article>
+          <article><span>04</span><div><h3>Test first, then go live</h3><p>The console uses our test system. For live traffic on numbers and porting, you use your own production login.</p></div></article>
         </div>
-      </div>
-      <div class="status-flow" aria-label="Request decision flow">
-        <span>Request</span><b>→</b><span>Token validation</span><b>→</b><span>Scope + customer authorization</span><b>→</b><span>API operation</span><b>→</b><span>Audit event</span>
       </div>
     </section>
 
-    <section id="audit" class="audit-section">
+    <section id="trust" class="audit-section">
+      <style>
+        #trust details{border-bottom:1px solid #203b53;padding:14px 0}
+        #trust summary{cursor:pointer;font-weight:750;color:#fff}
+        #trust details p{color:#c2cfdb;margin:8px 0 0}
+      </style>
       <div class="section-heading light">
-        <div><p class="eyebrow">Evidence by design</p><h2>Logging & audit</h2></div>
-        <p>Logs support operations. Audit records prove who did what, for which customer, and under which authorization.</p>
+        <div><p class="eyebrow">Your data and security</p><h2>Questions, answered</h2></div>
+        <p>We review every request and you stay in control of your key.</p>
       </div>
       <div class="audit-grid">
-        <div class="event-card">
-          <p class="eyebrow">Sample event</p>
-          <pre>{
-  <i>"timestamp"</i>: "2026-09-02T14:26:41Z",
-  <i>"correlation_id"</i>: "8f3a…",
-  <i>"customer_id"</i>: "cust_2481",
-  <i>"client_id"</i>: "app_activation_prod",
-  <i>"subject"</i>: "service-account",
-  <i>"scope"</i>: "subscriber.activate",
-  <i>"operation"</i>: "POST /subscribers",
-  <i>"resource_id"</i>: "sub_91…",
-  <i>"outcome"</i>: "success",
-  <i>"source_ip"</i>: "203.0.113.x",
-  <i>"status_code"</i>: 201
-}</pre>
-        </div>
         <div class="audit-controls">
-          <h3>Capture</h3>
-          <div class="chips"><span>Time</span><span>Customer</span><span>Client</span><span>Actor</span><span>Scope</span><span>Operation</span><span>Resource</span><span>Outcome</span><span>Source</span><span>Correlation ID</span></div>
-          <h3>Protect</h3>
-          <ul><li>Centralize and restrict audit-log access</li><li>Make records tamper-evident and time-synchronized</li><li>Define retention by legal, security, and business needs</li><li>Alert on repeated denial, abnormal volume, and privileged actions</li></ul>
-          <div class="never-log"><strong>Never log:</strong> bearer tokens, client secrets, passwords, authorization codes, full payment data, or unnecessary personal data.</div>
+          <h3>What we do</h3>
+          <ul>
+            <li>Review every request before any access is granted</li>
+            <li>Keep the keys to Iristel’s systems on our servers, never in your browser</li>
+            <li>Check your approval on every API call</li>
+            <li>Remove access immediately when an account is closed</li>
+          </ul>
+          <h3>What you do</h3>
+          <ul>
+            <li>Keep your API key secret, like a password</li>
+            <li>Never put it in a web page, a ticket or a screenshot</li>
+            <li>Tell us right away if you think it has leaked</li>
+          </ul>
         </div>
-      </div>
-    </section>
-
-    <section class="developer-checklist">
-      <div><p class="eyebrow">Definition of done</p><h2>Before an API goes live</h2></div>
-      <div class="checklist">
-        <label><input type="checkbox"> Customer type and identity verified</label>
-        <label><input type="checkbox"> Business purpose and data classification approved</label>
-        <label><input type="checkbox"> Dedicated client and environment created</label>
-        <label><input type="checkbox"> Scopes enforce least privilege and tenant boundary</label>
-        <label><input type="checkbox"> Token validation and secret rotation tested</label>
-        <label><input type="checkbox"> Logs redact secrets and sensitive payloads</label>
-        <label><input type="checkbox"> Audit events, alerts, retention, and review owner confirmed</label>
-        <label><input type="checkbox"> Revocation and offboarding tested</label>
+        <div>
+          <details><summary>Who can use the marketplace?</summary><p>Business customers, resellers, agents, white-label partners and consumers with an Iristel account. Choose your path above to see what fits you.</p></details>
+          <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
+          <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
+          <details><summary>What if I need an API that isn’t listed?</summary><p>Choose “Other” on the request form and describe what you need.</p></details>
+          <details><summary>What does it cost?</summary><p>Your usage is billed to your Iristel account. Contact your Iristel representative for pricing.</p></details>
+        </div>
       </div>
     </section>
   </main>
 
-  <footer><span>Iristel API Marketplace</span><span>Customer identity · Access · Accountability</span></footer>
+  <footer><span>Iristel API Marketplace</span><span>Numbers · Voice · Mobile · 911 — built on Iristel</span></footer>
   <script>
-const views = {
-  internal: {
-    title: "Internal checklist",
-    items: [
-      "Operated and supported by an Iristel team",
-      "Named technical and business owners",
-      "Service account lifecycle tied to the application",
-      "Production access approved independently"
-    ]
-  },
-  external: {
-    title: "External checklist",
-    items: [
-      "Verified legal organization and account relationship",
-      "Named partner sponsor plus technical and security contacts",
-      "Signed API terms and documented permitted use",
-      "Dedicated sandbox validation before production approval"
-    ]
-  }
-};
 
 const themeToggle = document.getElementById("theme-toggle");
 
@@ -460,20 +415,39 @@ themeToggle.addEventListener("click", () => {
   applyTheme(next);
 });
 
-document.querySelectorAll("[data-view]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const view = button.dataset.view;
-    document.querySelectorAll("[data-view]").forEach((item) => {
-      item.classList.toggle("active", item === button);
-      item.setAttribute("aria-pressed", item === button ? "true" : "false");
+// ---- "Choose your path": the five account types from the catalog --------
+function renderAccountTypes(reg) {
+  const types = reg.accountTypes || [];
+  const bundles = reg.bundles || [];
+  const products = reg.products || [];
+  const buttons = document.getElementById("at-buttons");
+  const card = document.getElementById("at-card");
+  if (!types.length) { card.innerHTML = "<p>Account types unavailable.</p>"; return; }
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const show = (id) => {
+    const t = types.find((x) => x.id === id) || types[0];
+    buttons.querySelectorAll("button").forEach((b) => {
+      b.classList.toggle("active", b.dataset.type === t.id);
+      b.setAttribute("aria-pressed", b.dataset.type === t.id ? "true" : "false");
     });
-    document.querySelectorAll("[data-card]").forEach((card) => {
-      card.classList.toggle("active", card.dataset.card === view);
-    });
-    document.getElementById("decision-title").textContent = views[view].title;
-    document.getElementById("decision-list").innerHTML = views[view].items.map((item) => `<li>${item}</li>`).join("");
-  });
-});
+    const picks = [
+      ...bundles.filter((b) => (t.audiences || []).includes(b.audience)).map((b) => "📦 " + b.name),
+      ...products.filter((p) => (t.products || []).includes(p.id)).map((p) => p.name),
+    ];
+    card.innerHTML =
+      `<div class="tag external">${esc(t.label.toUpperCase())}</div>` +
+      `<h3>${esc(t.short)}</h3><p>${esc(t.description)}</p>` +
+      `<dl><div><dt>What you can build</dt><dd><ul>${(t.build || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></dd></div>` +
+      (picks.length ? `<div><dt>Suggested for you</dt><dd><div class="at-bundles">${picks.map((x) => `<span>${esc(x)}</span>`).join("")}</div></dd></div>` : "") +
+      `</dl>` + ACCOUNT_TYPE_CTA(t);
+  };
+  buttons.innerHTML = types.map((t) =>
+    `<button type="button" data-type="${esc(t.id)}" aria-pressed="false">${esc(t.label)}</button>`).join("");
+  buttons.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => show(b.dataset.type)));
+  show(types[0].id);
+}
+const ACCOUNT_TYPE_CTA = (t) =>
+  `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up as ${t.label} →</a></p>`;
 
 // ---- Packages section + access-request form (data-driven from the catalog)
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -487,6 +461,7 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
   catch { document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>"; return; }
 
   // Packages grid
+  renderAccountTypes(reg);
   const grid = document.getElementById("packages-grid");
   const bundles = reg.bundles || [], audiences = reg.audiences || [];
   // Self-contained cards: every step visible with its explanation, no console

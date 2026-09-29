@@ -120,7 +120,7 @@
   //  We read the cookie and use it verbatim — no overrides.
   //
   //  Expected values: agent, reseller, customer, cobranded,
-  //                   whitelabel, Internal
+  //                   whitelabel, consumer, Internal
   //
   //  Commission (compensation link) is visible ONLY to agents
   //  and Internal. reseller / customer / cobranded / whitelabel
@@ -174,9 +174,9 @@
       return 'icewireless';
     }
 
-    // Reseller — partnerType cookie is "reseller"
-    // Customer also defaults to the reseller dashboard role.
-    if (pt === 'reseller' || pt === 'customer') {
+    // Reseller dashboard role for every non-agent partner type: resellers,
+    // customers, co-branded, white-label and consumers never get agent data.
+    if (['reseller', 'customer', 'cobranded', 'whitelabel', 'consumer'].includes(pt)) {
       return 'reseller';
     }
 
@@ -361,6 +361,14 @@
           // Customers are treated as resellers portal-wide.
           setHref("training", "/training-partner");
           if (compensationLink) compensationLink.style.display = "none"; // no commission
+          break;
+
+        case "consumer":
+          // Individuals: no partner sales material, no commission.
+          setHref("training", "/training-partner");
+          if (compensationLink) compensationLink.style.display = "none";
+          hide("marketing");
+          hide("toolkit");
           break;
 
         default:
