@@ -170,7 +170,7 @@
       </div>
       <div class="card">
         <h2>Calls per API</h2>
-        <p class="sub">Console calls in the selected range.</p>
+        <p class="sub">Every call in the selected range, from the console or partners' own apps.</p>
         <figure id="chart-product-calls"></figure>
       </div>
     </div>
@@ -395,7 +395,11 @@
     $('#source-note').innerHTML = (d.sources.crm.available
       ? 'Access data comes from Dynamics 365 and is permanent. '
       : '<b>Dynamics is not configured on this gateway</b> — the access table is empty until the D365 environment variables are set. ') +
-      'Requests and usage are stored on the gateway and <b>reset when it redeploys</b>.' +
+      (d.sources.local.durable
+        ? 'Requests, usage and billing are stored on the persistent disk (<code>' + esc(d.sources.local.dataDir) + '</code>) and survive redeploys.'
+        : '<b>Requests, usage and billing are NOT on a persistent disk</b> (<code>' + esc(d.sources.local.dataDir) + '</code>' +
+          (d.sources.local.fromEnv ? ' is not a mounted disk' : ', DATA_DIR is not set') +
+          ') — they are wiped on every deploy. Set DATA_DIR on Render to the disk\'s mount path.') +
       (d.sources.crm.error ? ' CRM error: ' + esc(d.sources.crm.error) : '');
 
     $('#kpis').innerHTML =

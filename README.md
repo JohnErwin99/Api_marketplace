@@ -105,7 +105,7 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 | `D365_*` | Dynamics 365 (approvals are read from here) |
 | `ADMIN_EMAILS` | Optional staff list override |
 | `GATEWAY_API_KEY` | Optional internal override key |
-| `DATA_DIR` | Folder for the SQLite ledger (usage, cards on file, charges). **Set to the Render persistent disk mount, e.g. `/var/data`** — without a disk the data is wiped on every deploy. |
+| `DATA_DIR` | Folder for the SQLite ledger (usage, cards on file, charges) and `access-requests.json`. **Set to the Render persistent disk's mount path exactly, e.g. `/var/data`** — otherwise everything is wiped on every deploy. The startup log warns, and the `/admin` dashboard says so, when it isn't a mounted disk. |
 | `PAYMENT_API_KEY` | IristelX payment key used to charge saved cards (`POST /bot/{account}/payment`) |
 
 ### Usage billing
