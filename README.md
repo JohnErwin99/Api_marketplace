@@ -42,7 +42,7 @@ auto-generating the console UI.
 **Who may call `/api/*`?** Every call must identify an approved caller
 (`lib/entitlements.js`):
 
-- **The test console** sends the partner's portal login session
+- **The console** sends the partner's portal login session
   (`Authorization: Bearer <session>`), issued by `POST /marketplace/session`
   after a real password check.
 - **A partner's own application** sends their personal marketplace key,
@@ -63,18 +63,33 @@ disables the key within a minute.
 forwarded. The portal login and sign-up pages call `/portal/*` for the same
 reason.
 
-**Espresso login (DIDs, LNP).** Send your own credentials as
-`X-EDID-Username` / `X-EDID-Password` (Basic auth also works when the
-marketplace key goes in `X-Marketplace-Key`). Without them the gateway uses
-the shared `EDID_USER` / `EDID_PASS` account, but **only on the test
-system**; production calls without your own login get 401.
+### Sandbox and production
+
+The card on file is the only switch, and the partner's API key is the same in
+both modes (`lib/entitlements.js`):
+
+| Partner state | Mode | What works |
+|---|---|---|
+| Chose **Sandbox → Production** on the request form, no card yet | `sandbox` | 30 free calls in total (one-time). DIDs/LNP run on the Espresso **test** system; other products (no test system) allow `GET` only. Never billed. |
+| Chose **Production**, no card yet | — | Nothing: 402 until a card is added. |
+| Card on file | `production` | Everything, live. Every successful call is billable. |
+| Past due | — | Nothing: 402 until the outstanding charge is paid. |
+
+The choice is stored in CRM `cr57d_environment` (649950001 = Sandbox →
+Production, 649950002 = Production; the legacy "Sandbox only" value is treated
+as Sandbox → Production). Every response carries `X-Marketplace-Mode` and, in
+sandbox, `X-Sandbox-Calls-Remaining`. Staff, agents and internal callers are
+exempt: no card, no limit, never billed.
+
+**Espresso login (DIDs, LNP).** No partner login is needed: the gateway uses
+`EDID_USER` / `EDID_PASS`, the same account on Espresso's test and production
+systems. The system follows the partner's mode; partners can't override it
+with `X-EDID-Env`. Staff and internal callers can still send
+`X-EDID-Env: test|production` (default `test`).
 
 ```bash
 curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
-  -H 'Authorization: Bearer mk_...' \
-  -H 'X-EDID-Username: partner@example.com' \
-  -H 'X-EDID-Password: their-espresso-password' \
-  -H 'X-EDID-Env: production'
+  -H 'Authorization: Bearer mk_...'
 ```
 
 **Server environment (Render):**
@@ -95,11 +110,11 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 
 ### Usage billing
 
-- Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`).
-  A call is **billable** when it succeeded (2xx), came from a paying partner (not staff,
-  not an agent, not an internal key) and hit a live system — Espresso test-environment calls are free.
+- Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`),
+  with its mode. A call is **billable** when it succeeded (2xx) in `production` mode —
+  sandbox, staff, agent and internal calls never are.
 - Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. They are
-  all `0` until set; a call with a price needs a card on file (402 otherwise).
+  all `0` until set; production mode needs a card on file regardless of price.
 - **Agents are never billed** and have no card on file: they have an agent record
   (`GET /agents?email=`) and no MIND billing account of their own.
 - Partners add a card in the console under **Billing & usage**. The card goes to MIND
@@ -108,19 +123,15 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
   The card number does pass through the gateway once, so the gateway is in PCI scope;
   a hosted card field (e.g. Moneris Hosted Tokenization) would remove that.
 - Staff run the monthly charge from `/admin` → **Billing** → *Run charges*. Each
-  partner is charged once per month (`MKT-{account}-{YYYYMM}`); paid and unknown
-  charges are never repeated automatically. A failed charge marks the partner past
-  due, which pauses billed calls until it's resolved.
+  partner is charged once per month (`MKT-{account}-{YYYYMM}`). Running again retries
+  declined charges but never repeats paid or unknown ones. A declined or unknown
+  charge marks the partner past due, which blocks their calls (402):
+  - **Declined:** saving a new card retries every declined month right away; the
+    partner is unblocked once nothing is left declined or unknown.
+  - **Unknown** (no clear answer from MIND — the card may have been charged): staff
+    check MIND, then use **Retry** or **Mark paid** on that row in `/admin` → Billing.
 
-Environment (`test` vs `production`) resolves from the `X-EDID-Env` header,
-`?env=` query param, or `EDID_ENV` on the server (defaults to `test`).
-
-> **The gateway defaults to `test`.** Calls without an environment go to the
-> Espresso test system — orders placed there are not real and no DIDs are
-> provisioned. When you move from trying things out to calling the API for real,
-> you must send `X-EDID-Env: production` (or `?env=production`) on **every**
-> request, alongside your own production Espresso credentials. Test credentials
-> do not work against production, and vice versa.
+Espresso environment: see [Sandbox and production](#sandbox-and-production).
 
 ## Endpoints
 
@@ -183,9 +194,8 @@ curl -s -X POST "$BASE/api/orders/DID1205280200006/requests" -H 'Content-Type: a
 curl -s -X POST "$BASE/api/orders/DID1205280200006/discard-rejected"
 curl -s -X POST "$BASE/api/orders/DID1205280200006/cancel"
 
-# per-customer credentials (marketplace) + production env
-curl -s "$BASE/api/catalog" \
-  -H 'X-EDID-Username: someuser' -H 'X-EDID-Password: somepass' -H 'X-EDID-Env: production'
+# staff / internal only: pick the Espresso system (partners follow their mode)
+curl -s "$BASE/api/catalog" -H "X-API-Key: $GATEWAY_API_KEY" -H 'X-EDID-Env: production'
 ```
 
 ## Error format

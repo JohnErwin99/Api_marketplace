@@ -1,21 +1,27 @@
 <!--
   IRISTEL PARTNER PORTAL — LOGGED-IN NAV SCRIPT (complete Webflow embed)
 
+  Lives in the HTML Embed inside the "iristel menu" component in Webflow
+  (site iristel-portal), so it runs on every page that has the navbar.
+
   API Marketplace additions vs. the previous version, all marked
   "MARKETPLACE" below:
     1. "apimarketplace" added to the guest hide list and the 0Wire blanket
        hide list, so the menu item never leaks to logged-out / restricted
        users.
-    2. Logged-in branch shows the "API Marketplace" menu item ONLY when the
-       `marketplaceAccess` cookie (set by the login page from the CRM field
-       cr57d_apimarketplaceaccess) is non-empty — same pattern as
-       911listing.
+    2. Logged-in branch shows the "API Console" menu item (id
+       "apimarketplace", links to /console) ONLY when the
+       `marketplaceAccess` cookie (set by the login page) is non-empty, and
+       otherwise shows "API Marketplace" (id "marketplacerequest", the
+       request-access page) — same gating pattern as 911listing.
     3. Admin badge block always shows it for admins.
+    4. LIVE RE-CHECK runs inside the main handler (where `email` exists) and
+       sends the signed `marketplaceSession` token the gateway requires; it
+       only changes the menu when the gateway answers successfully.
 
-  Requires a nav link in the Webflow navbar with id="apimarketplace"
-  pointing at the marketplace console (e.g.
-  https://iristel-portal.webflow.io/console), hidden by default like the
-  other gated items.
+  DASHBOARD (Sept 2026): admin-only "Dashboard" dropdown (id="dashboard")
+  containing API Marketplace. Hidden by default via class; shown only in
+  the admin block below; also in the guest + 0Wire hide lists.
 -->
 <style>
   .status-light {
@@ -120,7 +126,7 @@
   //  We read the cookie and use it verbatim — no overrides.
   //
   //  Expected values: agent, reseller, customer, cobranded,
-  //                   whitelabel, consumer, Internal
+  //                   whitelabel, Internal
   //
   //  Commission (compensation link) is visible ONLY to agents
   //  and Internal. reseller / customer / cobranded / whitelabel
@@ -174,9 +180,9 @@
       return 'icewireless';
     }
 
-    // Reseller dashboard role for every non-agent partner type: resellers,
-    // customers, co-branded, white-label and consumers never get agent data.
-    if (['reseller', 'customer', 'cobranded', 'whitelabel', 'consumer'].includes(pt)) {
+    // Reseller — partnerType cookie is "reseller"
+    // Customer also defaults to the reseller dashboard role.
+    if (pt === 'reseller' || pt === 'customer') {
       return 'reseller';
     }
 
@@ -236,7 +242,7 @@
     const activationDate = getCookie("startActivationDate");
 
     // MARKETPLACE: authorized API product ids ("e911,dids"), set by the
-    // login page from the CRM field cr57d_apimarketplaceaccess.
+    // login page from the CRM field iristel_apimarketplaceaccess.
     // Non-empty => this partner may see the API Marketplace menu item.
     const marketplaceAccess = (getCookie("marketplaceAccess") || "").trim();
 
@@ -261,7 +267,7 @@
     if (!email || name === "Guest") {
       console.log("🔒 Guest branch entered:", { email, name });
       ["training", "marketing", "compensation", "911listing",
-       "toolkit", "presidentsclub", "apimarketplace", "logout"].forEach(hide); // MARKETPLACE: hidden for guests
+       "toolkit", "presidentsclub", "marketplacerequest", "apimarketplace", "dashboard", "logout"].forEach(hide); // MARKETPLACE + DASHBOARD: hidden for guests
 
       // External "Support" link has no id — hide by href.
       document.querySelectorAll('a[href*="support.iristel.com"]').forEach(function (a) {
@@ -284,7 +290,7 @@
 
       // 1) Hide EVERY nav item (blanket hide — nothing leaks).
       ["training", "marketing", "compensation", "911listing", "toolkit",
-       "presidentsclub", "apimarketplace", "signup", "login", "logout"].forEach(hide); // MARKETPLACE: in the blanket hide
+       "presidentsclub" , "apimarketplace", "dashboard", "signup", "login", "logout"].forEach(hide); // MARKETPLACE + DASHBOARD: in the blanket hide
 
       document.querySelectorAll('a[href*="support.iristel.com"]').forEach(function (a) {
         a.style.display = "none";
@@ -322,9 +328,11 @@
       // ═══════════════════════════════════════════════════════
       if (marketplaceAccess) {
         show("apimarketplace");
+        hide("marketplacerequest")
         console.log('🛒 API Marketplace visible for products:', marketplaceAccess);
       } else {
         hide("apimarketplace");
+        show("marketplacerequest")
       }
 
       // ── Per partner type: training destination + commission ──
@@ -363,14 +371,6 @@
           if (compensationLink) compensationLink.style.display = "none"; // no commission
           break;
 
-        case "consumer":
-          // Individuals: no partner sales material, no commission.
-          setHref("training", "/training-partner");
-          if (compensationLink) compensationLink.style.display = "none";
-          hide("marketing");
-          hide("toolkit");
-          break;
-
         default:
           // Unknown / missing partnerType — safest is no commission.
           setHref("training", "/training-agent");
@@ -378,7 +378,7 @@
       }
     } else {
       if (compensationLink) compensationLink.style.display = "none";
-      ["training", "marketing", "911listing", "toolkit", "apimarketplace"].forEach(hide); // MARKETPLACE: hidden without login
+      ["training", "marketing", "911listing", "toolkit", "apimarketplace", "dashboard"].forEach(hide); // MARKETPLACE + DASHBOARD: hidden without login
     }
 
     // ── Activation date check ──
@@ -436,10 +436,38 @@
       hide("adminShow");
       show("911listing");
       show("toolkit");
-      show("apimarketplace"); // MARKETPLACE: admins always see it
+      show("marketplacerequest"); // MARKETPLACE: admins always see it
+      show("dashboard"); // DASHBOARD: admin-only dropdown (API Marketplace)
       setHref("presidentsclub", "/presidents-club-admin");
       console.log('👑 Admin detected — Presidents Club link set to /presidents-club-admin');
     }
+
+    // ═══════════════════════════════════════════════════════
+    //  MARKETPLACE — LIVE RE-CHECK (no logout needed)
+    //  The cookie above is a login-time snapshot. Re-validate
+    //  against the gateway so a grant (or revoke) made after
+    //  login takes effect on the next page load. The gateway
+    //  requires the signed login session; without one, or if the
+    //  gateway doesn't answer, keep the login-time snapshot.
+    // ═══════════════════════════════════════════════════════
+    const marketplaceSession = getCookie("marketplaceSession");
+    if (marketplaceSession) {
+      fetch("https://api-marketplace-1im9.onrender.com/marketplace/authorizations?email=" + encodeURIComponent(email),
+        { headers: { "Authorization": "Bearer " + marketplaceSession } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (a) {
+          if (!a) return;                              // session expired / gateway error
+          var live = (a.approved && Array.isArray(a.products)) ? a.products.join(",") : "";
+          if (live === marketplaceAccess) return;      // nothing changed since login
+          setCookie("marketplaceAccess", live, 7);     // keep every page's snapshot fresh
+          if (live) { show("apimarketplace"); hide("marketplacerequest"); }
+          else      { hide("apimarketplace"); show("marketplacerequest"); }
+          console.log("🛒 API Marketplace access refreshed live:", live || "(none)");
+        })
+        .catch(function () { /* gateway unreachable — keep the login-time snapshot */ });
+    }
   });
 </script>
+
+
 </body>

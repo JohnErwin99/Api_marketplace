@@ -18,12 +18,15 @@ const PORTAL_ORIGINS = [
   'https://iristelpartnerportal.com',
   'https://www.iristelpartnerportal.com',
   'https://iristel-portal.webflow.io',
+  'https://partner.iristel.com',
   'https://iristel.webflow.io',
   'https://iristel.com',
   'https://www.iristel.com',
 ];
 const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? PORTAL_ORIGINS : [])])];
-app.use(cors(allowed.length ? { origin: allowed } : {}));
+// The console reads the caller's mode and sandbox allowance from these.
+const exposedHeaders = ['X-Marketplace-Mode', 'X-Sandbox-Calls-Remaining'];
+app.use(cors(allowed.length ? { origin: allowed, exposedHeaders } : { exposedHeaders }));
 // 8 MB: the access-request form sends the business-registration document
 // as base64 JSON (~5 MB file cap plus encoding overhead).
 app.use(express.json({ limit: '8mb' }));
@@ -53,10 +56,13 @@ app.get('/marketplace-access.js', (req, res) => res.sendFile(path.join(__dirname
 
 // ---------------------------------------------------------------------------
 // Credentials resolution
-// Priority: per-request headers/basic-auth  ->  .env defaults
-// This lets the marketplace console pass a customer's own Espresso creds,
-// while falling back to server defaults for quick testing.
+// Priority: per-request headers/basic-auth  ->  .env defaults (EDID_USER /
+// EDID_PASS, the same login on Espresso's test and production systems).
+// The system comes from the caller's marketplace mode — sandbox partners on
+// test, partners with a card on production — and only staff and internal
+// callers may pick it with X-EDID-Env (see lib/entitlements.js edidEnv).
 // ---------------------------------------------------------------------------
+const { edidEnv } = require('./lib/entitlements');
 function resolveContext(req) {
   let username = req.get('X-EDID-Username');
   let password = req.get('X-EDID-Password');
@@ -71,19 +77,8 @@ function resolveContext(req) {
     }
   }
 
-  const env =
-    (req.get('X-EDID-Env') || req.query.env || process.env.EDID_ENV || 'test')
-      .toLowerCase() === 'production'
-      ? 'production'
-      : 'test';
-
-  // The shared server account is only for the test system (the console).
-  // Production calls must bring the caller's own Espresso credentials.
+  const env = edidEnv(req);
   if (!username || !password) {
-    if (env === 'production' && !(req.marketplace && req.marketplace.internal)) {
-      throw new AppError(401, 'credentials_required',
-        'Production calls need your own Espresso login in the X-EDID-Username and X-EDID-Password headers.');
-    }
     username = username || process.env.EDID_USER;
     password = password || process.env.EDID_PASS;
   }

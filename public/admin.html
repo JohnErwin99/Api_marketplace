@@ -420,10 +420,16 @@
         extra: p.errors ? p.errors + ' failed' : 'all succeeded'
       })), c2, 'calls');
 
+    // Plan: what the partner chose on the request form and where they are now.
+    const planCell = (p) => !p ? '<span style="color:var(--muted)">—</span>'
+      : p.mode === 'production' ? '<span class="pill yes">Live</span>'
+      : p.mode === 'past_due' ? '<span class="pill pending">Past due</span>'
+      : p.mode === 'card_required' ? '<span class="pill no">Production · no card</span>'
+      : '<span class="pill pending">Sandbox · ' + p.sandboxUsed + '/' + p.sandboxLimit + '</span>';
     // Access table — the Control column flips the CRM approved switch.
     const crmOk = d.sources.crm.available;
     $('#t-grants').innerHTML = d.grants.length
-      ? '<thead><tr><th>Control</th><th>Organization</th><th>Type</th><th>Primary contact</th><th>Access</th><th>Bundle</th><th>APIs in bundle</th><th>APIs granted</th><th>Reg #</th><th>Application</th></tr></thead><tbody>' +
+      ? '<thead><tr><th>Control</th><th>Organization</th><th>Type</th><th>Primary contact</th><th>Access</th><th>Bundle</th><th>APIs in bundle</th><th>APIs granted</th><th>Plan</th><th>Reg #</th><th>Application</th></tr></thead><tbody>' +
         d.grants.map(g => '<tr>' +
           '<td>' + (crmOk
             ? '<button type="button" class="ctl ' + (g.approved ? 'revoke' : 'approve') +
@@ -435,6 +441,7 @@
           '<td>' + ((g.bundles || []).length ? g.bundles.map(b => esc(b.name)).join('<br>') : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + ((g.bundles || []).length ? g.bundles.map(b => b.apis.map(a => '<code>' + esc(a) + '</code>').join(' ') || '<span style="color:var(--muted)">—</span>').join('<br>') : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
+          '<td>' + planCell(g.plan) + '</td>' +
           '<td>' + (g.businessRegNumber ? esc(g.businessRegNumber) : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + esc(g.application) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No accounts have been through the marketplace flow yet.</td></tr></tbody>';
@@ -511,16 +518,38 @@
     if (!r.ok) { $('#billing-card').hidden = true; return; }
     const d = await r.json();
     $('#bill-note').textContent = 'Total billable for ' + d.month + ': ' + cad(d.totalCents) + ' CAD. ' +
-      'Charges go to each partner\'s card on file through MIND. Running again never repeats a paid or unknown charge.';
+      'Charges go to each partner\'s card on file through MIND. Running again retries declined charges but never repeats a paid or unknown one — ' +
+      'for unknown, check the payment in MIND, then Retry or Mark paid.';
     $('#t-billing').innerHTML = d.rows.length
       ? '<thead><tr><th>Partner</th><th>MIND account</th><th class="num">Calls</th><th class="num">Billed</th><th class="num">Amount</th><th>Card</th><th>Charge</th></tr></thead><tbody>' +
         d.rows.map(x => '<tr><td>' + esc(x.email) + (x.pastDue ? ' <span class="pill pending">past due</span>' : '') + '</td>' +
           '<td>' + (x.mindAccount ? '<code>' + esc(x.mindAccount) + '</code>' : '<span style="color:var(--muted)">not linked</span>') + '</td>' +
           '<td class="num">' + fmt(x.calls) + '</td><td class="num">' + fmt(x.billableCalls) + '</td><td class="num">' + cad(x.cents) + '</td>' +
           '<td>' + (x.card ? '<code>' + esc(x.card) + '</code>' : '<span style="color:var(--muted)">none</span>') + '</td>' +
-          '<td>' + (x.charge ? '<span class="pill ' + (STATUS_PILL[x.charge.status] || 'no') + '">' + esc(x.charge.status.replace('_', ' ')) + '</span> ' + cad(x.charge.cents) : '<span style="color:var(--muted)">—</span>') + '</td></tr>').join('') + '</tbody>'
+          '<td>' + (x.charge ? '<span class="pill ' + (STATUS_PILL[x.charge.status] || 'no') + '">' + esc(x.charge.status.replace('_', ' ')) + '</span> ' + cad(x.charge.cents) +
+            (['declined', 'unknown'].includes(x.charge.status) ? ' <button type="button" class="ctl approve" data-bill="retry" data-email="' + esc(x.email) + '">Retry</button>' : '') +
+            (x.charge.status === 'unknown' ? ' <button type="button" class="ctl" data-bill="mark-paid" data-email="' + esc(x.email) + '">Mark paid</button>' : '')
+            : '<span style="color:var(--muted)">—</span>') + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No API usage recorded for this month.</td></tr></tbody>';
   }
+  $('#t-billing').onclick = async (ev) => {
+    const btn = ev.target.closest('[data-bill]');
+    if (!btn) return;
+    const action = btn.dataset.bill, email = btn.dataset.email, m = billMonth.value;
+    const ask = action === 'mark-paid'
+      ? 'Mark ' + email + '\'s ' + m + ' charge as paid? Only do this after confirming the payment in MIND.'
+      : 'Charge ' + email + ' for ' + m + ' again? For an unknown charge, first confirm in MIND that the earlier attempt did not go through.';
+    if (!confirm(ask)) return;
+    btn.disabled = true;
+    try {
+      const r = await fetch(GATEWAY + '/marketplace/admin/billing/' + action, {
+        method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, month: m }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      if (action === 'retry') alert('Result: ' + d.status);
+    } catch (err) { alert(err.message); }
+    loadBilling();
+  };
   billMonth.onchange = loadBilling;
   $('#bill-run').onclick = async () => {
     const m = billMonth.value;

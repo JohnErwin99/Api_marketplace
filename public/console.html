@@ -201,6 +201,15 @@
   .soap{color:var(--muted);font-size:12px;margin:0 0 10px}
   .soap code{font-family:var(--mono)}
   .desc{font-size:13.5px;margin:0 0 10px;max-width:70ch}
+  .modebar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:9px 16px;font-size:13px;border-bottom:1px solid var(--line)}
+  .modebar[hidden]{display:none}
+  .modebar b{font:800 11.5px var(--head);letter-spacing:.8px;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid currentColor}
+  .modebar.sandbox{background:var(--warn-bg);color:var(--gold-soft)}
+  .modebar.live{background:var(--ok-bg);color:var(--ok)}
+  .modebar.block{background:var(--err-bg);color:var(--err)}
+  .modebar .grow{flex:1}
+  .modebar button{font:600 12.5px var(--body,inherit);padding:5px 12px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+  .needs-card{font:600 11px var(--mono);color:var(--err);border:1px solid currentColor;border-radius:999px;padding:2px 8px;margin-left:8px}
   .pre-note{font-size:12.5px;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);color:var(--gold-soft);border-radius:var(--r-sm);padding:9px 12px;margin:0 0 12px}
   .pre-note b{color:var(--gold-soft)}
   .doc h3{font:700 11px var(--head);text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin:16px 0 6px}
@@ -350,6 +359,7 @@
     <span class="theme-label">Light</span>
   </button>
 </header>
+<div class="modebar" id="modebar" role="status" aria-live="polite" hidden></div>
 <div class="layout">
 <nav class="products" aria-label="Products">
   <input id="product-search" type="search" placeholder="Search APIs… (e.g. port a number)" aria-label="Search APIs" autocomplete="off">
@@ -436,8 +446,9 @@
   //       'ix'    -> IristelX API; gateway injects the upstream key
   // Every product also needs the caller's marketplace session or key.
   const IX=id=>ORIGIN+'/api/ix/'+id;
-  // The console only ever talks to the Espresso test system; production is
-  // reached from the caller's own app by sending X-EDID-Env: production.
+  // Partners' Espresso system follows their marketplace mode (sandbox = test,
+  // card on file = production) and the gateway ignores this header for them.
+  // Only staff can pick the system with it; the console keeps staff on test.
   const CONSOLE_ENV='test';
   const PRODUCT_CFG={
     'dids':           {auth:'edid',  base:ORIGIN, group:p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System'},
@@ -514,6 +525,45 @@
       $('#product-bar').innerHTML='';
       return;
     }
+  }
+
+  // ---- sandbox / live mode -----------------------------------------------
+  // The partner's mode comes from /marketplace/billing and is refreshed from
+  // the X-Marketplace-Mode / X-Sandbox-Calls-Remaining headers on every call
+  // (lib/entitlements.js). sandbox: free test calls until a card is added;
+  // production: live and billed; card_required / past_due: calls are blocked.
+  let ACCOUNT=null;
+  const modeLeft=d=>Math.max(0,d.sandboxCallsLimit-d.sandboxCallsUsed);
+  const needsCard=e=>!!ACCOUNT&&ACCOUNT.mode==='sandbox'&&cfgOf(e).auth!=='edid'&&!/^(GET|HEAD|OPTIONS)$/.test(e.method);
+  function openBilling(){const b=document.querySelector('.pchip[data-id="billing"]');if(b)b.click();}
+  function renderModebar(){
+    const el=$('#modebar'), d=ACCOUNT;
+    if(!d||d.mode==='exempt'){el.hidden=true;return;}
+    const cta=label=>'<span class="grow"></span><button type="button" data-open-billing>'+label+'</button>';
+    const left=modeLeft(d);
+    el.className='modebar '+(d.mode==='production'?'live':d.mode==='sandbox'&&left>0?'sandbox':'block');
+    el.innerHTML=d.mode==='production'
+      ?'<b>Live</b><span>Production — calls are billed per successful call to your card on file.</span>'
+      :d.mode==='sandbox'
+      ?'<b>Sandbox · test</b><span>'+(left>0?left+' of '+d.sandboxCallsLimit+' free test calls left. Nothing is billed. '
+        +'DIDs &amp; LNP use the test system; other APIs are lookups only.'
+        :'You\'ve used all '+d.sandboxCallsLimit+' free test calls.')+'</span>'+cta('Add a card to go live →')
+      :d.mode==='past_due'
+      ?'<b>Paused</b><span>Your last payment didn\'t go through, so API calls are paused.</span>'+cta('Update card →')
+      :'<b>Card required</b><span>Your account is set up for production. Add a card to make your first call.</span>'+cta('Add a card →');
+    el.hidden=false;
+    const b=el.querySelector('[data-open-billing]');if(b)b.onclick=openBilling;
+  }
+  function noteMode(r){
+    if(!ACCOUNT||ACCOUNT.mode==='exempt')return;
+    const m=r.headers.get('X-Marketplace-Mode'), left=r.headers.get('X-Sandbox-Calls-Remaining');
+    if(m)ACCOUNT.mode=m;
+    if(left!==null)ACCOUNT.sandboxCallsUsed=ACCOUNT.sandboxCallsLimit-Number(left);
+    renderModebar();
+  }
+  if(mpSession()){
+    try{ACCOUNT=await billingApi('GET');}catch(_){/* billing unavailable: no banner */}
+    renderModebar();
   }
 
   products.forEach(p=>(p.endpoints||[]).forEach(e=>{e.pid=p.id;}));
@@ -777,7 +827,6 @@
   // ---- auth snippet helpers --------------------------------------------
   function authHeaderLines(env,e){
     const L=["  -H 'Authorization: Bearer "+KEY_PH+"'"];
-    if(cfgOf(e).auth==='edid')L.push("  -H 'X-EDID-Username: "+USER_PH+"'","  -H 'X-EDID-Password: "+PASS_PH+"'","  -H 'X-EDID-Env: "+(env||'production')+"'");
     return L;
   }
 
@@ -852,16 +901,14 @@
       +'so you don\'t need the key here.</p>';
 
     if(c.auth==='edid'){
-      d+='<h3>Espresso login</h3>'
-        +'<p>Also send your Espresso username and password on <strong>every</strong> request, as headers:</p>'
-        +'<pre>'+esc('X-EDID-Username: '+USER_PH+'\nX-EDID-Password: '+PASS_PH)+'</pre>'
-        +'<p>Requests without an Espresso login use a shared <strong>test</strong> account, which is how this '
-        +'console works. Production requests without your own login are refused.</p>'
-        +'<h3>Environments</h3>'
-        +'<p>Espresso runs two completely separate systems — test and production share no data and have separate credentials.</p>'
-        +'<div class="callout"><b>Going live:</b> the gateway defaults to <code>test</code>. For real traffic send '
-        +'<code>X-EDID-Env: production</code> on every request with your production credentials. Looking up a '
-        +'production record without it returns "does not exist", because you are querying the test system.</div>';
+      d+='<h3>Sandbox and live</h3>'
+        +'<p>No Espresso login is needed — the gateway signs in to Espresso for you. Espresso runs two completely '
+        +'separate systems, test and production, which share no data. Which one answers depends on your account:</p>'
+        +'<ul><li><b>Sandbox</b> (no card on file yet): calls go to the Espresso <strong>test</strong> system, free, '
+        +'up to your sandbox allowance.</li>'
+        +'<li><b>Live</b> (card on file): calls go to <strong>production</strong> and are billed per successful call.</li></ul>'
+        +'<div class="callout"><b>Going live:</b> add a card under <strong>Billing &amp; usage</strong>. Your API key stays '
+        +'the same. Records you created in sandbox don\'t exist in production.</div>';
     }else if(p.id==='e911'){
       d+='<h3>Account code</h3>'
         +'<p>Every request also carries <code>?code=</code>, the account code the listing belongs to. In the partner '
@@ -893,7 +940,7 @@
         +'<li><code>GET /api/lnp/pons/{pon}</code> — poll status; read <code>status_reason</code> on rejection.</li>'
         +'<li>On rejection: fix and <code>POST /api/lnp/pons/{pon}/edit</code>.</li>'
         +'<li>Once Confirmed, on the due date: <code>POST /api/lnp/pons/{pon}/activate</code>.</li></ol>'
-        +'<p>On the sandbox, <code>POST /api/lnp/pons/{pon}/status</code> lets you force statuses to walk the whole flow without a real losing carrier.</p>';
+        +'<p>In sandbox (before a card is added), <code>POST /api/lnp/pons/{pon}/status</code> lets you force statuses to walk the whole flow without a real losing carrier.</p>';
     }
     if(p.id==='lnp-wireless'){
       d+='<h3>Rules that trip people up</h3><table><tr><th>Rule</th><th>Detail</th></tr>'
@@ -999,10 +1046,8 @@
     rail.className='railnote';
     let t='<strong>Base URL:</strong> <code>'+esc(c.base)+'</code><br>Every path above is relative to it.';
     if(c.auth==='edid'){
-      t+='<br><br>This console runs on the shared Iristel Espresso account. From your own application, send your '
-        +'own <code>X-EDID-Username</code> / <code>X-EDID-Password</code> headers.'
-        +'<br><br><strong>Going live:</strong> the console is test-only. Live traffic needs '
-        +'<code>X-EDID-Env: production</code> with production credentials.';
+      t+='<br><br>No Espresso login needed — the gateway signs in for you. In sandbox, calls go to the Espresso '
+        +'test system; once a card is on file they go to production and are billed.';
     }else if(c.auth==='ix'){
       t+='<br><br>Calls go through the marketplace gateway, which adds the IristelX key on the server — '
         +'no IristelX key is needed from you.'
@@ -1069,7 +1114,7 @@
   async function renderBillingView(){
     $('#baseurl').textContent=ORIGIN;
     nav.innerHTML='<div class="railnote" style="border:0;margin:0"><strong>Billing &amp; usage</strong><br>'
-      +'API calls are billed per successful call to your Iristel billing account. Calls to the Espresso test system are free.</div>';
+      +'Sandbox calls are free. Once a card is on file, calls are live and billed per successful call to your Iristel billing account.</div>';
     $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
     const body=$('#docs-body');
     body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">Loading…</p>';
@@ -1080,7 +1125,12 @@
     let h='<h2>💳 Billing &amp; usage</h2>'
       +'<p class="lead">'+(d.isAgent?'Your API usage for '+esc(d.month)+'. Agent accounts are not billed.'
         :'Usage for '+esc(d.month)+' is charged to your card on file at the start of next month.')+'</p>';
-    if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through, so paid API calls are paused. Update your card below and our team will retry the payment.</div>';
+    ACCOUNT=d;renderModebar();
+    if(d.mode==='sandbox')h+='<div class="callout"><b>Sandbox:</b> '+modeLeft(d)+' of '+d.sandboxCallsLimit+' free test calls left. '
+      +'DIDs and LNP use the Espresso test system; other APIs allow lookups only. Add a card below to go live — '
+      +'from then on calls run in production and are billed. Your API key stays the same.</div>';
+    else if(d.mode==='card_required')h+='<div class="callout"><b>Card required:</b> your account is set up for production, so add a card below before your first call.</div>';
+    if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through, so API calls are paused. Save a card below and we\'ll retry the payment right away.</div>';
     h+='<h3>Card on file</h3>';
     if(d.isAgent){
       h+='<p>Agent accounts aren\'t billed for API usage, so there\'s no card to add. Your calls are still listed below.</p>';
@@ -1092,7 +1142,7 @@
         +'<p><button class="btn" type="button" data-card-edit>Replace card</button> '
         +'<button class="btn danger" type="button" data-card-remove>Remove card</button></p>';
     }else{
-      h+='<p>No card yet. Add one to use APIs that are billed.</p>';
+      h+='<p>No card yet. Add one to go live — calls are then billed per successful call.</p>';
     }
     if(d.mindAccount&&!d.isAgent){
       h+='<form class="card" data-card-form style="max-width:460px;'+(d.card?'display:none':'')+'" autocomplete="on">'
@@ -1124,7 +1174,7 @@
     if(edit)edit.onclick=()=>{form.style.display='';form.querySelector('input').focus();};
     const remove=body.querySelector('[data-card-remove]');
     if(remove)remove.onclick=async()=>{
-      if(!confirm('Remove this card? APIs that are billed will stop working until you add a new one.'))return;
+      if(!confirm('Remove this card? API calls will stop working until you add a new one.'))return;
       try{await billingApi('DELETE');renderBillingView();}catch(err){alert(err.message);}
     };
     if(form)form.onsubmit=async ev=>{
@@ -1133,9 +1183,12 @@
       const v=Object.fromEntries(new FormData(form).entries());
       btn.disabled=true;msg.textContent='Saving…';
       try{
-        await billingApi('PUT',v);
+        const saved=await billingApi('PUT',v);
         form.reset();                      // never leave card details in the page
-        renderBillingView();
+        await renderBillingView();
+        if(saved.retried&&saved.retried.length)
+          alert(saved.pastDue?'Card saved, but the outstanding payment still didn\'t go through. Try another card or contact Iristel support.'
+            :'Card saved and your outstanding balance was paid. API calls are back on.');
       }catch(err){msg.textContent=err.message;btn.disabled=false;form.querySelector('[name=cvv]').value='';}
     };
   }
@@ -1381,6 +1434,7 @@
     const danger=h.danger!==undefined?h.danger:e.method==='DELETE';
     html+='<div class="row"><button class="btn'+(danger?' danger':'')+'" data-send>'
       +'<span class="spin" aria-hidden="true"></span><span>'+esc(h.submitLabel||'Send request')+'</span></button>'
+      +(needsCard(e)?'<span class="needs-card" title="In sandbox this API is read-only: it has no test system, so changes are live. Add a card under Billing &amp; usage.">Requires card (live)</span>':'')
       +(opts.compact?'':'<span class="url" data-url></span>')+'</div>';
     return html;
   }
@@ -1415,7 +1469,7 @@
   }
   function curlTextFor(root,e){
     const L=["curl -s -X "+e.method+" '"+cfgOf(e).base+buildPathFrom(root,e)+"'",
-             ...authHeaderLines(cfgOf(e).auth==='edid'?CONSOLE_ENV:null,e)];
+             ...authHeaderLines(null,e)];
     if(e.upload){L.push("  -F '"+(e.upload.field||'file')+"=@listings.csv'");}
     else{
       let b;try{b=buildBodyFrom(root,e);}catch(_){b=undefined;}
@@ -1427,8 +1481,9 @@
     }
     // Comments lead the snippet: after a '\' continuation a trailing '#' line
     // would reach curl as an argument, not a comment.
-    const head=cfgOf(e).auth==='edid'
-      ?"# Test environment. For live traffic, use X-EDID-Env: production\n# with your production Espresso credentials.\n":"";
+    const head=ACCOUNT&&ACCOUNT.mode==='sandbox'
+      ?"# Sandbox: free test call (counts toward your "+ACCOUNT.sandboxCallsLimit+"). Live and billed once a card is on file.\n"
+      :ACCOUNT&&ACCOUNT.mode==='production'?"# Live: billed per successful call.\n":"";
     return head+L.join(" \\\n");
   }
   function wireForm(root,e,opts){
@@ -1477,10 +1532,8 @@
       +'<p class="hint" style="margin:0 0 8px">Replace <code>'+KEY_PH+'</code> with your marketplace API key '
       +'(<b>Show my API key</b> on the Docs tab).</p>';
     if(a==='edid'){
-      html+='<p class="hint" style="margin:0 0 8px">Also send your Espresso login as the '
-        +'<code>X-EDID-Username</code> and <code>X-EDID-Password</code> headers.</p>'
-        +'<div class="pre-note"><b>This console is test-only.</b> For live traffic switch the env header to '
-        +'<code>X-EDID-Env: production</code> and use production credentials.</div>';
+      html+='<p class="hint" style="margin:0 0 8px">The same key works in sandbox and live — '
+        +'your mode decides which Espresso system answers (see the banner at the top).</p>';
     }else if(productId==='e911'){
       html+='<p class="hint" style="margin:0 0 8px">The account code in <code>?code=</code> selects whose listings you touch.</p>';
     }
@@ -1545,6 +1598,7 @@
     const t0=performance.now();
     try{
       const r=await fetch(c.base+buildPathFrom(root,e),reqOpts);
+      noteMode(r);
       const txt=await r.text();
       showResult(e,vals,r.status,txt,performance.now()-t0,inlineEl);
       if(opts.onResult)opts.onResult(r.status,txt);
