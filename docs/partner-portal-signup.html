@@ -326,9 +326,15 @@
 
         // 4. Mirror the new customer into Dynamics 365 (account + primary
         // contact + MIND account code) so the relationship is on record from
-        // day one. Fire-and-forget: CRM being down must not block sign-up.
-        fetch(MARKETPLACE_GATEWAY + '/marketplace/signup', {
+        // day one. Awaited (the page navigates away next, which would cancel
+        // the upload of the registration document) but capped at 15 s, and
+        // CRM being down never blocks sign-up.
+        message.textContent = 'Finishing your account setup...';
+        const crmAbort = new AbortController();
+        const crmTimer = setTimeout(function () { crmAbort.abort(); }, 15000);
+        await fetch(MARKETPLACE_GATEWAY + '/marketplace/signup', {
           method: 'POST',
+          signal: crmAbort.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: fields.email, fname: fields.fname, lname: fields.lname,
@@ -340,8 +346,13 @@
             accountType: accountType, mindAccountId: created.accountId
           })
         }).then(function (r) {
-          console.log('CRM sign-up mirror:', r.status);
-        }).catch(function (e) { console.warn('CRM sign-up mirror failed:', e); });
+          return r.json().catch(function () { return {}; }).then(function (d) {
+            console.log('CRM sign-up mirror:', r.status, d);
+            if (d.contactError) console.warn('CRM contact not linked:', d.contactError);
+          });
+        }).catch(function (e) {
+          console.warn('CRM sign-up mirror failed:', e);
+        }).finally(function () { clearTimeout(crmTimer); });
 
         // The billing account exists; the login already did (or could not be made).
         if (created.loginExists) {

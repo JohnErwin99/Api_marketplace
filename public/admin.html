@@ -205,6 +205,26 @@
         <span id="bill-account-msg"></span>
       </form>
     </div>
+
+    <div class="card" id="audit-card" style="margin-top:16px">
+      <div class="tablehead"><h2>Security &amp; audit</h2><a class="csv" id="csv-audit" href="#">Export CSV</a></div>
+      <p class="sub">Sign-ins with IP address, sign-ups, API keys and staff actions, in the dates above. Kept for one year. An account locks for 30 minutes after 5 wrong passwords.</p>
+      <div class="kpis" id="audit-kpis"></div>
+      <h2 style="font-size:13px;margin:6px 0 8px">Locked accounts</h2>
+      <div class="scroll" style="margin-bottom:14px"><table id="t-locked"></table></div>
+      <form id="audit-filter" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
+        <input name="email" placeholder="email contains" style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);font:12px var(--sans)">
+        <input name="ip" placeholder="IP contains" style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);font:12px var(--sans)">
+        <select name="event" id="audit-event" style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);font:12px var(--sans)">
+          <option value="">All events</option>
+          <option value="login.">Logins (all)</option>
+          <option value="signup.">Sign-ups (all)</option>
+          <option value="admin.">Staff actions (all)</option>
+        </select>
+        <button type="submit" class="ctl approve">Filter</button>
+      </form>
+      <div class="scroll"><table id="t-audit"></table></div>
+    </div>
   </div>
 </main>
 <div class="tip" id="tip" role="status"></div>
@@ -487,19 +507,21 @@
 
     // Usage table
     $('#t-usage').innerHTML = d.usage.length
-      ? '<thead><tr><th>When</th><th>Who</th><th>API</th><th>Endpoint</th><th>Status</th><th class="num">ms</th></tr></thead><tbody>' +
+      ? '<thead><tr><th>When</th><th>Who</th><th>IP</th><th>API</th><th>Endpoint</th><th>Status</th><th class="num">ms</th></tr></thead><tbody>' +
         d.usage.map(u => '<tr><td>' + esc(String(u.at).slice(0, 19).replace('T', ' ')) + '</td>' +
-          '<td>' + esc(u.email || '—') + '</td><td><code>' + esc(u.product || '—') + '</code></td>' +
+          '<td>' + esc(u.email || '—') + '</td>' +
+          '<td title="' + esc(u.userAgent || '') + '">' + (u.ip ? '<code>' + esc(u.ip) + '</code>' : '<span style="color:var(--muted)">—</span>') + '</td>' +
+          '<td><code>' + esc(u.product || '—') + '</code></td>' +
           '<td><code>' + esc((u.method || '') + ' ' + (u.endpoint || '')) + '</code></td>' +
           '<td>' + (u.status == null ? '—' : '<span class="pill ' + (u.status >= 200 && u.status < 300 ? 'yes' : 'pending') + '">' + u.status + '</span>') + '</td>' +
           '<td class="num">' + (u.ms == null ? '—' : fmt(u.ms)) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No API calls recorded in this range. Every call through the gateway is counted, from the console or a partner\'s own app.</td></tr></tbody>';
 
     // Downloads go through fetch so the session token rides in a header.
-    ['grants', 'requests', 'usage'].forEach(view => {
+    ['grants', 'requests', 'usage', 'audit'].forEach(view => {
       $('#csv-' + view).onclick = async (ev) => {
         ev.preventDefault();
-        const r = await fetch(GATEWAY + '/marketplace/admin/export.csv?' + query({ view }), { headers: auth });
+        const r = await fetch(GATEWAY + '/marketplace/admin/export.csv?' + query(view === 'audit' ? { view, ...auditFilter() } : { view }), { headers: auth });
         if (!r.ok) { alert('Export failed: HTTP ' + r.status); return; }
         const a = document.createElement('a');
         a.href = URL.createObjectURL(await r.blob());
@@ -511,6 +533,63 @@
   }
 
   load();
+
+  // ---- security & audit ----------------------------------------------------
+  const OUTCOME_PILL = { ok: 'yes', denied: 'no', locked: 'no', rejected: 'no', error: 'no', partial: 'pending', declined: 'pending' };
+  const when = t => esc(String(t || '').slice(0, 19).replace('T', ' '));
+  const auditFilter = () => {
+    const f = Object.fromEntries(new FormData($('#audit-filter')).entries());
+    Object.keys(f).forEach(k => { if (!f[k]) delete f[k]; });
+    return f;
+  };
+  async function loadAudit(){
+    const [ra, rl] = await Promise.all([
+      fetch(GATEWAY + '/marketplace/admin/audit?' + query(auditFilter()), { headers: auth }),
+      fetch(GATEWAY + '/marketplace/admin/locked', { headers: auth }),
+    ]);
+    if (!ra.ok || !rl.ok) { $('#audit-card').hidden = true; return; }
+    const d = await ra.json(), locked = (await rl.json()).rows;
+    const k = d.kpis;
+    const tile = (label, v, note) => '<div class="kpi"><div class="k">' + esc(label) + '</div><div class="v">' + fmt(v) + '</div><div class="d">' + esc(note) + '</div></div>';
+    $('#audit-kpis').innerHTML =
+      tile('Sign-ins', k.logins24h, 'last 24 hours') + tile('Wrong passwords', k.failed24h, 'last 24 hours') +
+      tile('Locked now', k.lockedNow, 'auto-unlock after 30 min') + tile('Sign-ups', k.signups24h, 'last 24 hours') +
+      tile('Rate-limited', k.rateLimited24h, 'last 24 hours');
+    const sel = $('#audit-event');
+    d.events.forEach(ev => {
+      if (![...sel.options].some(o => o.value === ev)) {
+        const o = document.createElement('option'); o.value = ev; o.textContent = ev; sel.appendChild(o);
+      }
+    });
+    $('#t-locked').innerHTML = locked.length
+      ? '<thead><tr><th>Email</th><th>Last IP</th><th class="num">Wrong passwords</th><th>Locked until</th><th></th></tr></thead><tbody>' +
+        locked.map(x => '<tr><td>' + esc(x.email) + '</td><td>' + (x.lastIp ? '<code>' + esc(x.lastIp) + '</code>' : '—') + '</td>' +
+          '<td class="num">' + fmt(x.failures) + '</td><td>' + when(x.lockedUntil) + ' UTC</td>' +
+          '<td><button type="button" class="ctl approve" data-unlock="' + esc(x.email) + '">Unlock</button></td></tr>').join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No accounts are locked.</td></tr></tbody>';
+    $('#t-audit').innerHTML = d.rows.length
+      ? '<thead><tr><th>When (UTC)</th><th>Event</th><th>Email</th><th>IP</th><th>Outcome</th><th>Detail</th></tr></thead><tbody>' +
+        d.rows.map(a => '<tr><td>' + when(a.at) + '</td><td><code>' + esc(a.event) + '</code></td>' +
+          '<td>' + esc(a.email || '—') + '</td>' +
+          '<td title="' + esc(a.user_agent || '') + '">' + (a.ip ? '<code>' + esc(a.ip) + '</code>' : '—') + '</td>' +
+          '<td>' + (a.outcome ? '<span class="pill ' + (OUTCOME_PILL[a.outcome] || 'pending') + '">' + esc(a.outcome) + '</span>' : '—') + '</td>' +
+          '<td style="color:var(--muted)">' + esc(a.detail || '') + '</td></tr>').join('') + '</tbody>'
+      : '<tbody><tr><td class="empty">No events match in this range.</td></tr></tbody>';
+  }
+  $('#t-locked').onclick = async (ev) => {
+    const btn = ev.target.closest('[data-unlock]');
+    if (!btn) return;
+    if (!confirm('Unlock ' + btn.dataset.unlock + ' now?')) return;
+    btn.disabled = true;
+    const r = await fetch(GATEWAY + '/marketplace/admin/unlock', {
+      method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: btn.dataset.unlock }) });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'HTTP ' + r.status); }
+    loadAudit();
+  };
+  $('#audit-filter').onsubmit = (ev) => { ev.preventDefault(); loadAudit(); };
+  $('#apply').addEventListener('click', loadAudit);
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', loadAudit));
+  loadAudit();
 
   // ---- billing ------------------------------------------------------------
   const cad = c => '$' + (Number(c || 0) / 100).toFixed(2);

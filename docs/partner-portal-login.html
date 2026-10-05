@@ -227,6 +227,12 @@
           body: JSON.stringify({ email: email, password: password })
         });
 
+        // 423: locked for 30 min after 5 wrong passwords. 429: too many tries.
+        if (response.status === 423 || response.status === 429) {
+          const body = await response.json().catch(() => ({}));
+          lockForm(body.retryAfterSeconds || (response.status === 429 ? 60 : 0));
+          return { error: body.message || body.error || "Too many attempts. Please try again later." };
+        }
         if (!response.ok) {
           console.warn("Login API call failed with status:", response.status);
           return { error: "Login service unavailable. Please try again." };
@@ -552,6 +558,13 @@
       const loginLinksRow     = document.getElementById('loginLinksRow');
       const backToLoginLink   = document.getElementById('backToLogin');
       const goToCreateLink    = document.getElementById('goToCreate');
+
+      // Locked out by the gateway (5 wrong passwords -> 30 min, or rate
+      // limited): refuse to submit until the time is up.
+      let lockedUntil = 0;
+      const lockForm = (seconds) => {
+        if (seconds > 0) lockedUntil = Math.max(lockedUntil, Date.now() + seconds * 1000);
+      };
       const forgotPasswordLink= document.getElementById('forgotPassword');
 
       let mode = 'login'; // 'login' | 'create'
@@ -643,6 +656,12 @@
       document.getElementById('loginForm').addEventListener('submit', async function(event) {
         event.preventDefault();
 
+        if (Date.now() < lockedUntil) {
+          const mins = Math.ceil((lockedUntil - Date.now()) / 60000);
+          message.textContent = 'Too many wrong passwords. Try again in ' + mins + ' minute' + (mins === 1 ? '' : 's') + ', or contact support.';
+          return;
+        }
+
         const email    = resolveEmail(emailInput.value.trim());
         const password = passwordInput.value;
         currentPassword = password;
@@ -690,6 +709,11 @@
           let mindAccount = null;
           if (!isEmployee) {
             try { loginResult = await unifiedLogin(email, password); } catch (e) { console.error(e); }
+            if (Date.now() < lockedUntil) {
+              message.textContent = loginResult.error;
+              submitBtn.disabled = false;
+              return;
+            }
             const hasUnifiedRecord = !!(loginResult && (loginResult.agent || loginResult.master || loginResult.contact));
             if (!hasUnifiedRecord) mindAccount = await accountByEmail(email);
 
