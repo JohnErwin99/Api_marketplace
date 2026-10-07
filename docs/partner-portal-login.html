@@ -558,6 +558,7 @@
       const loginLinksRow     = document.getElementById('loginLinksRow');
       const backToLoginLink   = document.getElementById('backToLogin');
       const goToCreateLink    = document.getElementById('goToCreate');
+      const forgotPasswordLink= document.getElementById('forgotPassword');
 
       // Locked out by the gateway (5 wrong passwords -> 30 min, or rate
       // limited): refuse to submit until the time is up.
@@ -565,7 +566,6 @@
       const lockForm = (seconds) => {
         if (seconds > 0) lockedUntil = Math.max(lockedUntil, Date.now() + seconds * 1000);
       };
-      const forgotPasswordLink= document.getElementById('forgotPassword');
 
       let mode = 'login'; // 'login' | 'create'
 

@@ -7,7 +7,8 @@ const soap = require('./lib/soap');
 const { AppError, call, str, requestItems, orderRequestArray } = soap;
 
 const app = express();
-// Render sits behind one proxy — needed for a real req.ip in rate limits.
+// Render sits behind Cloudflare; the visitor's own address comes from
+// security.clientIp() (CF-Connecting-IP), not req.ip.
 app.set('trust proxy', 1);
 // CORS: set ALLOWED_ORIGINS="https://portal.example.com,https://www.example.com" in prod.
 // If unset, any origin is allowed (dev convenience).
