@@ -113,8 +113,8 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 - Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`),
   with its mode. A call is **billable** when it succeeded (2xx) in `production` mode —
   sandbox, staff, agent and internal calls never are.
-- Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. They are
-  all `0` until set; production mode needs a card on file regardless of price.
+- Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. Every
+  API is 1¢ per call for now; production mode needs a card on file regardless of price.
 - **Agents are never billed** and have no card on file: they have an agent record
   (`GET /agents?email=`) and no MIND billing account of their own.
 - Partners add a card in the console under **Billing & usage**. The card goes to MIND

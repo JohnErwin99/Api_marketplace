@@ -38,8 +38,15 @@ app.use(express.json({ limit: '8mb' }));
 // internal override for Iristel's own services.
 app.use('/api', require('./lib/entitlements').requireEntitlement());
 
-// Health check for Render
-app.get('/healthz', (req, res) => res.json({ ok: true }));
+// Health check for Render. Also shows whether the ledger survives deploys:
+// sandboxCalls should keep its value across a redeploy (no emails exposed).
+const STARTED_AT = new Date().toISOString();
+const qSandboxCalls = require('./lib/db').prepare(`SELECT COUNT(*) AS n FROM usage WHERE mode = 'sandbox'`);
+app.get('/healthz', (req, res) => res.json({
+  ok: true, startedAt: STARTED_AT,
+  persistentDisk: require('./lib/db').storage.persistent,
+  sandboxCalls: qSandboxCalls.get().n,
+}));
 
 // Test console (single static page) at /console
 const path = require('path');
