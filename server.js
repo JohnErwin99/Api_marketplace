@@ -156,6 +156,8 @@ require('./lib/portal').register(app);
 require('./lib/usage').register(app);
 require('./lib/admin').register(app, PRODUCTS);
 
+const { priceFor } = require('./lib/catalogs/pricing');
+const { SANDBOX_CALLS } = require('./lib/entitlements');
 function catalogPayload() {
   return {
     service: 'iristel-api-marketplace',
@@ -171,6 +173,9 @@ function catalogPayload() {
     categories: CATEGORIES,
     accountTypes: ACCOUNT_TYPES,
     bundles: BUNDLES,
+    // Price per successful production call, in CAD cents, per product.
+    prices: Object.fromEntries(PRODUCTS.map((p) => [p.id, priceFor(p.id, null)])),
+    sandboxCalls: SANDBOX_CALLS,
     // Kept for older clients that read the flat DID list.
     endpoints: CATALOG,
   };

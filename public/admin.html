@@ -467,7 +467,9 @@
           '<td>' + ((g.bundles || []).length ? g.bundles.map(b => b.apis.map(a => '<code>' + esc(a) + '</code>').join(' ') || '<span style="color:var(--muted)">—</span>').join('<br>') : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + planCell(g.plan) + '</td>' +
-          '<td>' + (g.businessRegNumber ? esc(g.businessRegNumber) : '<span style="color:var(--muted)">—</span>') + '</td>' +
+          '<td>' + (g.businessRegNumber ? esc(g.businessRegNumber) : g.department ? esc(g.department) + ' <span style="color:var(--muted)">(dept.)</span>' : '<span style="color:var(--muted)">—</span>') +
+            (g.regCheck ? ' <span class="pill ' + (/^verified/.test(g.regCheck) ? 'yes' : /^invalid/.test(g.regCheck) ? 'no' : 'pending') + '" title="' + esc(g.regCheck) + '">' +
+              esc(g.regCheck.split(' · ')[0]) + '</span>' : '') + '</td>' +
           '<td>' + esc(g.application) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No accounts have been through the marketplace flow yet.</td></tr></tbody>';
 
