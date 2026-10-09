@@ -304,6 +304,17 @@
       return; // skip the standard menu logic for these accounts
     }
 
+    // The "API Marketplace" item (#marketplacerequest) stays visible for
+    // every signed-in user: approved users go straight to the console,
+    // everyone else to the marketplace page to request access. (A separate
+    // "API Console" item, #apimarketplace, is shown too if one is ever
+    // added to the menu.)
+    const setMarketplaceLink = function (access) {
+      show("marketplacerequest");
+      setHref("marketplacerequest", access ? "/console" : "/api-marketplace");
+      if (access) show("apimarketplace"); else hide("apimarketplace");
+    };
+
     // ── Partner type is taken straight from the cookie (set above). ──
     setText("partnertype", partnerType);
 
@@ -326,14 +337,8 @@
       //  non-empty (authorization comes from Dynamics 365 via
       //  the login page). Same gating pattern as 911listing.
       // ═══════════════════════════════════════════════════════
-      if (marketplaceAccess) {
-        show("apimarketplace");
-        hide("marketplacerequest")
-        console.log('🛒 API Marketplace visible for products:', marketplaceAccess);
-      } else {
-        hide("apimarketplace");
-        show("marketplacerequest")
-      }
+      setMarketplaceLink(marketplaceAccess);
+      if (marketplaceAccess) console.log('🛒 API Marketplace access for products:', marketplaceAccess);
 
       // ── Per partner type: training destination + commission ──
       switch (pt) {
@@ -480,8 +485,7 @@
           var live = (a.approved && Array.isArray(a.products)) ? a.products.join(",") : "";
           if (live === marketplaceAccess) return;      // nothing changed since login
           setCookie("marketplaceAccess", live, 7);     // keep every page's snapshot fresh
-          if (live) { show("apimarketplace"); hide("marketplacerequest"); }
-          else      { hide("apimarketplace"); show("marketplacerequest"); }
+          if (!isAdminUser) setMarketplaceLink(live);
           console.log("🛒 API Marketplace access refreshed live:", live || "(none)");
         })
         .catch(function () { /* gateway unreachable — keep the login-time snapshot */ });

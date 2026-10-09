@@ -222,7 +222,7 @@ footer { background: var(--surface); border-color: var(--line); }
       <div>
         <p class="eyebrow">Iristel API Marketplace</p>
         <h1>Build on Canada’s<br><span>largest CLEC.</span></h1>
-        <p class="lede">Order phone numbers and SIP trunks, move numbers to Iristel, keep 911 addresses current, activate mobile subscribers and manage eSIMs — straight from your own apps and tools. Built for businesses, partners and the people who use Iristel every day.</p>
+        <p class="lede">Order phone numbers and SIP trunks, move numbers to Iristel, keep 911 addresses current, activate mobile subscribers and manage eSIMs — straight from your own apps and tools. Built for business customers, partners, agents and Iristel’s own teams.</p>
         <div class="hero-actions">
           <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
           <a class="ghost" href="#packages">Browse the packages</a>
@@ -231,8 +231,8 @@ footer { background: var(--surface); border-color: var(--line); }
       <aside class="rule-card" aria-label="Who it is for">
         <div class="rule-icon">4</div>
         <p class="eyebrow">Built for</p>
-        <h2>Businesses, consumers, partners and our own teams.</h2>
-        <p>Businesses, consumers, Iristel partners and agents, and Iristel employees each get the APIs that fit how they work with Iristel.</p>
+        <h2>Business customers, partners, agents and our own teams.</h2>
+        <p>Business customers, Iristel partners, agents and Iristel employees each get the APIs that fit how they work with Iristel.</p>
       </aside>
     </section>
 
@@ -308,7 +308,7 @@ footer { background: var(--surface); border-color: var(--line); }
             <li>You get an email when your access is approved.</li>
             <li>Try every API in the test console, then connect your app.</li>
           </ol>
-          <p class="caution">Consumers don’t need a business registration — tell us your Iristel account instead. Iristel employees give their department.</p>
+          <p class="caution">Business customers, partners and agents give a business registration number, checked automatically. Iristel employees give their department instead.</p>
         </aside>
       </div>
     </section>
@@ -316,7 +316,7 @@ footer { background: var(--surface); border-color: var(--line); }
     <section class="form-section" id="signup">
       <div class="section-heading">
         <div><p class="eyebrow">Get started</p><h2>Create your Iristel account</h2></div>
-        <p>Sign up once as a business, a consumer, or an Iristel partner or agent.</p>
+        <p>Sign up once as a business customer, an Iristel partner or an agent.</p>
       </div>
       <div class="form-layout">
         <div class="mock-form" style="align-content:start">
@@ -388,7 +388,7 @@ footer { background: var(--surface); border-color: var(--line); }
           </ul>
         </div>
         <div>
-          <details><summary>Who can use the marketplace?</summary><p>Businesses, consumers with an Iristel account, Iristel partners and agents, and Iristel employees. Choose your path above to see what fits you.</p></details>
+          <details><summary>Who can use the marketplace?</summary><p>Business customers, Iristel partners, agents and Iristel employees. Choose your path above to see what fits you.</p></details>
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
           <details><summary>What if I need an API that isn’t listed?</summary><p>Choose “Other” on the request form and describe what you need.</p></details>
@@ -426,7 +426,7 @@ themeToggle.addEventListener("click", () => {
 const FALLBACK_ACCOUNT_TYPES = [
   {
     "id": "business",
-    "label": "Business",
+    "label": "Business customer",
     "short": "Your business uses Iristel services for itself.",
     "description": "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
     "build": [
@@ -440,33 +440,32 @@ const FALLBACK_ACCOUNT_TYPES = [
     "products": []
   },
   {
-    "id": "consumer",
-    "label": "Consumer",
-    "short": "You use Iristel services personally.",
-    "description": "An individual with Iristel mobile, eSIM or phone service who wants to connect their own app or tools to their account.",
-    "build": [
-      "See your plan and usage",
-      "Manage your eSIM",
-      "Get account notifications"
-    ],
-    "audiences": [],
-    "products": [
-      "iristelx-mobile"
-    ]
-  },
-  {
     "id": "partner",
-    "label": "Iristel partner / agent",
-    "short": "You resell Iristel services or sign customers up for us.",
-    "description": "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners, and agents who sign customers up in the field and earn commission.",
+    "label": "Iristel partner",
+    "short": "You resell Iristel services to your own customers.",
+    "description": "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners who sell Iristel services and bill their own customers.",
     "build": [
       "Activate subscribers end to end",
-      "Order numbers and port customers onto the network",
-      "Track your commissions"
+      "Order numbers at scale",
+      "Port your customers onto the network"
     ],
     "audiences": [
       "resellers",
-      "carriers",
+      "carriers"
+    ],
+    "products": []
+  },
+  {
+    "id": "agent",
+    "label": "Agent",
+    "short": "You sign customers up for Iristel and earn commission.",
+    "description": "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
+    "build": [
+      "Sign customers up from your own tools",
+      "Assign SIMs and eSIMs",
+      "Track your commissions"
+    ],
+    "audiences": [
       "agents"
     ],
     "products": []

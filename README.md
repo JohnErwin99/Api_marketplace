@@ -112,11 +112,14 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 
 - Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`),
   with its mode. A call is **billable** when it succeeded (2xx) in `production` mode —
-  sandbox, staff, agent and internal calls never are.
+  sandbox calls, and calls by Iristel staff and internal employees, never are.
 - Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. Every
   API is 1¢ per call for now; production mode needs a card on file regardless of price.
-- **Agents are never billed** and have no card on file: they have an agent record
-  (`GET /agents?email=`) and no MIND billing account of their own.
+- **Everyone is billed except Iristel staff and internal employees** (account type
+  Internal employee with an @iristel.com email). Business customers, partners and
+  agents all add a card. An agent created outside the portal sign-up may have no
+  MIND billing account yet — staff link one on the dashboard (Billing → "Link a
+  partner to a MIND billing account").
 - Partners add a card in the console under **Billing & usage**. The card goes to MIND
   (`PATCH /billing/{account}/credit-card`); we keep only the token, masked number,
   type, expiry and holder — never the card number or CVV, and nothing is logged.

@@ -24,66 +24,65 @@ applyTheme(next);
 // lib/catalogs/bundles.js) so "Choose your path" still renders when the
 // catalog can't be loaded.
 const FALLBACK_ACCOUNT_TYPES = [
-{
-  "id": "business",
-  "label": "Business",
-  "short": "Your business uses Iristel services for itself.",
-  "description": "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
-  "build": [
-    "Order SIP trunks and phone numbers",
-    "Keep your numbers when you move to Iristel",
-    "Keep your 911 addresses up to date"
-  ],
-  "audiences": [
-    "enterprise"
-  ],
-  "products": []
-},
-{
-  "id": "consumer",
-  "label": "Consumer",
-  "short": "You use Iristel services personally.",
-  "description": "An individual with Iristel mobile, eSIM or phone service who wants to connect their own app or tools to their account.",
-  "build": [
-    "See your plan and usage",
-    "Manage your eSIM",
-    "Get account notifications"
-  ],
-  "audiences": [],
-  "products": [
-    "iristelx-mobile"
-  ]
-},
-{
-  "id": "partner",
-  "label": "Iristel partner / agent",
-  "short": "You resell Iristel services or sign customers up for us.",
-  "description": "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners, and agents who sign customers up in the field and earn commission.",
-  "build": [
-    "Activate subscribers end to end",
-    "Order numbers and port customers onto the network",
-    "Track your commissions"
-  ],
-  "audiences": [
-    "resellers",
-    "carriers",
-    "agents"
-  ],
-  "products": []
-},
-{
-  "id": "internal",
-  "label": "Internal employee",
-  "short": "You work at Iristel and need API access for your team.",
-  "description": "Iristel staff building internal tools, reports or integrations. Use your @iristel.com email and tell us your department — no business registration needed, and internal usage isn't billed.",
-  "build": [
-    "Automate provisioning and porting tasks",
-    "Build reports on numbers and subscribers",
-    "Integrate Iristel systems with your team's tools"
-  ],
-  "audiences": [],
-  "products": []
-}
+  {
+    "id": "business",
+    "label": "Business customer",
+    "short": "Your business uses Iristel services for itself.",
+    "description": "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
+    "build": [
+      "Order SIP trunks and phone numbers",
+      "Keep your numbers when you move to Iristel",
+      "Keep your 911 addresses up to date"
+    ],
+    "audiences": [
+      "enterprise"
+    ],
+    "products": []
+  },
+  {
+    "id": "partner",
+    "label": "Iristel partner",
+    "short": "You resell Iristel services to your own customers.",
+    "description": "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners who sell Iristel services and bill their own customers.",
+    "build": [
+      "Activate subscribers end to end",
+      "Order numbers at scale",
+      "Port your customers onto the network"
+    ],
+    "audiences": [
+      "resellers",
+      "carriers"
+    ],
+    "products": []
+  },
+  {
+    "id": "agent",
+    "label": "Agent",
+    "short": "You sign customers up for Iristel and earn commission.",
+    "description": "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
+    "build": [
+      "Sign customers up from your own tools",
+      "Assign SIMs and eSIMs",
+      "Track your commissions"
+    ],
+    "audiences": [
+      "agents"
+    ],
+    "products": []
+  },
+  {
+    "id": "internal",
+    "label": "Internal employee",
+    "short": "You work at Iristel and need API access for your team.",
+    "description": "Iristel staff building internal tools, reports or integrations. Use your @iristel.com email and tell us your department — no business registration needed, and internal usage isn't billed.",
+    "build": [
+      "Automate provisioning and porting tasks",
+      "Build reports on numbers and subscribers",
+      "Integrate Iristel systems with your team's tools"
+    ],
+    "audiences": [],
+    "products": []
+  }
 ];
 
 // ---- "Choose your path": the five account types from the catalog --------
@@ -305,18 +304,18 @@ const applyType = () => {
 };
 typeSel.addEventListener("change", applyType);
 
-// Businesses and partners give a registration number (checked live) and
-// document; internal employees give their department; consumers neither.
+// Business customers, partners and agents give a registration number (checked live) and
+// document; internal employees give their department instead.
 const form = document.getElementById("access-form");
 const applyTypeFields = () => {
   const t = typeSel.value;
-  const needsReg = t === "business" || t === "partner";
+  const needsReg = t === "business" || t === "partner" || t === "agent";
   form.querySelectorAll('[data-for="business"]').forEach((el) => { el.hidden = !needsReg; });
   form.querySelectorAll('[data-for="internal"]').forEach((el) => { el.hidden = t !== "internal"; });
   form.querySelector('[name="businessRegNumber"]').required = needsReg;
   form.querySelector('[name="registrationFile"]').required = needsReg;
   form.querySelector('[name="department"]').required = t === "internal";
-  form.querySelector('[name="organization"]').placeholder = t === "internal" ? "Iristel" : t === "consumer" ? "Your name" : "Your company";
+  form.querySelector('[name="organization"]').placeholder = t === "internal" ? "Iristel" : "Your company";
   form.querySelector('[name="email"]').placeholder = t === "internal" ? "you@iristel.com" : "you@company.com";
 };
 typeSel.addEventListener("change", applyTypeFields);
@@ -399,7 +398,7 @@ if (!selected.length && !individual.length && !data.other) {
 // Business registration document -> base64 (5 MB cap).
 const fileInput = form.querySelector('input[name="registrationFile"]');
 const file = fileInput && fileInput.files[0];
-const needsReg = data.accountType === "business" || data.accountType === "partner";
+const needsReg = ["business", "partner", "agent"].includes(data.accountType);
 if (data.accountType === "internal" && !/@iristel\.com$/i.test(data.email || "")) {
   out.hidden = false; out.textContent = "⚠ Internal employees request access with their @iristel.com email."; return;
 }

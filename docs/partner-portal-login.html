@@ -489,8 +489,8 @@
 
       // Account type recorded in the CRM at sign-up -> partnerType cookie.
       // Only used for logins with a plain MIND account (no agent record), so
-      // a business or consumer is no longer shown as an agent.
-      const PARTNER_TYPE_FROM_CRM = { business: 'customer', consumer: 'consumer' };
+      // a business customer is no longer shown as an agent.
+      const PARTNER_TYPE_FROM_CRM = { business: 'customer', partner: 'reseller', agent: 'agent' };
 
       // Sets cookies from a resolved record (agent / master / contact /
       // MIND account) and redirects. Shared by login and create flows.

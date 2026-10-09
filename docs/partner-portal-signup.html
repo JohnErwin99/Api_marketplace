@@ -95,12 +95,12 @@
     // gateway before anything is created. The document stays optional here.
     const REQUIRE_REGISTRATION = true;
 
-    // ?type=business|consumer|partner preselects the account type (links from
+    // ?type=business|partner|agent preselects the account type (links from
     // the API marketplace page) and hides the choice; ?from=marketplace marks
     // the account as an API Marketplace sign-up.
     const SIGNUP_PARAMS = new URLSearchParams(location.search);
-    const LEGACY_TYPES = { customer: 'business', reseller: 'partner', agent: 'partner', 'white-label': 'partner' };
-    const TYPE_LABELS = { business: 'Business', consumer: 'Consumer', partner: 'Iristel partner / agent' };
+    const LEGACY_TYPES = { customer: 'business', consumer: 'business', reseller: 'partner', 'white-label': 'partner' };
+    const TYPE_LABELS = { business: 'Business customer', partner: 'Iristel partner', agent: 'Agent' };
     const presetType = (function (t) { t = LEGACY_TYPES[t] || t; return TYPE_LABELS[t] ? t : null; })(String(SIGNUP_PARAMS.get('type') || '').toLowerCase());
     const FROM_MARKETPLACE = SIGNUP_PARAMS.get('from') === 'marketplace';
 
@@ -116,7 +116,7 @@
       // marketplace gateway (/portal/*), which holds the keys.
 
       // Account type -> partnerType cookie value the portal nav understands.
-      const PARTNER_TYPE_COOKIE = { business: 'customer', partner: 'reseller', consumer: 'consumer' };
+      const PARTNER_TYPE_COOKIE = { business: 'customer', partner: 'reseller', agent: 'agent' };
 
       // Canadian postal codes: MIND only accepts "A1A 1A1" / "A1A1A1". Returns
       // the code formatted as "A1A 1A1", or null when it isn't valid. Other
@@ -213,7 +213,8 @@
         setCookie('name', name, 7);
         // The type chosen on this form, in the portal nav's vocabulary.
         setCookie('partnerType', PARTNER_TYPE_COOKIE[accountType] || 'customer', 7);
-        if (FROM_MARKETPLACE) setCookie('marketplaceOnly', accountType === 'partner' ? '' : '1', 7);
+        // Only business customers who came for the APIs get the focused portal.
+        if (FROM_MARKETPLACE) setCookie('marketplaceOnly', accountType === 'business' ? '1' : '', 7);
         if (created && created.id) {
           setCookie('agentId',  created.id, 7);
           setCookie('agentIds', String(created.id), 7);
@@ -245,16 +246,10 @@
       if (FROM_MARKETPLACE) document.getElementById('subtitle').textContent =
         'Sign up for the Iristel API Marketplace — your login also opens the Iristel Partner Portal';
 
-      // Consumers are individuals: no business registration to give.
-      const regBlock = document.getElementById('regBlock');
-      const syncRegRequired = () => {
-        const consumer = typeNow() === 'consumer';
-        regBlock.hidden = consumer;
-        document.getElementById('businessRegNumber').required = REQUIRE_REGISTRATION && !consumer;
-        document.getElementById('businessName').placeholder = consumer ? 'Optional for individuals' : 'Your registered business name';
-      };
-      document.querySelectorAll('input[name="accountType"]').forEach(function (r) { r.addEventListener('change', syncRegRequired); });
-      syncRegRequired();
+      // Every account type here (business customer, partner, agent) gives a
+      // business registration number.
+      document.getElementById('businessRegNumber').required = REQUIRE_REGISTRATION;
+      document.getElementById('businessName').placeholder = 'Your registered business name';
 
       // Live registration check against the official registries.
       const REG_HINT = { CA: 'CRA Business Number, e.g. 123456789', US: 'EIN, e.g. 12-3456789', RO: 'CUI / CIF, e.g. RO14399840', KE: 'KRA PIN, e.g. P051234567X' };
@@ -322,10 +317,8 @@
         const postal = normalizePostal(fields.postalCode, fields.country);
         if (postal === null) { message.textContent = 'Postal code should look like A1A 1A1.'; return; }
         fields.postalCode = postal;
-        // Consumers are individuals: no business registration to give.
-        const isConsumer = accountType === 'consumer';
-        if (!fields.businessRegNumber && REQUIRE_REGISTRATION && !isConsumer) { message.textContent = 'Business registration number is required.'; return; }
-        if (!isConsumer && fields.businessRegNumber) {
+        if (!fields.businessRegNumber && REQUIRE_REGISTRATION) { message.textContent = 'Business registration number is required.'; return; }
+        if (fields.businessRegNumber) {
           const reg = regResult || await checkRegistration();
           if (reg && reg.status === 'invalid') { message.textContent = reg.reason || 'Check your business registration number.'; return; }
         }
@@ -362,7 +355,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               accountType: accountType,
-              businessRegNumber: isConsumer ? '' : fields.businessRegNumber,
+              businessRegNumber: fields.businessRegNumber,
               email: fields.email,
               password: password,
               account: {
@@ -471,11 +464,11 @@
       <div class="type-chip" id="typeChip" hidden>Signing up as <strong></strong> · <button type="button">Change</button></div>
       <div class="type-list" id="typeList">
         <label><input type="radio" name="accountType" value="business" checked>
-          <span><strong>Business</strong> — my business uses Iristel services (calling, SIP trunks, numbers, Teams/Webex, SMS, 911) for itself.</span></label>
-        <label><input type="radio" name="accountType" value="consumer">
-          <span><strong>Consumer</strong> — I use Iristel services personally (mobile, eSIM, phone number).</span></label>
+          <span><strong>Business customer</strong> — my business uses Iristel services (calling, SIP trunks, numbers, Teams/Webex, SMS, 911) for itself.</span></label>
         <label><input type="radio" name="accountType" value="partner">
-          <span><strong>Iristel partner / agent</strong> — we resell Iristel services (carriers, ISPs, MSPs, VARs, UCaaS, white-label, co-branded), or I sign customers up and earn commission.</span></label>
+          <span><strong>Iristel partner</strong> — we resell Iristel services and bill our own customers (carriers, ISPs, MSPs, VARs, UCaaS, white-label, co-branded).</span></label>
+        <label><input type="radio" name="accountType" value="agent">
+          <span><strong>Agent</strong> — I sign customers up for Iristel and earn commission; Iristel handles billing and support.</span></label>
       </div>
       <p class="type-note">Iristel employees don't sign up here — <a href="/login">log in</a> with your Iristel account.</p>
 

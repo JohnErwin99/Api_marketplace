@@ -2,9 +2,9 @@
 /**
  * Dynamics 365: the four marketplace account types (Oct 2026) on Account.
  *
- * - cr57d_dataclassification options: relabel to Business / Iristel partner
- *   / agent / Consumer, mark the old Agent and White-label options as legacy
- *   (existing records keep them), and add 649950005 "Internal employee".
+ * - cr57d_dataclassification options: Business customer, Iristel partner,
+ *   Agent, Internal employee (649950005, added). The old White-label and
+ *   Consumer options stay for existing records, marked legacy.
  * - New text columns: cr57d_department (internal employees) and
  *   cr57d_regcheck (result of the business-registration check).
  * - Publishes.
@@ -19,11 +19,11 @@ const lbl = (t) => ({ '@odata.type': 'Microsoft.Dynamics.CRM.Label', LocalizedLa
 
 // Same values as ACCOUNT_TYPE_CRM in lib/onboarding.js.
 const OPTIONS = [
-  [649950000, 'Business'],
-  [649950001, 'Iristel partner / agent'],
-  [649950002, 'Agent (legacy)'],
+  [649950000, 'Business customer'],
+  [649950001, 'Iristel partner'],
+  [649950002, 'Agent'],
   [649950003, 'White-label partner (legacy)'],
-  [649950004, 'Consumer'],
+  [649950004, 'Consumer (legacy)'],
   [649950005, 'Internal employee'],
 ];
 const COLUMNS = [

@@ -1127,7 +1127,7 @@
     try{d=await billingApi('GET');}
     catch(err){body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">'+esc(err.message)+'</p>';return;}
     let h='<h2>💳 Billing &amp; usage</h2>'
-      +'<p class="lead">'+(d.isAgent?'Your API usage for '+esc(d.month)+'. Agent accounts are not billed.'
+      +'<p class="lead">'+(d.exempt?'Your API usage for '+esc(d.month)+'. Internal Iristel accounts are not billed.'
         :'Usage for '+esc(d.month)+' is invoiced on the 1st of next month (sales tax added for Canadian accounts) and charged to your card on file on the 5th.')+'</p>';
     ACCOUNT=d;renderModebar();
     if(d.mode==='sandbox')h+='<div class="callout"><b>Sandbox:</b> '+modeLeft(d)+' of '+d.sandboxCallsLimit+' free test calls left. '
@@ -1136,8 +1136,8 @@
     else if(d.mode==='card_required')h+='<div class="callout"><b>Card required:</b> your account is set up for production, so add a card below before your first call.</div>';
     if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through, so API calls are paused. Save a card below and we\'ll retry the payment right away.</div>';
     h+='<h3>Card on file</h3>';
-    if(d.isAgent){
-      h+='<p>Agent accounts aren\'t billed for API usage, so there\'s no card to add. Your calls are still listed below.</p>';
+    if(d.exempt){
+      h+='<p>Internal Iristel accounts aren\'t billed for API usage, so there\'s no card to add. Your calls are still listed below.</p>';
     }else if(!d.mindAccount){
       h+='<p>Your billing account isn\'t linked yet. Contact Iristel support and we\'ll set it up.</p>';
     }else if(d.card){
@@ -1148,7 +1148,7 @@
     }else{
       h+='<p>No card yet. Add one to go live — calls are then billed per successful call.</p>';
     }
-    if(d.mindAccount&&!d.isAgent){
+    if(d.mindAccount&&!d.exempt){
       h+='<form class="card" data-card-form style="max-width:460px;'+(d.card?'display:none':'')+'" autocomplete="on">'
         +'<div class="gfield"><label>Name on card</label><input name="holder" autocomplete="cc-name" required></div>'
         +'<div class="gfield"><label>Card number</label><input name="number" inputmode="numeric" autocomplete="cc-number" required></div>'
