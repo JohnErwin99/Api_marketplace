@@ -96,13 +96,14 @@
     const REQUIRE_REGISTRATION = true;
 
     // ?type=business|partner|agent preselects the account type (links from
-    // the API marketplace page) and hides the choice; ?from=marketplace marks
-    // the account as an API Marketplace sign-up.
+    // the API marketplace page) and hides the choice.
     const SIGNUP_PARAMS = new URLSearchParams(location.search);
     const LEGACY_TYPES = { customer: 'business', consumer: 'business', reseller: 'partner', 'white-label': 'partner' };
     const TYPE_LABELS = { business: 'Business customer', partner: 'Iristel partner', agent: 'Agent' };
     const presetType = (function (t) { t = LEGACY_TYPES[t] || t; return TYPE_LABELS[t] ? t : null; })(String(SIGNUP_PARAMS.get('type') || '').toLowerCase());
-    const FROM_MARKETPLACE = SIGNUP_PARAMS.get('from') === 'marketplace';
+    // This page is only for signing up to the API Marketplace: every sign-up
+    // is a marketplace sign-up and gets the marketplace-only portal.
+    const FROM_MARKETPLACE = true;
 
     // Same clear-cookies-on-load as the login page.
     ['userEmail','agentId','agentIds','partnerType','code','name',
@@ -213,8 +214,8 @@
         setCookie('name', name, 7);
         // The type chosen on this form, in the portal nav's vocabulary.
         setCookie('partnerType', PARTNER_TYPE_COOKIE[accountType] || 'customer', 7);
-        // Only business customers who came for the APIs get the focused portal.
-        if (FROM_MARKETPLACE) setCookie('marketplaceOnly', accountType === 'business' ? '1' : '', 7);
+        // Marketplace sign-ups see only the API Marketplace in the portal.
+        setCookie('marketplaceOnly', '1', 7);
         if (created && created.id) {
           setCookie('agentId',  created.id, 7);
           setCookie('agentIds', String(created.id), 7);
@@ -416,7 +417,7 @@
             address1: fields.address1, city: fields.city, province: fields.province,
             postalCode: fields.postalCode, country: fields.country,
             accountType: accountType, mindAccountId: created.accountId,
-            from: FROM_MARKETPLACE ? 'marketplace' : 'portal'
+            from: 'marketplace'
           })
         }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (d) {

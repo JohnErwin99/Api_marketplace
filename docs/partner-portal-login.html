@@ -211,10 +211,10 @@
       const EMAIL_ALIASES_TARGETS = new Set(Object.values(EMAIL_ALIASES).map((e) => e.toLowerCase()));
       const isAliasTarget = (email) => EMAIL_ALIASES_TARGETS.has(String(email || '').trim().toLowerCase());
 
-      // Standard refusal for emails we have no record of. Shown with
-      // innerHTML so the sign-up link is clickable.
+      // Standard refusal for emails we have no record of. Sign-up is only
+      // offered from the API Marketplace page, so no sign-up link here.
       const NO_ACCOUNT_MSG =
-        'You don\'t have an account. <a href="/sign-up">Sign up</a> or contact support.';
+        'We couldn\'t find an account for this email. Contact Iristel support.';
       const showNoAccount = () => { message.innerHTML = NO_ACCOUNT_MSG; };
 
       // ── API helpers ────────────────────────────────────────────
@@ -881,7 +881,6 @@
 
       <div class="links-row" id="loginLinksRow">
         <a href="#" id="goToCreate" class="link-btn">First time logging in?</a>
-        <a href="/sign-up" id="goToSignup" class="link-btn">Sign up</a>
         <a href="#" id="forgotPassword" class="link-btn">Forgot password?</a>
       </div>
 
