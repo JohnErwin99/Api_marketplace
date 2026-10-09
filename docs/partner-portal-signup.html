@@ -78,14 +78,31 @@
       min-height: 22px; font-size: 14px;
     }
     #message a { color: #D1155A; }
+    [hidden] { display: none !important; }
+    .reg-status { font-size: 13px; margin: -6px 0 12px; font-weight: 600; }
+    .reg-status.ok { color: #11733d; } .reg-status.review { color: #9a6400; } .reg-status.bad { color: #b42318; }
+    .type-chip { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+    .type-chip button { background: none; border: 0; padding: 0; color: #D1155A; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; width: auto; margin: 0; }
+    .type-note { font-size: 12.5px; color: #666; margin: 4px 0 14px; }
+    .type-note a { color: #D1155A; }
   </style>
 
   <script>
     // ── MARKETPLACE ────────────────────────────────────────────
     const MARKETPLACE_GATEWAY = "https://api-marketplace-1im9.onrender.com";
-    // Business registration number + document: optional while testing. Set
-    // to true to require them again (consumers never need them).
-    const REQUIRE_REGISTRATION = false;
+    // Businesses and partners must give a registration number, checked live
+    // against the registries (gateway lib/registration.js) and again by the
+    // gateway before anything is created. The document stays optional here.
+    const REQUIRE_REGISTRATION = true;
+
+    // ?type=business|consumer|partner preselects the account type (links from
+    // the API marketplace page) and hides the choice; ?from=marketplace marks
+    // the account as an API Marketplace sign-up.
+    const SIGNUP_PARAMS = new URLSearchParams(location.search);
+    const LEGACY_TYPES = { customer: 'business', reseller: 'partner', agent: 'partner', 'white-label': 'partner' };
+    const TYPE_LABELS = { business: 'Business', consumer: 'Consumer', partner: 'Iristel partner / agent' };
+    const presetType = (function (t) { t = LEGACY_TYPES[t] || t; return TYPE_LABELS[t] ? t : null; })(String(SIGNUP_PARAMS.get('type') || '').toLowerCase());
+    const FROM_MARKETPLACE = SIGNUP_PARAMS.get('from') === 'marketplace';
 
     // Same clear-cookies-on-load as the login page.
     ['userEmail','agentId','agentIds','partnerType','code','name',
@@ -99,17 +116,14 @@
       // marketplace gateway (/portal/*), which holds the keys.
 
       // Account type -> partnerType cookie value the portal nav understands.
-      const PARTNER_TYPE_COOKIE = {
-        customer: 'customer', reseller: 'reseller', agent: 'agent',
-        'white-label': 'whitelabel', consumer: 'consumer'
-      };
+      const PARTNER_TYPE_COOKIE = { business: 'customer', partner: 'reseller', consumer: 'consumer' };
 
       // Canadian postal codes: MIND only accepts "A1A 1A1" / "A1A1A1". Returns
       // the code formatted as "A1A 1A1", or null when it isn't valid. Other
       // countries pass through trimmed.
       const normalizeCountry = (c) => {
         const v = String(c || '').trim().toUpperCase();
-        return v === 'CANADA' ? 'CA' : v;
+        return ({ CANADA: 'CA', 'UNITED STATES': 'US', ROMANIA: 'RO', KENYA: 'KE' })[v] || v;
       };
       const normalizePostal = (pc, country) => {
         if (normalizeCountry(country) !== 'CA') return String(pc || '').trim();
@@ -170,6 +184,9 @@
           const data = await response.json();
           const ids = (data.products || []).join(",");
           if (ids) setCookie('marketplaceAccess', ids, 7);
+          // People who came for the API marketplace get a nav focused on it.
+          setCookie('marketplaceOnly', data.marketplaceOnly ? '1' : '', 7);
+          return data;
         } catch (e) { /* marketplace stays hidden */ }
       };
 
@@ -181,7 +198,7 @@
             message.textContent = `Redirecting in ${counter} seconds...`;
           } else {
             clearInterval(interval);
-            window.location.href = "/home";
+            window.location.href = FROM_MARKETPLACE ? "/api-marketplace" : "/home";
           }
           counter--;
         }, 1000);
@@ -196,6 +213,7 @@
         setCookie('name', name, 7);
         // The type chosen on this form, in the portal nav's vocabulary.
         setCookie('partnerType', PARTNER_TYPE_COOKIE[accountType] || 'customer', 7);
+        if (FROM_MARKETPLACE) setCookie('marketplaceOnly', accountType === 'partner' ? '' : '1', 7);
         if (created && created.id) {
           setCookie('agentId',  created.id, 7);
           setCookie('agentIds', String(created.id), 7);
@@ -209,13 +227,70 @@
         startCountdown(5);
       };
 
-      // Business registration is optional for consumers.
+      const typeNow = () => ((document.querySelector('input[name="accountType"]:checked') || {}).value) || 'business';
+
+      // Preselected type: show it as a chip and hide the list ("Change"
+      // brings it back).
+      if (presetType) {
+        const radio = document.querySelector('input[name="accountType"][value="' + presetType + '"]');
+        if (radio) radio.checked = true;
+        document.getElementById('typeList').hidden = true;
+        const chip = document.getElementById('typeChip');
+        chip.hidden = false;
+        chip.querySelector('strong').textContent = TYPE_LABELS[presetType];
+        chip.querySelector('button').addEventListener('click', function () {
+          chip.hidden = true; document.getElementById('typeList').hidden = false;
+        });
+      }
+      if (FROM_MARKETPLACE) document.getElementById('subtitle').textContent =
+        'Sign up for the Iristel API Marketplace — your login also opens the Iristel Partner Portal';
+
+      // Consumers are individuals: no business registration to give.
+      const regBlock = document.getElementById('regBlock');
       const syncRegRequired = () => {
-        const consumer = ((document.querySelector('input[name="accountType"]:checked') || {}).value) === 'consumer';
-        ['businessRegNumber', 'registrationFile'].forEach(function (id) { document.getElementById(id).required = REQUIRE_REGISTRATION && !consumer; });
+        const consumer = typeNow() === 'consumer';
+        regBlock.hidden = consumer;
+        document.getElementById('businessRegNumber').required = REQUIRE_REGISTRATION && !consumer;
+        document.getElementById('businessName').placeholder = consumer ? 'Optional for individuals' : 'Your registered business name';
       };
       document.querySelectorAll('input[name="accountType"]').forEach(function (r) { r.addEventListener('change', syncRegRequired); });
       syncRegRequired();
+
+      // Live registration check against the official registries.
+      const REG_HINT = { CA: 'CRA Business Number, e.g. 123456789', US: 'EIN, e.g. 12-3456789', RO: 'CUI / CIF, e.g. RO14399840', KE: 'KRA PIN, e.g. P051234567X' };
+      const regInput = document.getElementById('businessRegNumber');
+      const regOut = document.getElementById('regStatus');
+      let regResult = null, regTimer = null;
+      const checkRegistration = async () => {
+        const number = regInput.value.trim();
+        regResult = null;
+        if (!number) { regOut.textContent = ''; regOut.className = 'reg-status'; return null; }
+        regOut.textContent = 'Checking…'; regOut.className = 'reg-status';
+        try {
+          const r = await fetch(MARKETPLACE_GATEWAY + '/portal/verify-registration', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ country: normalizeCountry(document.getElementById('country').value), number: number, name: document.getElementById('businessName').value.trim() })
+          });
+          regResult = await r.json();
+        } catch (e) { regOut.textContent = ''; return null; }
+        regOut.className = 'reg-status ' + (regResult.status === 'verified' ? 'ok' : regResult.status === 'invalid' ? 'bad' : 'review');
+        regOut.textContent = regResult.status === 'verified'
+          ? '✓ Verified' + (regResult.legalName ? ': ' + regResult.legalName : '')
+          : (regResult.status === 'invalid' ? '⚠ ' : '') + (regResult.reason || '');
+        return regResult;
+      };
+      regInput.addEventListener('input', function () { clearTimeout(regTimer); regTimer = setTimeout(checkRegistration, 700); });
+      const countrySel = document.getElementById('country');
+      const syncCountry = () => {
+        const c = countrySel.value;
+        regInput.placeholder = REG_HINT[c] || '';
+        const prov = document.getElementById('province');
+        document.getElementById('provinceLabel').textContent = c === 'CA' ? 'Province' : c === 'US' ? 'State' : 'County';
+        prov.placeholder = c === 'CA' ? 'ON' : c === 'US' ? 'NY' : '';
+        if (regInput.value.trim()) checkRegistration();
+      };
+      countrySel.addEventListener('change', syncCountry);
+      syncCountry();
 
       // ── Submit ──────────────────────────────────────────────────
       const message = document.getElementById('message');
@@ -234,7 +309,7 @@
           country: val('country')
         };
         fields.businessRegNumber = val('businessRegNumber');
-        const accountType = (document.querySelector('input[name="accountType"]:checked') || {}).value || 'customer';
+        const accountType = typeNow();
         const password = document.getElementById('password').value;
         const confirm  = document.getElementById('passwordConfirm').value;
 
@@ -250,10 +325,13 @@
         // Consumers are individuals: no business registration to give.
         const isConsumer = accountType === 'consumer';
         if (!fields.businessRegNumber && REQUIRE_REGISTRATION && !isConsumer) { message.textContent = 'Business registration number is required.'; return; }
+        if (!isConsumer && fields.businessRegNumber) {
+          const reg = regResult || await checkRegistration();
+          if (reg && reg.status === 'invalid') { message.textContent = reg.reason || 'Check your business registration number.'; return; }
+        }
 
         // Business registration document (fraud screening) -> base64, <= 5 MB.
         const regFile = document.getElementById('registrationFile').files[0];
-        if (!regFile && REQUIRE_REGISTRATION && !isConsumer) { message.textContent = 'Attach your business registration document.'; return; }
         if (regFile && regFile.size > 5 * 1024 * 1024) { message.textContent = 'Document must be 5 MB or smaller.'; return; }
         const registrationDocument = !regFile ? null : await new Promise(function (resolve) {
           const r = new FileReader();
@@ -284,6 +362,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               accountType: accountType,
+              businessRegNumber: isConsumer ? '' : fields.businessRegNumber,
               email: fields.email,
               password: password,
               account: {
@@ -343,7 +422,8 @@
             registrationDocument: registrationDocument,
             address1: fields.address1, city: fields.city, province: fields.province,
             postalCode: fields.postalCode, country: fields.country,
-            accountType: accountType, mindAccountId: created.accountId
+            accountType: accountType, mindAccountId: created.accountId,
+            from: FROM_MARKETPLACE ? 'marketplace' : 'portal'
           })
         }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (d) {
@@ -388,18 +468,16 @@
 
     <form id="signupForm">
       <label>Account type</label>
-      <div class="type-list">
-        <label><input type="radio" name="accountType" value="customer" checked>
-          <span><strong>Business customer</strong> — my business uses Iristel services (calling, SIP trunks, numbers, Teams/Webex, SMS, 911) for itself.</span></label>
-        <label><input type="radio" name="accountType" value="reseller">
-          <span><strong>Reseller</strong> — we sell Iristel services to our own customers and bill them ourselves (carriers, ISPs, MSPs, VARs, UCaaS, co-branded).</span></label>
-        <label><input type="radio" name="accountType" value="agent">
-          <span><strong>Agent</strong> — I sign customers up and earn commission; Iristel handles billing and support.</span></label>
-        <label><input type="radio" name="accountType" value="white-label">
-          <span><strong>White-label partner</strong> — we sell under our own brand, set our prices and own support.</span></label>
+      <div class="type-chip" id="typeChip" hidden>Signing up as <strong></strong> · <button type="button">Change</button></div>
+      <div class="type-list" id="typeList">
+        <label><input type="radio" name="accountType" value="business" checked>
+          <span><strong>Business</strong> — my business uses Iristel services (calling, SIP trunks, numbers, Teams/Webex, SMS, 911) for itself.</span></label>
         <label><input type="radio" name="accountType" value="consumer">
           <span><strong>Consumer</strong> — I use Iristel services personally (mobile, eSIM, phone number).</span></label>
+        <label><input type="radio" name="accountType" value="partner">
+          <span><strong>Iristel partner / agent</strong> — we resell Iristel services (carriers, ISPs, MSPs, VARs, UCaaS, white-label, co-branded), or I sign customers up and earn commission.</span></label>
       </div>
+      <p class="type-note">Iristel employees don't sign up here — <a href="/login">log in</a> with your Iristel account.</p>
 
       <div class="two-col">
         <div><label for="fname">First Name</label><input type="text" id="fname" required autocomplete="given-name"></div>
@@ -409,11 +487,14 @@
       <label for="businessName">Business Name</label>
       <input type="text" id="businessName" autocomplete="organization" placeholder="Optional for individuals">
 
-      <label for="businessRegNumber">Business Registration Number</label>
-      <input type="text" id="businessRegNumber" placeholder="e.g. 123456789">
+      <div id="regBlock">
+        <label for="businessRegNumber">Business Registration Number</label>
+        <input type="text" id="businessRegNumber" placeholder="CRA Business Number, e.g. 123456789">
+        <div class="reg-status" id="regStatus" aria-live="polite"></div>
 
-      <label for="registrationFile">Business Registration Document</label>
-      <input type="file" id="registrationFile" accept=".pdf,.png,.jpg,.jpeg">
+        <label for="registrationFile">Business Registration Document <span style="font-weight:400;color:#777">(optional)</span></label>
+        <input type="file" id="registrationFile" accept=".pdf,.png,.jpg,.jpeg">
+      </div>
 
       <label for="email">Email Address</label>
       <input type="email" id="email" required autocomplete="email">
@@ -426,12 +507,12 @@
 
       <div class="two-col">
         <div><label for="city">City</label><input type="text" id="city" required autocomplete="address-level2"></div>
-        <div><label for="province">Province</label><input type="text" id="province" required placeholder="ON" maxlength="30" autocomplete="address-level1"></div>
+        <div><label for="province" id="provinceLabel">Province</label><input type="text" id="province" required placeholder="ON" maxlength="30" autocomplete="address-level1"></div>
       </div>
 
       <div class="two-col">
         <div><label for="postalCode">Postal Code</label><input type="text" id="postalCode" required autocomplete="postal-code"></div>
-        <div><label for="country">Country</label><select id="country" required autocomplete="country"><option value="CA" selected>Canada</option><option value="US">United States</option></select></div>
+        <div><label for="country">Country</label><select id="country" required autocomplete="country"><option value="CA" selected>Canada</option><option value="US">United States</option><option value="RO">Romania</option><option value="KE">Kenya</option></select></div>
       </div>
 
       <label for="password">Password</label>

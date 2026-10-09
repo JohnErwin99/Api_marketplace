@@ -65,14 +65,28 @@
 
     if (!email || !access) {
       // Not logged in, or logged in without any authorized API products.
-      wrap.innerHTML =
-        '<div class="mp-no-access">' +
-        '<h3>API Marketplace access required</h3>' +
-        (email
-          ? "<p>Your portal login (" + email.replace(/</g, "&lt;") + ") has no API products authorized yet.</p>"
-          : "<p>Log in to the Iristel Partner Portal to open the API console.</p>") +
-        '<p><a href="' + REQUEST_ACCESS_URL + '">Request marketplace access →</a></p>' +
-        "</div>";
+      var noAccess = function (pending) {
+        wrap.innerHTML =
+          '<div class="mp-no-access">' +
+          (pending
+            ? "<h3>Your request is under review</h3><p>We'll email you as soon as it's approved — the API console then opens here.</p>" +
+              '<p><a href="/api-marketplace">See your request →</a></p>'
+            : '<h3>API Marketplace access required</h3>' +
+              (email
+                ? "<p>Your portal login (" + email.replace(/</g, "&lt;") + ") has no API products authorized yet.</p>"
+                : "<p>Log in to the Iristel Partner Portal to open the API console.</p>") +
+              '<p><a href="' + REQUEST_ACCESS_URL + '">Request marketplace access →</a></p>') +
+          "</div>";
+      };
+      noAccess(false);
+      // A request waiting for review shouldn't be told to request again.
+      if (email && session) {
+        fetch(MARKETPLACE_GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email),
+          { headers: { "Authorization": "Bearer " + session } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (a) { if (a && a.status === "pending") noAccess(true); })
+          .catch(function () {});
+      }
       return;
     }
 

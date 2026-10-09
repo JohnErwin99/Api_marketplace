@@ -428,6 +428,24 @@
       if (name) setText("loggedUser", "Leann Hayes");
     }
 
+    // ═══════════════════════════════════════════════════════
+    //  MARKETPLACE-ONLY — people who came in through the API
+    //  marketplace (sign-up or request, not partners / staff)
+    //  only see the marketplace, their profile and logout.
+    //  Cookie set by the login and sign-up pages from the
+    //  gateway's /marketplace/authorizations (marketplaceOnly).
+    // ═══════════════════════════════════════════════════════
+    const focusMarketplace = function () {
+      ["training", "marketing", "compensation", "911listing", "toolkit", "presidentsclub"].forEach(hide);
+      if (compensationLink) compensationLink.style.display = "none";
+      show("marketplacerequest");
+    };
+    const isAdminUser = ADMIN_EMAILS.includes(email.toLowerCase());
+    if (getCookie("marketplaceOnly") === "1" && !isAdminUser) {
+      focusMarketplace();
+      console.log("🛒 Marketplace-only portal view");
+    }
+
     // ── Admin badge ──
     // Runs LAST so it overrides earlier per-partner-type settings.
     if (ADMIN_EMAILS.includes(email.toLowerCase())) {
@@ -457,6 +475,8 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (a) {
           if (!a) return;                              // session expired / gateway error
+          setCookie("marketplaceOnly", a.marketplaceOnly ? "1" : "", 7);
+          if (a.marketplaceOnly && !isAdminUser) focusMarketplace();
           var live = (a.approved && Array.isArray(a.products)) ? a.products.join(",") : "";
           if (live === marketplaceAccess) return;      // nothing changed since login
           setCookie("marketplaceAccess", live, 7);     // keep every page's snapshot fresh

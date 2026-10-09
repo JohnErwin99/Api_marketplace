@@ -208,7 +208,7 @@ footer { background: var(--surface); border-color: var(--line); }
     </a>
     <div class="header-actions">
       <span class="version">API Marketplace</span>
-      <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
+      <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
         <span class="sun" aria-hidden="true">☀</span>
         <span class="moon" aria-hidden="true">☾</span>
@@ -224,15 +224,15 @@ footer { background: var(--surface); border-color: var(--line); }
         <h1>Build on Canada’s<br><span>largest CLEC.</span></h1>
         <p class="lede">Order phone numbers and SIP trunks, move numbers to Iristel, keep 911 addresses current, activate mobile subscribers and manage eSIMs — straight from your own apps and tools. Built for businesses, partners and the people who use Iristel every day.</p>
         <div class="hero-actions">
-          <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
+          <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
           <a class="ghost" href="#packages">Browse the packages</a>
         </div>
       </div>
       <aside class="rule-card" aria-label="Who it is for">
-        <div class="rule-icon">5</div>
+        <div class="rule-icon">4</div>
         <p class="eyebrow">Built for</p>
-        <h2>Businesses, partners and consumers.</h2>
-        <p>Business customers, resellers, agents, white-label partners and individual consumers each get the APIs that fit how they work with Iristel.</p>
+        <h2>Businesses, consumers, partners and our own teams.</h2>
+        <p>Businesses, consumers, Iristel partners and agents, and Iristel employees each get the APIs that fit how they work with Iristel.</p>
       </aside>
     </section>
 
@@ -308,7 +308,7 @@ footer { background: var(--surface); border-color: var(--line); }
             <li>You get an email when your access is approved.</li>
             <li>Try every API in the test console, then connect your app.</li>
           </ol>
-          <p class="caution">Consumers don’t need a business registration — tell us your Iristel account instead.</p>
+          <p class="caution">Consumers don’t need a business registration — tell us your Iristel account instead. Iristel employees give their department.</p>
         </aside>
       </div>
     </section>
@@ -316,7 +316,7 @@ footer { background: var(--surface); border-color: var(--line); }
     <section class="form-section" id="signup">
       <div class="section-heading">
         <div><p class="eyebrow">Get started</p><h2>Create your Iristel account</h2></div>
-        <p>Sign up once as a business customer, reseller, agent, white-label partner or consumer.</p>
+        <p>Sign up once as a business, a consumer, or an Iristel partner or agent.</p>
       </div>
       <div class="form-layout">
         <div class="mock-form" style="align-content:start">
@@ -327,7 +327,7 @@ footer { background: var(--surface); border-color: var(--line); }
             <li>Tell us which APIs you need — our team reviews every request.</li>
             <li>Once approved, your APIs appear in the console, ready to try.</li>
           </ol>
-          <a class="console-cta" style="justify-content:center;margin-top:18px;height:48px;font-size:.95rem" href="https://www.iristelpartnerportal.com/sign-up">Sign up →</a>
+          <a class="console-cta" style="justify-content:center;margin-top:18px;height:48px;font-size:.95rem" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
         </div>
         <div class="field-notes">
           <h3>Why sign up</h3>
@@ -388,7 +388,7 @@ footer { background: var(--surface); border-color: var(--line); }
           </ul>
         </div>
         <div>
-          <details><summary>Who can use the marketplace?</summary><p>Business customers, resellers, agents, white-label partners and consumers with an Iristel account. Choose your path above to see what fits you.</p></details>
+          <details><summary>Who can use the marketplace?</summary><p>Businesses, consumers with an Iristel account, Iristel partners and agents, and Iristel employees. Choose your path above to see what fits you.</p></details>
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
           <details><summary>What if I need an API that isn’t listed?</summary><p>Choose “Other” on the request form and describe what you need.</p></details>
@@ -425,48 +425,19 @@ themeToggle.addEventListener("click", () => {
 // catalog can't be loaded.
 const FALLBACK_ACCOUNT_TYPES = [
   {
-    "id": "customer",
-    "label": "Business customer",
+    "id": "business",
+    "label": "Business",
     "short": "Your business uses Iristel services for itself.",
     "description": "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
     "build": [
       "Order SIP trunks and phone numbers",
       "Keep your numbers when you move to Iristel",
       "Keep your 911 addresses up to date"
-    ]
-  },
-  {
-    "id": "reseller",
-    "label": "Reseller",
-    "short": "You sell Iristel services to your own customers.",
-    "description": "Carriers, ISPs, MSPs, VARs and UCaaS providers who sell Iristel services — including co-branded partners — and bill their own customers.",
-    "build": [
-      "Activate subscribers end to end",
-      "Order numbers at scale",
-      "Port your customers onto the network"
-    ]
-  },
-  {
-    "id": "agent",
-    "label": "Agent",
-    "short": "You sign up customers and earn commission.",
-    "description": "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
-    "build": [
-      "Sign customers up from your own tools",
-      "Assign SIMs and eSIMs",
-      "Track your commissions"
-    ]
-  },
-  {
-    "id": "white-label",
-    "label": "White-label partner",
-    "short": "You sell under your own brand and own support.",
-    "description": "Iristel services under your brand: you set prices, run support and own the customer relationship, with Iristel's network behind you.",
-    "build": [
-      "Provision voice services under your brand",
-      "Supply numbers and 911 to your customers",
-      "Activate mobile subscribers"
-    ]
+    ],
+    "audiences": [
+      "enterprise"
+    ],
+    "products": []
   },
   {
     "id": "consumer",
@@ -477,7 +448,41 @@ const FALLBACK_ACCOUNT_TYPES = [
       "See your plan and usage",
       "Manage your eSIM",
       "Get account notifications"
+    ],
+    "audiences": [],
+    "products": [
+      "iristelx-mobile"
     ]
+  },
+  {
+    "id": "partner",
+    "label": "Iristel partner / agent",
+    "short": "You resell Iristel services or sign customers up for us.",
+    "description": "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners, and agents who sign customers up in the field and earn commission.",
+    "build": [
+      "Activate subscribers end to end",
+      "Order numbers and port customers onto the network",
+      "Track your commissions"
+    ],
+    "audiences": [
+      "resellers",
+      "carriers",
+      "agents"
+    ],
+    "products": []
+  },
+  {
+    "id": "internal",
+    "label": "Internal employee",
+    "short": "You work at Iristel and need API access for your team.",
+    "description": "Iristel staff building internal tools, reports or integrations. Use your @iristel.com email and tell us your department — no business registration needed, and internal usage isn't billed.",
+    "build": [
+      "Automate provisioning and porting tasks",
+      "Build reports on numbers and subscribers",
+      "Integrate Iristel systems with your team's tools"
+    ],
+    "audiences": [],
+    "products": []
   }
 ];
 
@@ -513,7 +518,10 @@ function renderAccountTypes(reg) {
   show(types[0].id);
 }
 const ACCOUNT_TYPE_CTA = (t) =>
-  `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up">Sign up as ${t.label} →</a></p>`;
+  t.id === "internal"
+    ? `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/">Log in with your Iristel account →</a></p>` +
+      `<p style="font-size:.85rem;opacity:.75">Iristel employees already have a portal login — open API Marketplace from the menu to request access.</p>`
+    : `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?type=${encodeURIComponent(t.id)}&from=marketplace">Sign up as ${t.label} →</a></p>`;
 
 // ---- Packages section + access-request form (data-driven from the catalog)
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

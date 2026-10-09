@@ -159,6 +159,7 @@
     // MARKETPLACE: authorized API products, re-fetched on every login.
     document.cookie = 'marketplaceAccess=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     document.cookie = 'marketplaceSession=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'marketplaceOnly=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
     // Clear President's Club cached data (localStorage + IndexedDB)
     ['pc_commissions','pc_agents','pc_cache_ts','pc_leaderboard','pc_cached_user'].forEach(function(k){
@@ -182,6 +183,16 @@
       };
       req.onerror = function() { /* IndexedDB unavailable — ignore */ };
     } catch(e) {}
+
+    // Clear commission dashboard caches (compensation, compensation-microage, compensation-admin)
+    try {
+      Object.keys(localStorage).forEach(function(k){
+        if (/^(unified_dash_|ma_dash_|admin_dash_)/.test(k)) localStorage.removeItem(k);
+      });
+    } catch(e) {}
+    ['unified_dashboard_cache','ma_dashboard_cache','admin_dashboard_cache'].forEach(function(n){
+      try { indexedDB.deleteDatabase(n); } catch(e) {}
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -452,13 +463,16 @@
           } else {
             document.cookie = 'marketplaceAccess=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
           }
+          // Came in through the API marketplace: the nav shows only it.
+          setCookie('marketplaceOnly', data.marketplaceOnly ? '1' : '', 7);
           console.log("🛒 marketplaceAccess:", ids || "(none)");
+          return data;
         } catch (error) {
           console.warn("Marketplace authorization lookup error:", error);
         }
       };
 
-      const startCountdown = (seconds) => {
+      const startCountdown = (seconds, destination) => {
         let counter = seconds;
         const message = document.getElementById('message');
         const interval = setInterval(() => {
@@ -466,12 +480,17 @@
             message.textContent = `Redirecting in ${counter} seconds...`;
           } else {
             clearInterval(interval);
-            window.location.href = "/home";
+            window.location.href = destination || "/home";
           }
           counter--;
         }, 1000);
         return interval;
       };
+
+      // Account type recorded in the CRM at sign-up -> partnerType cookie.
+      // Only used for logins with a plain MIND account (no agent record), so
+      // a business or consumer is no longer shown as an agent.
+      const PARTNER_TYPE_FROM_CRM = { business: 'customer', consumer: 'consumer' };
 
       // Sets cookies from a resolved record (agent / master / contact /
       // MIND account) and redirects. Shared by login and create flows.
@@ -526,10 +545,13 @@
 
         // MARKETPLACE: awaited so the cookies exist before the redirect.
         const session = await setMarketplaceSessionCookie(email);
-        await setMarketplaceAccessCookie(userEmail, session);
+        const access = await setMarketplaceAccessCookie(userEmail, session);
+        if (access && !agent && !master && mindAccount && PARTNER_TYPE_FROM_CRM[access.accountType]) {
+          setCookie('partnerType', PARTNER_TYPE_FROM_CRM[access.accountType], 7);
+        }
 
         document.getElementById('message').textContent = 'Login successful! Redirecting...';
-        startCountdown(5);
+        startCountdown(5, access && access.marketplaceOnly ? "/api-marketplace" : "/home");
       };
 
       const completeEmployeeLogin = async (email, employeeResult) => {
