@@ -61,6 +61,8 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/public', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index-public.html')));
 // Marketplace-access cookie reader — also embedded standalone in Webflow.
 app.get('/marketplace-access.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-access.js')));
+// The marketplace page's script (the page and its Webflow copy load it from here).
+app.get('/marketplace-page.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-page.js')));
 
 // ---------------------------------------------------------------------------
 // Credentials resolution
