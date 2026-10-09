@@ -189,9 +189,32 @@ app.get('/', (req, res) => {
 // IristelX-backed products (provisioning, 911, accounts, SIM, commissions,
 // mobile): proxied so the upstream keys never leave the server.
 app.use('/api/ix', require('./lib/routes/ix')(PRODUCTS));
-// Per-call prices (all $0 until set) and usage billing / card on file.
+// Per-call prices (lib/catalogs/pricing.js), usage billing / card on file,
+// and monthly invoices.
 require('./lib/catalogs/pricing').init(PRODUCTS);
 require('./lib/billing').register(app);
+require('./lib/invoices').register(app, PRODUCTS);
+
+// Monthly billing, checked hourly (every step is idempotent): last month's
+// invoices go out from the 1st, and are charged from the 5th. Set
+// BILLING_SCHEDULER=off to run both by hand from the dashboard instead.
+if (process.env.BILLING_SCHEDULER !== 'off') {
+  const invoices = require('./lib/invoices');
+  const { chargeInvoices } = require('./lib/billing');
+  const billingTick = async () => {
+    try {
+      const mon = invoices.prevMonth();
+      const sent = (await invoices.runInvoices(mon)).filter((r) => r.status === 'sent');
+      if (sent.length) console.log(`[billing] ${mon}: emailed ${sent.length} invoice(s)`);
+      if (new Date().getUTCDate() >= invoices.CHARGE_DAY) {
+        const charged = await chargeInvoices(mon, { newOnly: true });
+        if (charged.length) console.log(`[billing] ${mon}: charged ${charged.map((c) => `${c.number} ${c.status}`).join(', ')}`);
+      }
+    } catch (err) { console.warn('[billing] scheduler:', err.message); }
+  };
+  setTimeout(billingTick, 60 * 1000).unref();
+  setInterval(billingTick, 60 * 60 * 1000).unref();
+}
 
 // Number Porting — Enterprise (LNP, Espresso v4)
 app.use('/api/lnp', require('./lib/routes/lnp')(resolveContext, h));

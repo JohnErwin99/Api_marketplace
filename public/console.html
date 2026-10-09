@@ -1124,7 +1124,7 @@
     catch(err){body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">'+esc(err.message)+'</p>';return;}
     let h='<h2>💳 Billing &amp; usage</h2>'
       +'<p class="lead">'+(d.isAgent?'Your API usage for '+esc(d.month)+'. Agent accounts are not billed.'
-        :'Usage for '+esc(d.month)+' is charged to your card on file at the start of next month.')+'</p>';
+        :'Usage for '+esc(d.month)+' is invoiced on the 1st of next month (sales tax added for Canadian accounts) and charged to your card on file on the 5th.')+'</p>';
     ACCOUNT=d;renderModebar();
     if(d.mode==='sandbox')h+='<div class="callout"><b>Sandbox:</b> '+modeLeft(d)+' of '+d.sandboxCallsLimit+' free test calls left. '
       +'DIDs and LNP use the Espresso test system; other APIs allow lookups only. Add a card below to go live — '
@@ -1162,6 +1162,12 @@
         +d.usage.map(u=>'<tr><td>'+esc(productName(u.product))+'</td><td>'+u.calls+'</td><td>'+u.billableCalls+'</td><td>'+cad(u.cents)+'</td></tr>').join('')
         +'<tr><td><b>Estimated total</b></td><td></td><td></td><td><b>'+cad(d.estimatedCents)+' CAD</b></td></tr></table>';
     }else h+='<p>No API calls yet this month.</p>';
+    h+='<h3>Invoices</h3>';
+    h+=(d.invoices||[]).length
+      ?'<table><tr><th>Month</th><th>Invoice</th><th>Total (tax incl.)</th><th>Charged on</th><th></th></tr>'
+        +d.invoices.map(i=>'<tr><td>'+esc(i.month)+'</td><td><code>'+esc(i.number)+'</code></td><td>'+cad(i.cents)+'</td><td>'+esc(i.dueOn)+'</td>'
+          +'<td><a href="'+esc(i.url)+'" target="_blank" rel="noopener">View</a></td></tr>').join('')+'</table>'
+      :'<p>No invoices yet. Each month\'s invoice is emailed on the 1st and charged on the 5th.</p>';
     h+='<h3>Past charges</h3>';
     h+=d.charges.length
       ?'<table><tr><th>Month</th><th>Amount</th><th>Status</th><th>Reference</th></tr>'

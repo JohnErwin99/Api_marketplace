@@ -193,6 +193,7 @@
     <div class="card" id="billing-card">
       <div class="tablehead"><h2>Billing</h2>
         <input type="month" id="bill-month" style="margin-left:auto;font:600 12px var(--sans);padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
+        <button type="button" class="ctl revoke" id="bill-invoices" style="color:var(--ink)">Send invoices</button>
         <button type="button" class="ctl approve" id="bill-run">Run charges</button>
       </div>
       <p id="bill-note" style="color:var(--muted);font-size:12px;margin:0 0 8px"></p>
@@ -600,14 +601,19 @@
     const r = await fetch(GATEWAY + '/marketplace/admin/billing?month=' + encodeURIComponent(billMonth.value), { headers: auth });
     if (!r.ok) { $('#billing-card').hidden = true; return; }
     const d = await r.json();
-    $('#bill-note').textContent = 'Total billable for ' + d.month + ': ' + cad(d.totalCents) + ' CAD. ' +
-      'Charges go to each partner\'s card on file through MIND. Running again retries declined charges but never repeats a paid or unknown one — ' +
-      'for unknown, check the payment in MIND, then Retry or Mark paid.';
+    $('#bill-note').textContent = 'Billable usage for ' + d.month + ': ' + cad(d.totalCents) + ' CAD before tax. ' +
+      'Invoices go out automatically on the 1st and are charged on the 5th (both buttons do it now). Only emailed invoices are charged, tax included. ' +
+      'Running charges again retries declined ones but never repeats a paid or unknown one — for unknown, check the payment in MIND, then Retry or Mark paid.';
     $('#t-billing').innerHTML = d.rows.length
-      ? '<thead><tr><th>Partner</th><th>MIND account</th><th class="num">Calls</th><th class="num">Billed</th><th class="num">Amount</th><th>Card</th><th>Charge</th></tr></thead><tbody>' +
+      ? '<thead><tr><th>Partner</th><th>MIND account</th><th class="num">Calls</th><th class="num">Billed</th><th class="num">Amount</th><th>Invoice</th><th>Card</th><th>Charge</th></tr></thead><tbody>' +
         d.rows.map(x => '<tr><td>' + esc(x.email) + (x.pastDue ? ' <span class="pill pending">past due</span>' : '') + '</td>' +
           '<td>' + (x.mindAccount ? '<code>' + esc(x.mindAccount) + '</code>' : '<span style="color:var(--muted)">not linked</span>') + '</td>' +
           '<td class="num">' + fmt(x.calls) + '</td><td class="num">' + fmt(x.billableCalls) + '</td><td class="num">' + cad(x.cents) + '</td>' +
+          '<td>' + (x.invoice
+            ? '<code>' + esc(x.invoice.number) + '</code> ' + cad(x.invoice.cents) + (x.invoice.sent ? '' : ' <span class="pill pending">not sent</span>') +
+              (x.invoice.taxReview ? ' <span class="pill pending" title="No province on file: GST only">check tax</span>' : '') +
+              ' <button type="button" class="ctl" data-inv="' + esc(x.invoice.number) + '">View</button>'
+            : '<button type="button" class="ctl" data-preview="' + esc(x.email) + '">Preview</button>') + '</td>' +
           '<td>' + (x.card ? '<code>' + esc(x.card) + '</code>' : '<span style="color:var(--muted)">none</span>') + '</td>' +
           '<td>' + (x.charge ? '<span class="pill ' + (STATUS_PILL[x.charge.status] || 'no') + '">' + esc(x.charge.status.replace('_', ' ')) + '</span> ' + cad(x.charge.cents) +
             (['declined', 'unknown'].includes(x.charge.status) ? ' <button type="button" class="ctl approve" data-bill="retry" data-email="' + esc(x.email) + '">Retry</button>' : '') +
@@ -615,7 +621,18 @@
             : '<span style="color:var(--muted)">—</span>') + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No API usage recorded for this month.</td></tr></tbody>';
   }
+  // Invoices are served as HTML behind the staff session: fetch, then open.
+  async function openHtml(url){
+    const w = window.open('', '_blank');
+    const r = await fetch(url, { headers: auth });
+    const html = await r.text();
+    if (!r.ok) { if (w) w.close(); alert(html || 'HTTP ' + r.status); return; }
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+  }
   $('#t-billing').onclick = async (ev) => {
+    const inv = ev.target.closest('[data-inv]'), pre = ev.target.closest('[data-preview]');
+    if (inv) return openHtml(GATEWAY + '/marketplace/invoices/' + encodeURIComponent(inv.dataset.inv));
+    if (pre) return openHtml(GATEWAY + '/marketplace/admin/invoices/preview?email=' + encodeURIComponent(pre.dataset.preview) + '&month=' + encodeURIComponent(billMonth.value));
     const btn = ev.target.closest('[data-bill]');
     if (!btn) return;
     const action = btn.dataset.bill, email = btn.dataset.email, m = billMonth.value;
@@ -636,7 +653,7 @@
   billMonth.onchange = loadBilling;
   $('#bill-run').onclick = async () => {
     const m = billMonth.value;
-    if (!confirm('Charge every partner for their ' + m + ' usage now? Paid charges are never repeated.')) return;
+    if (!confirm('Charge every emailed ' + m + ' invoice now? Paid charges are never repeated.')) return;
     const btn = $('#bill-run'); btn.disabled = true; btn.textContent = 'Charging…';
     try {
       const r = await fetch(GATEWAY + '/marketplace/admin/billing/run', {
@@ -644,9 +661,28 @@
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
       const errs = (d.results || []).filter(x => x.status === 'error');
-      alert((d.results || []).length + ' partner(s) processed.' + (errs.length ? '\n' + errs.map(x => x.email + ': ' + x.error).join('\n') : ''));
+      const noInv = (d.results || []).filter(x => x.status === 'no_invoice');
+      alert((d.results || []).length - noInv.length + ' invoice(s) processed.' +
+        (noInv.length ? '\n' + noInv.length + ' partner(s) have no emailed invoice yet — send invoices first.' : '') +
+        (errs.length ? '\n' + errs.map(x => x.email + ': ' + x.error).join('\n') : ''));
     } catch (err) { alert('Charge run failed: ' + err.message); }
     btn.disabled = false; btn.textContent = 'Run charges';
+    loadBilling();
+  };
+  $('#bill-invoices').onclick = async () => {
+    const m = billMonth.value;
+    if (!confirm('Issue and email the ' + m + ' invoices now? Partners already invoiced for ' + m + ' are not emailed again.')) return;
+    const btn = $('#bill-invoices'); btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const r = await fetch(GATEWAY + '/marketplace/admin/billing/invoices', {
+        method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ month: m }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      const sent = (d.results || []).filter(x => x.status === 'sent').length;
+      const errs = (d.results || []).filter(x => x.status === 'error');
+      alert(sent + ' invoice(s) emailed.' + (errs.length ? '\n' + errs.map(x => x.email + ': ' + x.error).join('\n') : ''));
+    } catch (err) { alert('Sending invoices failed: ' + err.message); }
+    btn.disabled = false; btn.textContent = 'Send invoices';
     loadBilling();
   };
   $('#bill-account').onsubmit = async (ev) => {
