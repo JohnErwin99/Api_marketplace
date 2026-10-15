@@ -349,6 +349,54 @@
     #search-results{width:100%}
     main{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{max-height:34vh}.field{grid-template-columns:1fr}.field .fd{grid-column:1}header{gap:10px}
   }
+  /* Phone pickers: stand-ins for the product rail and the endpoint rail
+     below 760px (see "phone pickers" in the script). Hidden on wider screens. */
+  .m-pick{display:none;align-items:center;gap:10px;width:100%}
+  .m-pick>span{flex:none;font:700 10.5px var(--head);text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .m-pick select{flex:1;min-width:0;font:600 14px var(--head);padding:9px 34px 9px 12px;border:1px solid var(--line-strong);border-radius:10px;color:var(--ink);
+    background:var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%233E8CCB' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;
+    -webkit-appearance:none;appearance:none}
+  .m-pick select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  /* Phones: one page that scrolls as a whole. The desktop shell (product
+     rail, endpoint rail and content, each scrolling in its own box) leaves
+     the content a sliver of the screen, so it is flattened here. */
+  @media (max-width:760px){
+    html,body{height:auto}
+    body{display:block}
+    header{padding:10px 14px;gap:8px 10px}
+    header>a{flex:1;min-width:0;order:0}
+    header h1{font-size:14px}
+    .theme-toggle{order:1}
+    .tabs{order:2;width:100%}
+    .tab{flex:1}
+    #partner-badge{order:3;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    .base{order:4;width:100%;min-width:0}
+    .base code{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
+    header .grow{display:none}
+    .modebar{padding:8px 14px;font-size:12.5px}
+    .layout{display:block}
+    .products{display:flex;flex-direction:column;gap:8px;max-height:none;overflow:visible;padding:10px 14px 12px}
+    #product-bar{display:none!important}
+    #product-search{margin:0}
+    .m-pick{display:flex}
+    .m-pick[hidden]{display:none}
+    .content{display:block}
+    .docs{height:auto;overflow:visible;padding:18px 14px 96px}
+    .docs h2{font-size:20px}
+    .docs .ep{padding:14px}
+    .docs .ep .sig{flex-wrap:wrap;gap:4px 10px}
+    .docs .ep .sig>*,.docs .toc a,.docs table td,.docs table td code{min-width:0;overflow-wrap:anywhere;white-space:normal}
+    .docs table{display:block;overflow-x:auto}
+    main{display:flex;flex-direction:column;height:auto}
+    #nav{order:2;max-height:none;overflow:visible;border:0;border-top:1px solid var(--line);background:none}
+    #nav .group,#nav>button{display:none}
+    #nav .railnote{margin:0;border:0}
+    section{overflow:visible;padding:14px 14px 96px;gap:14px}
+    .card{padding:14px}
+    .opgrid,.bundle-grid{grid-template-columns:1fr;gap:14px}
+    .grow2{grid-template-columns:1fr}
+    table.doc td.k{white-space:normal;word-break:break-all}
+  }
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -374,6 +422,7 @@
 <div class="modebar" id="modebar" role="status" aria-live="polite" hidden></div>
 <div class="layout">
 <nav class="products" aria-label="Products">
+  <label class="m-pick" for="m-product"><span>API</span><select id="m-product"></select></label>
   <input id="product-search" type="search" placeholder="Search APIs… (e.g. port a number)" aria-label="Search APIs" autocomplete="off">
   <div id="search-results" hidden></div>
   <div style="display:contents" id="product-bar" role="tablist" aria-orientation="vertical" aria-label="Product list"></div>
@@ -387,6 +436,7 @@
   <nav id="nav"><div class="empty" style="padding:14px">Loading endpoints…</div></nav>
   <section id="console-main">
     <div id="op-intro" hidden></div>
+    <label class="m-pick" id="m-jump-wrap" for="m-jump" hidden><span>Jump to</span><select id="m-jump"></select></label>
     <div id="opgrid" class="opgrid" hidden></div>
     <div class="card" id="req"><div class="empty">Pick an endpoint on the left to see its docs and try it.</div></div>
     <div class="card" id="resp-card">
@@ -746,6 +796,47 @@
     b.style.marginTop='10px';
     b.onclick=()=>{ productId='billing'; location.hash='#billing'; markProduct(); renderProduct(); };
     bar.appendChild(b);
+  }
+  // ---- phone pickers ----------------------------------------------------
+  // Below 760px the CSS hides the product rail and the endpoint rail; these
+  // two selects stand in for them. Picking an option clicks the matching rail
+  // button, so the hash, bundles and the Iris bridge work exactly as on a
+  // desktop, and the selects follow the rails' .active state.
+  {
+    const pSel=$('#m-product'), jSel=$('#m-jump'), jWrap=$('#m-jump-wrap');
+    const label=el=>{const c=el.cloneNode(true);c.querySelectorAll('.soon').forEach(s=>s.replaceWith(' (soon)'));c.querySelectorAll('br').forEach(s=>s.replaceWith(' · '));return c.textContent.replace(/\s+/g,' ').trim();};
+    const opt=(parent,value,text)=>{const o=document.createElement('option');o.value=value;o.textContent=text;parent.appendChild(o);};
+    const group=(name,chips)=>{
+      if(!chips.length)return;
+      const g=document.createElement('optgroup');g.label=name;
+      chips.forEach(c=>opt(g,c.dataset.id,label(c)));
+      pSel.appendChild(g);
+    };
+    group('APIs',[...bar.querySelectorAll('#api-group .pchip')]);
+    group('Bundles',[...bar.querySelectorAll('#bundle-group .pchip')]);
+    const bill=bar.querySelector('.pchip[data-id="billing"]');if(bill)opt(pSel,'billing',label(bill));
+    const syncProduct=()=>{const a=bar.querySelector('.pchip.active');if(a&&pSel.value!==a.dataset.id)pSel.value=a.dataset.id;};
+    pSel.onchange=()=>{const c=[...bar.querySelectorAll('.pchip')].find(x=>x.dataset.id===pSel.value);if(c)c.click();};
+    new MutationObserver(syncProduct).observe(bar,{subtree:true,attributes:true,attributeFilter:['class']});
+
+    const navButtons=()=>[...nav.querySelectorAll(':scope>button')];
+    const syncJump=()=>{const i=navButtons().findIndex(b=>b.classList.contains('active'));jSel.value=i<0?'':String(i);};
+    const fillJump=()=>{
+      const btns=navButtons();
+      jSel.innerHTML='';
+      opt(jSel,'','Choose an endpoint…');
+      let g=null;
+      [...nav.children].forEach(el=>{
+        if(el.classList.contains('group')){g=document.createElement('optgroup');g.label=el.textContent;jSel.appendChild(g);}
+        else if(el.tagName==='BUTTON')opt(g||jSel,String(btns.indexOf(el)),[...el.children].map(label).join('  '));
+      });
+      jWrap.hidden=btns.length<2;
+      syncJump();
+    };
+    jSel.onchange=()=>{const b=navButtons()[+jSel.value];if(b)b.click();};
+    new MutationObserver(fillJump).observe(nav,{childList:true});
+    new MutationObserver(syncJump).observe(nav,{subtree:true,attributes:true,attributeFilter:['class']});
+    fillJump();
   }
   function markProduct(){
     bar.querySelectorAll('.pchip').forEach(b=>{

@@ -35,6 +35,18 @@
     font-family: inherit;
   }
   #mp-console-wrap .mp-no-access a { color: #D1155A; font-weight: 600; }
+  /* Phones: exactly one screen tall, so the console scrolls as a single page
+     inside it and its "Ask Iris" button sits at the bottom of the screen.
+     The 640px minimum made the frame taller than a phone screen. */
+  @media (max-width: 760px) {
+    #mp-console-wrap iframe {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
 </style>
 
 <div id="mp-console-wrap"></div>
@@ -100,7 +112,8 @@
     var iframe = document.createElement("iframe");
     iframe.src = src;
     iframe.title = "Iristel API Marketplace Console";
-    iframe.allow = "clipboard-write";
+    // microphone: Iris's "Talk" (voice) mode in the console.
+    iframe.allow = "microphone; clipboard-write";
     wrap.appendChild(iframe);
   })();
 </script>

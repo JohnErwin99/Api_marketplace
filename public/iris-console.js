@@ -230,7 +230,13 @@
     '.irp-drawer{position:fixed;top:0;right:0;bottom:0;z-index:61;width:360px;max-width:100%;display:flex;flex-direction:column;background:var(--panel,#fff);color:var(--ink,#111827);border-left:1px solid var(--line,#e5e7eb);box-shadow:var(--shadow,0 8px 24px rgba(15,23,42,.12));font:14px/1.5 var(--sans,system-ui,sans-serif)}',
     '.irp-drawer[hidden]{display:none}',
     '@media (min-width:761px){body.irp-open{padding-right:360px}}',
-    '@media (max-width:760px){.irp-drawer{width:100%;border-left:0}}',
+    // Phones: a bottom sheet instead of a full-screen drawer, so the card Iris
+    // fills (and the Send button she points at) stays visible above it. The
+    // page gets room below its content, and scrollIntoView keeps targets
+    // clear of the sheet (scroll-padding).
+    '@media (max-width:760px){.irp-drawer{top:auto;left:0;width:100%;height:min(60vh,560px);border-left:0;border-top:1px solid var(--line,#e5e7eb);border-radius:16px 16px 0 0;padding-bottom:env(safe-area-inset-bottom)}'
+      + 'body.irp-open{padding-bottom:62vh}html:has(body.irp-open){scroll-padding-bottom:62vh}'
+      + '.irp-launch{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 14px 6px 6px;font-size:12.5px}}',
     '.irp-head{flex:none;display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line,#e5e7eb)}',
     '.irp-head .irp-mark{background:var(--accent,#2563eb);color:var(--accent-ink,#fff)}',
     '.irp-titles{display:flex;flex-direction:column;line-height:1.25;min-width:0}',
