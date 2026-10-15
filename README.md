@@ -78,8 +78,9 @@ both modes (`lib/entitlements.js`):
 The choice is stored in CRM `cr57d_environment` (649950001 = Sandbox →
 Production, 649950002 = Production; the legacy "Sandbox only" value is treated
 as Sandbox → Production). Every response carries `X-Marketplace-Mode` and, in
-sandbox, `X-Sandbox-Calls-Remaining`. Staff, agents and internal callers are
-exempt: no card, no limit, never billed.
+sandbox, `X-Sandbox-Calls-Remaining`. Only Iristel staff and internal
+accounts (Internal employee with an @iristel.com email) are exempt: no card,
+no limit, never billed. Agents are billed like any partner.
 
 **Espresso login (DIDs, LNP).** No partner login is needed: the gateway uses
 `EDID_USER` / `EDID_PASS`, the same account on Espresso's test and production
@@ -107,6 +108,10 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 | `GATEWAY_API_KEY` | Optional internal override key |
 | `DATA_DIR` | Folder for the SQLite ledger (usage, cards on file, charges) and `access-requests.json`. **Set to the Render persistent disk's mount path exactly, e.g. `/var/data`** — otherwise everything is wiped on every deploy. The startup log warns, and the `/admin` dashboard says so, when it isn't a mounted disk. |
 | `PAYMENT_API_KEY` | IristelX payment key used to charge saved cards (`POST /bot/{account}/payment`) |
+| `ELEVENLABS_API_KEY` | Iris in the console: signs ElevenLabs conversation URLs (`GET /marketplace/iris/session`). Use a key scoped to agents only. |
+| `IRIS_CONSOLE_AGENT_ID` | The "Iris Console" ElevenLabs agent (auth on). Separate from the public website agent. |
+| `IRIS_CONSOLE_ENABLED` | `on` shows Iris in the console to every approved partner. Anything else limits it to `IRIS_CONSOLE_EMAILS`. |
+| `IRIS_CONSOLE_EMAILS` | Comma-separated pilot emails that get Iris while `IRIS_CONSOLE_ENABLED` isn't `on`. `GET /marketplace/me` reports the gate as `irisEnabled`, and the console shows the Iris launcher only when it is `true`. Everyone else gets `irisEnabled: false` and a 404 from `GET /marketplace/iris/session`. |
 
 ### Usage billing
 

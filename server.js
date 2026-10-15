@@ -61,6 +61,10 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/public', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index-public.html')));
 // Marketplace-access cookie reader — also embedded standalone in Webflow.
 app.get('/marketplace-access.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-access.js')));
+// Iris guide panel for the console (loaded by console.html after its own script).
+app.get('/iris-console.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'iris-console.js'),
+  { headers: { 'Content-Type': 'application/javascript; charset=UTF-8' } },
+  (err) => { if (err && !res.headersSent) res.status(404).json({ error: 'not_found', message: 'No route GET /iris-console.js' }); }));
 // The marketplace page's script (the page and its Webflow copy load it from here).
 app.get('/marketplace-page.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-page.js')));
 
@@ -115,13 +119,24 @@ const UI_HINTS = require('./lib/catalogs/ui-hints');
 const CATALOG = PRODUCTS.find((p) => p.id === 'dids').endpoints;
 
 // Attach UI hints once at startup: per-endpoint `ui` object + per-product `ui`.
+// A hint's description, returns and field help also fill the catalog's own
+// text where it is empty, so console search and Iris see them. Param objects
+// can be shared between endpoints, so they are copied, never edited.
 for (const p of PRODUCTS) {
   const hints = UI_HINTS[p.id];
   if (!hints) continue;
   if (hints.product) p.ui = hints.product;
   for (const e of p.endpoints || []) {
     const h = hints[`${e.method} ${e.path}`];
-    if (h) e.ui = h;
+    if (!h) continue;
+    e.ui = h;
+    if (!e.description && h.description) e.description = h.description;
+    if (!e.returns && h.returns) e.returns = h.returns;
+    const help = (name) => h.fields && h.fields[name] && h.fields[name].help;
+    for (const k of ['params', 'fields']) {
+      if (!Array.isArray(e[k])) continue;
+      e[k] = e[k].map((f) => (!f.description && help(f.name) ? { ...f, description: help(f.name) } : f));
+    }
   }
 }
 
@@ -200,6 +215,8 @@ app.use('/api/ix', require('./lib/routes/ix')(PRODUCTS));
 // and monthly invoices.
 require('./lib/catalogs/pricing').init(PRODUCTS);
 require('./lib/billing').register(app);
+// Iris in the console: account summary + signed ElevenLabs session.
+require('./lib/iris').register(app);
 require('./lib/invoices').register(app, PRODUCTS);
 
 // Monthly billing, checked hourly (every step is idempotent): last month's
