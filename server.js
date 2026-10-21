@@ -10,6 +10,10 @@ const app = express();
 // Render sits behind Cloudflare; the visitor's own address comes from
 // security.clientIp() (CF-Connecting-IP), not req.ip.
 app.set('trust proxy', 1);
+// Paths are matched with their letter case. Express mounts are case-blind by
+// default, but the entitlement check classifies a path by its exact text, so
+// /api/WLNP/... must not reach the Wireless LNP router as some other product.
+app.set('case sensitive routing', true);
 // CORS: set ALLOWED_ORIGINS="https://portal.example.com,https://www.example.com" in prod.
 // If unset, any origin is allowed (dev convenience).
 const envOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -61,7 +65,23 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 app.get('/public', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index-public.html')));
 // Marketplace-access cookie reader — also embedded standalone in Webflow.
 app.get('/marketplace-access.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-access.js')));
-// Iris guide panel for the console (loaded by console.html after its own script).
+// The console's card form, on the gateway origin so the page hosting the
+// console never sees card data. Only the gateway and the partner portal may
+// frame it (local hosts too when the gateway runs locally).
+app.get('/billing-card', (req, res) => {
+  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.get('host') || '');
+  const ancestors = ["'self'", 'https://iristelpartnerportal.com', 'https://www.iristelpartnerportal.com',
+    'https://iristel-portal.webflow.io', 'https://partner.iristel.com',
+    ...(local ? ['http://localhost:*', 'http://127.0.0.1:*'] : [])];
+  res.set('Content-Security-Policy', `frame-ancestors ${ancestors.join(' ')}`);
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'public', 'billing-card.html'));
+});
+// The console itself, as a script that mounts in a shadow root on any page
+// (console.html here, and the partner portal's /console page).
+app.get('/console-app.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'console-app.js'),
+  { headers: { 'Content-Type': 'application/javascript; charset=UTF-8' } }));
+// Iris guide panel for the console (loaded by console-app.js once it is mounted).
 app.get('/iris-console.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'iris-console.js'),
   { headers: { 'Content-Type': 'application/javascript; charset=UTF-8' } },
   (err) => { if (err && !res.headersSent) res.status(404).json({ error: 'not_found', message: 'No route GET /iris-console.js' }); }));
@@ -140,6 +160,16 @@ for (const p of PRODUCTS) {
   }
 }
 
+// Pricing tier per endpoint (lib/catalogs/tiers.json). Every operation should
+// have one; a missing tier is reported here, the same way stale bundle steps are.
+const { tierFor, TIERS, PRICING_NOTE } = require('./lib/catalogs/pricing');
+for (const p of PRODUCTS) {
+  for (const e of p.endpoints || []) {
+    e.tier = tierFor(p.id, `${e.method} ${e.path}`);
+    if (!e.tier) console.warn(`tiers: ${p.id} ${e.method} ${e.path} has no tier — add it to lib/catalogs/tiers.json`);
+  }
+}
+
 // Bundles: curated use-case packages. Validate references at startup and drop
 // any step that points at a missing product or one classified internal /
 // restricted — bundles must only expose partner-safe products.
@@ -192,6 +222,10 @@ function catalogPayload() {
     bundles: BUNDLES,
     // Price per successful production call, in CAD cents, per product.
     prices: Object.fromEntries(PRODUCTS.map((p) => [p.id, priceFor(p.id, null)])),
+    // Pricing tiers (each endpoint carries its `tier` id). Prices are null
+    // until they are set; pricingNote says what partners pay today.
+    tiers: TIERS,
+    pricingNote: PRICING_NOTE,
     sandboxCalls: SANDBOX_CALLS,
     // Kept for older clients that read the flat DID list.
     endpoints: CATALOG,

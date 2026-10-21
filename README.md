@@ -103,6 +103,8 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 | `MIND_RESELL_KEY` | Creating reseller billing accounts (RESELL provider) |
 | `MIND_SEARCH_KEY` | Get Account By Email |
 | `EDID_USER` / `EDID_PASS` / `EDID_ENV` | Shared Espresso test account |
+| `WLNP_API_KEY` | Number Porting — Wireless: the IristelX key sent as `x-api-key` on `/workflow/*`. Unset → WLNP calls answer 503. |
+| `WLNP_BASE_URL` | Optional WLNP upstream origin (default `https://api.iristelx.com`) |
 | `D365_*` | Dynamics 365 (approvals are read from here) |
 | `ADMIN_EMAILS` | Optional staff list override |
 | `GATEWAY_API_KEY` | Optional internal override key |
@@ -120,6 +122,13 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
   sandbox calls, and calls by Iristel staff and internal employees, never are.
 - Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. Every
   API is 1¢ per call for now; production mode needs a card on file regardless of price.
+- **Pricing tiers.** Every operation also has a tier (Free, Standard, Premium or Service
+  transaction) in `lib/catalogs/tiers.json`, imported from `../api-tier-map.xlsx` with
+  `python3 scripts/import-tier-map.py` (operations added later are kept). Tiers are
+  published in `/catalog.json` (`tiers`, each endpoint's `tier`, `pricingNote`) and shown
+  in the console and on the marketplace pages, but they don't change billing yet: tier
+  prices are `null` ("coming soon") until they're set in `TIERS`. The server warns at
+  startup about any endpoint without a tier.
 - **Everyone is billed except Iristel staff and internal employees** (account type
   Internal employee with an @iristel.com email). Business customers, partners and
   agents all add a card. An agent created outside the portal sign-up may have no
@@ -228,6 +237,24 @@ Every error is JSON with an HTTP status. Espresso's numeric app codes (1–8,
 
 ## Notes for the console build
 
+- **The console mounts itself.** `public/console-app.js` holds the whole console (CSS,
+  markup and logic) and renders it in a shadow root on `#mp-console`, then loads
+  `iris-console.js` from the same gateway, which mounts the Iris panel in that shadow
+  root. `/console` (`public/console.html`) is just a host page for it, and the partner
+  portal's `/console` page in Webflow hosts the same script
+  (`docs/marketplace-console-embed.html`), so there is no iframe: the page scrolls, the
+  rails are sticky, and the login comes from the portal's own cookies (nothing in the
+  URL). A host page with a fixed header sets `--mp-top` on `#mp-console`.
+- **Card entry stays on the gateway.** Billing & usage shows the card form in a frame
+  of `/billing-card` (`public/billing-card.html`, framable only by the gateway and the
+  portal origins). The console hands that frame the login session by `postMessage`; the
+  card number and CVV go straight from the frame to `PUT /marketplace/billing/card`, so
+  the page hosting the console never sees them.
+- **Wireless LNP is scoped per partner.** One IristelX key serves everyone, so
+  `lib/routes/wlnp.js` records each partner's port requests (`wlnp_requests`) and a
+  partner only sees and changes their own; port-out and the response operations are
+  Iristel staff only. Routing is case-sensitive (`server.js`) so a path's letter case
+  can't change which product it is checked against.
 - **CORS**: any origin when `ALLOWED_ORIGINS` is unset (dev); otherwise that list plus the partner portal origins.
 - `GET /` gives the endpoint catalog as JSON; the console can render forms from it.
 - The two **array** methods (`didOrderDids`, `didOrderEdit`) build rpc/encoded

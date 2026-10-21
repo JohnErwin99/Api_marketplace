@@ -177,7 +177,6 @@ fieldset { border-color: var(--line); border-radius: 6px; }
 .chips span { background: transparent; color: var(--muted); border-color: var(--line); border-radius: 4px; }
 .never-log { background: transparent; color: var(--muted); border-color: var(--line); border-radius: 6px; }
 .checklist label { background: var(--surface-raised); color: var(--ink); border-radius: 6px; }
-footer { background: var(--surface); border-color: var(--line); }
 
 @media (max-width: 900px) {
   .topbar { gap: 14px; }
@@ -191,6 +190,11 @@ footer { background: var(--surface); border-color: var(--line); }
   .intro h1 { font-size: 3rem; }
   .theme-toggle { min-width: 38px; width: 38px; padding: 0; }
   .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .header-actions .version { display: none; }
+  .header-actions { gap: 8px; }
+  .topbar { padding: 0 16px; }
+  .brand { min-width: 0; gap: 8px; font-size: .9rem; }
+  .brand > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -266,6 +270,7 @@ footer { background: var(--surface); border-color: var(--line); }
         #packages .pk-steps li{margin:6px 0}
         #packages .pk-steps code{display:block;opacity:.95}
         #packages .pk-steps span{display:block;opacity:.7}
+        #packages .pk-steps .pk-tier{display:inline;opacity:1;font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-left:4px}
         #packages .pk-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
         #packages .pk-filter button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
         #packages .pk-filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface,#fff);border-color:var(--ink)}
@@ -313,31 +318,39 @@ footer { background: var(--surface); border-color: var(--line); }
       </div>
     </section>
 
-    <section class="form-section" id="signup">
+    <section class="form-section" id="pricing">
+      <style>
+        #pricing .tier-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+        @media (max-width:980px){#pricing .tier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media (max-width:560px){#pricing .tier-grid{grid-template-columns:1fr}}
+        #pricing .tier-card{border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface);padding:18px}
+        #pricing .tier-card h3{margin:0 0 2px;font-size:1.05rem;color:var(--ink)}
+        #pricing .tier-unit{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px}
+        #pricing .tier-card p{font-size:.9rem;color:var(--muted);margin:0 0 10px}
+        #pricing .tier-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
+        #pricing .tier-price{font-weight:800;font-size:.9rem;color:var(--tc,var(--ink));margin:0}
+        #pricing .bt-wrap{overflow-x:auto;margin-top:26px}
+        #pricing table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
+        #pricing th,#pricing td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;color:var(--ink)}
+        #pricing th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+        #pricing td.n{text-align:center;font-weight:700}
+        #pricing td.n.z{color:var(--muted);font-weight:400}
+        #pricing .bt-list{display:none;list-style:none;margin:0;padding:0}
+        #pricing .bt-list li{border-bottom:1px solid var(--line);padding:10px 0;color:var(--ink)}
+        #pricing .bt-list span{display:inline-block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin:4px 10px 0 0}
+        @media (max-width:560px){#pricing table{display:none}#pricing .bt-list{display:block}}
+        #pricing .pricing-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:26px}
+        #pricing .pricing-cta p{margin:0;color:var(--muted);font-size:.95rem;max-width:60ch}
+      </style>
       <div class="section-heading">
-        <div><p class="eyebrow">Get started</p><h2>Create your Iristel account</h2></div>
-        <p>Sign up once as a business customer, an Iristel partner or an agent.</p>
+        <div><p class="eyebrow">Bundles &amp; pricing</p><h2>Four pricing tiers</h2></div>
+        <p id="pricing-note">Every API call falls in one of four tiers. Today every successful live call is 1¢ CAD, whatever its tier; sandbox calls are free. Tier prices are coming soon.</p>
       </div>
-      <div class="form-layout">
-        <div class="mock-form" style="align-content:start">
-          <h3 style="margin:0">What happens after you sign up</h3>
-          <ol style="margin:10px 0 0;padding-left:20px;font-size:.95rem;line-height:2">
-            <li>Choose who you are and create your login.</li>
-            <li>Log in to the Iristel Partner Portal.</li>
-            <li>Tell us which APIs you need — our team reviews every request.</li>
-            <li>Once approved, your APIs appear in the console, ready to try.</li>
-          </ol>
-          <a class="console-cta" style="justify-content:center;margin-top:18px;height:48px;font-size:.95rem" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
-        </div>
-        <div class="field-notes">
-          <h3>Why sign up</h3>
-          <ul>
-            <li><strong>One login</strong><span>Partner portal, your Iristel account and the API console</span></li>
-            <li><strong>A path for you</strong><span>Suggested APIs for how you work with Iristel</span></li>
-            <li><strong>Guided console</strong><span>Try every API with simple forms, no code needed</span></li>
-            <li><strong>Your own API key</strong><span>Connect your app once you’re approved</span></li>
-          </ul>
-        </div>
+      <div class="tier-grid" id="tier-grid"><p>Loading tiers…</p></div>
+      <div class="bt-wrap" id="bundle-tiers"></div>
+      <div class="pricing-cta">
+        <a class="console-cta" style="justify-content:center;height:48px;font-size:.95rem;padding:0 28px" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
+        <p>Sign up once as a business customer, an Iristel partner or an agent, then tell us which APIs you need. Our team reviews every request.</p>
       </div>
     </section>
 
@@ -363,9 +376,9 @@ footer { background: var(--surface); border-color: var(--line); }
 
     <section id="trust" class="audit-section">
       <style>
-        #trust details{border-bottom:1px solid #203b53;padding:14px 0}
-        #trust summary{cursor:pointer;font-weight:750;color:#fff}
-        #trust details p{color:#c2cfdb;margin:8px 0 0}
+        #trust details{border-bottom:1px solid var(--line);padding:14px 0}
+        #trust summary{cursor:pointer;font-weight:750;color:var(--ink)}
+        #trust details p{color:var(--muted);margin:8px 0 0}
       </style>
       <div class="section-heading light">
         <div><p class="eyebrow">Your data and security</p><h2>Questions, answered</h2></div>
@@ -391,15 +404,14 @@ footer { background: var(--surface); border-color: var(--line); }
           <details><summary>Who can use the marketplace?</summary><p>Business customers, Iristel partners, agents and Iristel employees. Choose your path above to see what fits you.</p></details>
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
-          <details><summary>What if I need an API that isn’t listed?</summary><p>Choose “Other” on the request form and describe what you need.</p></details>
-          <details><summary>Can I try it before paying?</summary><p>Yes. Choose “Sandbox → Production” on the request form and you get 30 free test calls after approval. Nothing is billed until you add a card — from then on your calls are live.</p></details>
-          <details><summary>What does it cost?</summary><p>Live calls are billed per successful call to the card on your Iristel account, once a month. Contact your Iristel representative for pricing.</p></details>
+          <details><summary>What if I need an API that isn’t listed?</summary><p>After you sign up, choose “Other” on your access request and describe what you need.</p></details>
+          <details><summary>Can I try it before paying?</summary><p>Yes. Choose “Sandbox → Production” on your access request and you get 30 free test calls after approval. Nothing is billed until you add a card — from then on your calls are live.</p></details>
+          <details><summary>What does it cost?</summary><p>Every API call falls in one of four tiers: Free, Standard, Premium and Service transaction (see Bundles &amp; pricing above). Today every successful live call is 1¢ CAD, whatever its tier, invoiced on the 1st of each month and charged to your card on the 5th. Tier prices are coming soon.</p></details>
         </div>
       </div>
     </section>
   </main>
 
-  <footer><span>Iristel API Marketplace</span><span>Numbers · Voice · Mobile · 911 — built on Iristel</span></footer>
   <script>
 
 const themeToggle = document.getElementById("theme-toggle");
@@ -522,6 +534,42 @@ const ACCOUNT_TYPE_CTA = (t) =>
       `<p style="font-size:.85rem;opacity:.75">Iristel employees already have a portal login — open API Marketplace from the menu to request access.</p>`
     : `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?type=${encodeURIComponent(t.id)}&from=marketplace">Sign up as ${t.label} →</a></p>`;
 
+// ---- Pricing tiers (data-driven from the catalog) -------------------------
+// Each catalog endpoint carries its tier id; reg.tiers describes the tiers.
+// Prices aren't set yet, so the price line says so.
+const TIER_COLOR = { free: "var(--green)", standard: "var(--muted)", premium: "var(--orange)", transaction: "var(--blue)" };
+let TIER_OF = {}, TIER_NAME = {};
+function stepTier(s) {
+  const t = TIER_OF[s.product + " " + s.endpoint];
+  return t ? ` <span class="pk-tier" style="color:${TIER_COLOR[t] || "inherit"}">${escHtml(TIER_NAME[t] || t)}</span>` : "";
+}
+function renderTiers(reg) {
+  const tiers = reg.tiers || [];
+  if (reg.pricingNote) document.getElementById("pricing-note").textContent =
+    "Every API call falls in one of four tiers. " + reg.pricingNote;
+  const counts = {};
+  (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { if (e.tier) counts[e.tier] = (counts[e.tier] || 0) + 1; }));
+  document.getElementById("tier-grid").innerHTML = tiers.length ? tiers.map((t) =>
+    `<article class="tier-card" style="--tc:${TIER_COLOR[t.id] || "var(--blue)"}">` +
+    `<h3>${escHtml(t.name)}</h3><p class="tier-unit">${t.priceCents != null ? escHtml(t.billingUnit) + (counts[t.id] ? " · " : "") : ""}${counts[t.id] ? counts[t.id] + " operations" : ""}</p>` +
+    `<p>${escHtml(t.whatsIn)}</p><ul>${(t.examples || []).map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>` +
+    `<p class="tier-price">${t.priceCents != null ? (t.priceCents === 0 ? "Free" : (t.priceCents < 100 ? t.priceCents + "¢" : "$" + (t.priceCents / 100).toFixed(2)) + " " + escHtml(t.billingUnit.toLowerCase())) : (t.id === "free" ? "1¢ per call today · free once tier prices start" : "1¢ per call today · tier price coming soon")}</p>` +
+    `</article>`).join("") : "<p>Tiers unavailable.</p>";
+  const bundles = reg.bundles || [];
+  if (!bundles.length || !tiers.length) return;
+  const mix = (b) => { const n = {}; (b.steps || []).forEach((s) => { const t = TIER_OF[s.product + " " + s.endpoint]; if (t) n[t] = (n[t] || 0) + 1; }); return n; };
+  document.getElementById("bundle-tiers").innerHTML =
+    `<ul class="bt-list">` + bundles.map((b) => { const n = mix(b);
+      return `<li><strong>📦 ${escHtml(b.name)}</strong><br>` + tiers.filter((t) => n[t.id]).map((t) =>
+        `<span style="color:${TIER_COLOR[t.id]}">${n[t.id]} ${escHtml(t.name)}</span>`).join("") + `</li>`; }).join("") + `</ul>` +
+    `<table><thead><tr><th>Bundle</th>${tiers.map((t) => `<th style="text-align:center">${escHtml(t.name)}</th>`).join("")}</tr></thead><tbody>` +
+    bundles.map((b) => {
+      const n = mix(b);
+      return `<tr><td><strong>📦 ${escHtml(b.name)}</strong></td>` +
+        tiers.map((t) => `<td class="n${n[t.id] ? "" : " z"}">${n[t.id] || "—"}</td>`).join("") + `</tr>`;
+    }).join("") + `</tbody></table>`;
+}
+
 // ---- Packages section + access-request form (data-driven from the catalog)
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // When this page is copied into Webflow, relative fetches would hit the
@@ -538,6 +586,8 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
   }
 
   // Packages grid
+  (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { if (e.tier) TIER_OF[p.id + " " + e.method + " " + e.path] = e.tier; }));
+  (reg.tiers || []).forEach((t) => { TIER_NAME[t.id] = t.name; });
   renderAccountTypes(reg);
   const grid = document.getElementById("packages-grid");
   const bundles = reg.bundles || [], audiences = reg.audiences || [];
@@ -563,12 +613,13 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
         `<h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
         `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
         `<ol class="pk-steps">${(b.steps || []).map((s) =>
-          `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
+          `<li><code>${escHtml(s.endpoint)}</code>${stepTier(s)}<span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
       ).join("") + `</div>`;
     }).join("") || "<p>No packages published yet.</p>");
     grid.querySelectorAll("[data-cat]").forEach((btn) => btn.addEventListener("click", () => { activeCat = btn.dataset.cat; drawPackages(); }));
   };
   drawPackages();
+  renderTiers(reg);
 
 })();
 

@@ -20,7 +20,8 @@ const path = require('path');
 const { PRODUCTS } = require('../lib/catalogs');
 const UI_HINTS = require('../lib/catalogs/ui-hints');
 const { BUNDLES } = require('../lib/catalogs/bundles');
-const { priceFor } = require('../lib/catalogs/pricing');
+const { priceFor, tierFor, TIERS, PRICING_NOTE } = require('../lib/catalogs/pricing');
+const TIER_NAME = Object.fromEntries(TIERS.map((t) => [t.id, t.name]));
 
 const OUT = path.resolve(process.argv[2]
   || path.join(__dirname, '..', '..', 'iris-ai', 'console-agent', 'kb', 'products.md'));
@@ -37,7 +38,7 @@ const gatewayPrefix = (p, e) => (e.path.startsWith('/api/') ? '' : '/api/ix/' + 
 
 function modeRules(p) {
   const price = priceFor(p.id, null);
-  const cost = `Production: ${price}¢ CAD per successful (2xx) call, invoiced monthly.`;
+  const cost = `Production: today ${price}¢ CAD per successful (2xx) call, whatever the operation's tier, invoiced monthly.`;
   if (ESPRESSO.has(p.id)) {
     return [
       `Sandbox: runs on the Espresso **test** system — reads and writes both work, nothing is live, and each call uses one of the ${SANDBOX_CALLS} free sandbox calls.`,
@@ -77,12 +78,23 @@ function productSection(p) {
     const h = hints[`${e.method} ${e.path}`] || {};
     const label = h.title || e.summary || '';
     const flags = [];
+    const tier = tierFor(p.id, `${e.method} ${e.path}`);
+    if (tier) flags.push(`${TIER_NAME[tier]} tier`);
     if (e.upload) flags.push('file upload');
     else if (e.fields && e.fields.some((f) => /[.\[]/.test(f.name))) flags.push('raw JSON body');
     if (!ESPRESSO.has(p.id) && !/^(GET|HEAD|OPTIONS)$/i.test(e.method)) flags.push('needs a card in sandbox');
     lines.push(`- \`${e.method} ${prefix}${e.path}\`${label ? ` — ${label}` : ''}${flags.length ? ` _(${flags.join('; ')})_` : ''}`);
   }
   lines.push('');
+  return lines.join('\n');
+}
+
+function tiersSection() {
+  const lines = ['## Pricing tiers', '', `Every operation is in one of four tiers; its tier is shown on each endpoint above and on its card in the console. ${PRICING_NOTE}`, ''];
+  for (const t of TIERS) {
+    lines.push(`- **${t.name}**: ${t.whatsIn} Examples: ${t.examples.join(', ')}.`);
+  }
+  lines.push('', `Once tier prices start, each tier is billed ${TIERS.map((t) => `${t.name}: ${t.billingUnit.toLowerCase()}`).join('; ')}. Until then, every successful live call costs the same.`, '');
   return lines.join('\n');
 }
 
@@ -103,6 +115,7 @@ const md = [
   `Sandbox gives ${SANDBOX_CALLS} free calls in total (one-time). Only the Espresso products (Phone Numbers / DIDs and Enterprise LNP) have a test system; every other product's sandbox reads return live data and its writes return 402 until a card is on file.`,
   '',
   ...PRODUCTS.map(productSection),
+  tiersSection(),
   bundlesSection(),
 ].join('\n');
 

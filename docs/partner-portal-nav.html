@@ -22,6 +22,9 @@
   DASHBOARD (Sept 2026): admin-only "Dashboard" dropdown (id="dashboard")
   containing API Marketplace. Hidden by default via class; shown only in
   the admin block below; also in the guest + 0Wire hide lists.
+  Oct 2026: the admin block also adds "Errors" (/dashboards/errors, the
+  OnlineOrdering error reports) to that dropdown, by copying the API
+  Marketplace item so it keeps the dropdown's styling.
 -->
 <style>
   .status-light {
@@ -106,6 +109,22 @@
   function setHref(id, href){ const e = $el(id); if (e) e.href = href; }
   function show(id)  { const e = $el(id); if (e) e.style.display = "block"; }
   function hide(id)  { const e = $el(id); if (e) e.style.display = "none"; }
+
+  // DASHBOARD: adds "Errors" to the admin-only Dashboards dropdown, as a copy
+  // of its API Marketplace item. Safe to call more than once.
+  function addErrorsDashboardLink() {
+    const menu = $el("dashboard");
+    if (!menu || menu.querySelector('a[href="/dashboards/errors"]')) return;
+    const first = menu.querySelector("a.nav-dashboard-link");
+    if (!first) return;
+    const link = first.cloneNode(true);
+    link.removeAttribute("id");
+    link.classList.remove("w--current");
+    link.href = "/dashboards/errors";
+    link.textContent = "Errors";
+    if (location.pathname === "/dashboards/errors") link.classList.add("w--current");
+    first.parentNode.appendChild(link);
+  }
 
   // ═══════════════════════════════════════════════════════════
   //  0WIRE SPECIAL ACCOUNTS — hide the whole nav, keep only
@@ -461,7 +480,8 @@
       show("911listing");
       show("toolkit");
       show("marketplacerequest"); // MARKETPLACE: admins always see it
-      show("dashboard"); // DASHBOARD: admin-only dropdown (API Marketplace)
+      show("dashboard"); // DASHBOARD: admin-only dropdown (API Marketplace, Errors)
+      addErrorsDashboardLink();
       setHref("presidentsclub", "/presidents-club-admin");
       console.log('👑 Admin detected — Presidents Club link set to /presidents-club-admin');
     }

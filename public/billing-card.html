@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card details</title>
+<!--
+  The console's "add a card" form, on the gateway's own origin. The console
+  (console-app.js) shows it in a frame inside Billing & usage, so the page that
+  hosts the console (the partner portal) never sees the card number or CVV.
+
+  Handshake with the console, by postMessage, only with the origin passed in
+  ?origin= and only if it is on the allow-list below:
+    frame  -> console  {type:'mp-card-ready'}            ask for the login session
+    console -> frame   {type:'mp-card-session', token}   kept in memory only
+    frame  -> console  {type:'mp-card-height', height}   fit the frame
+    frame  -> console  {type:'mp-card-saved', retried, pastDue}   never card data
+  The card goes from here straight to PUT /marketplace/billing/card.
+-->
+<style>
+  :root{color-scheme:light;--bg:#f8fafc;--panel:#ffffff;--bg2:#f1f5f9;--ink:#111827;--muted:#667085;--line-strong:#cbd5e1;--accent:#2563eb;
+    --grad:linear-gradient(135deg,#2563eb,#1d4ed8);--err:#b91c1c;--sans:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  [data-theme="dark"]{color-scheme:dark;--bg:#01111E;--panel:#0a1628;--bg2:#050d16;--ink:#E8F1F8;--muted:#9fb8cc;--line-strong:rgba(62,140,203,.38);--accent:#3E8CCB;
+    --grad:linear-gradient(135deg,#3E8CCB,#2a6a9a);--err:#ef9a9a}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:transparent;color:var(--ink);font:14px/1.5 var(--sans)}
+  form{background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;padding:16px 18px;max-width:460px}
+  .gfield{margin:10px 0}
+  .gfield label{display:block;font-weight:600;font-size:12.5px;margin-bottom:5px}
+  .gfield input{font:13.5px var(--sans);padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;width:100%;background:var(--bg2);color:var(--ink)}
+  .gfield input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .row{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  button{background:var(--grad);color:#fff;border:0;border-radius:10px;padding:10px 18px;font:700 13px var(--sans);cursor:pointer}
+  button:disabled{opacity:.6;cursor:progress}
+  .hint{font-size:12px;color:var(--muted)}
+  .msg{font-size:12.5px;color:var(--muted)}
+  .msg.err{color:var(--err)}
+  @media (max-width:420px){.grid3{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<form id="card-form" autocomplete="on">
+  <div class="gfield"><label for="holder">Name on card</label><input id="holder" name="holder" autocomplete="cc-name" required></div>
+  <div class="gfield"><label for="number">Card number</label><input id="number" name="number" inputmode="numeric" autocomplete="cc-number" required></div>
+  <div class="grid3">
+    <div class="gfield"><label for="expMonth">Month (MM)</label><input id="expMonth" name="expMonth" inputmode="numeric" maxlength="2" autocomplete="cc-exp-month" required></div>
+    <div class="gfield"><label for="expYear">Year (YYYY)</label><input id="expYear" name="expYear" inputmode="numeric" maxlength="4" autocomplete="cc-exp-year" required></div>
+    <div class="gfield"><label for="cvv">CVV</label><input id="cvv" name="cvv" inputmode="numeric" maxlength="4" autocomplete="cc-csc" required></div>
+  </div>
+  <div class="row"><button type="submit" disabled>Save card</button><span class="msg" id="msg" role="status"></span></div>
+  <p class="hint">Your card is sent securely to Iristel's billing system. We keep only the last 4 digits and expiry.</p>
+</form>
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(location.search);
+  if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+
+  // Pages allowed to host this form: the gateway itself and the partner
+  // portal (the same origins server.js allows for CORS). Local development
+  // hosts are allowed only when the gateway itself runs locally.
+  var ALLOWED = [
+    location.origin,
+    'https://iristelpartnerportal.com',
+    'https://www.iristelpartnerportal.com',
+    'https://iristel-portal.webflow.io',
+    'https://partner.iristel.com',
+  ];
+  var host = params.get('origin') || '';
+  var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+  var form = document.getElementById('card-form');
+  var msg = document.getElementById('msg');
+  var btn = form.querySelector('button');
+  if (window.parent === window || !(ALLOWED.indexOf(host) >= 0 || local)) {
+    form.innerHTML = '<p class="hint">This form only works inside the Iristel API console.</p>';
+    return;
+  }
+
+  var token = '';
+  function post(m) { window.parent.postMessage(m, host); }
+  window.addEventListener('message', function (ev) {
+    if (ev.source !== window.parent || ev.origin !== host) return;
+    var d = ev.data || {};
+    if (d.type === 'mp-card-session' && typeof d.token === 'string' && d.token) {
+      token = d.token;
+      btn.disabled = false;
+    }
+  });
+  function size() { post({ type: 'mp-card-height', height: document.documentElement.scrollHeight }); }
+  if (window.ResizeObserver) new ResizeObserver(size).observe(document.body);
+  size();
+  post({ type: 'mp-card-ready' });
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!token) { msg.textContent = 'Still connecting to the console. Try again in a second.'; return; }
+    var values = {};
+    new FormData(form).forEach(function (v, k) { values[k] = v; });
+    btn.disabled = true;
+    msg.className = 'msg';
+    msg.textContent = 'Saving…';
+    fetch('/marketplace/billing/card', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) {
+          throw new Error(d.error === 'login_required'
+            ? 'Your portal login has expired. Log in again and reopen the console.'
+            : (d.error || 'HTTP ' + r.status));
+        }
+        form.reset();                      // never leave card details in the page
+        msg.textContent = 'Saved.';
+        post({ type: 'mp-card-saved', retried: Array.isArray(d.retried) ? d.retried.length : 0, pastDue: !!d.pastDue });
+      });
+    }).catch(function (err) {
+      msg.className = 'msg err';
+      msg.textContent = err.message;
+      btn.disabled = false;
+      form.querySelector('[name=cvv]').value = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

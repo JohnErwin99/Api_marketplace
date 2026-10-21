@@ -1,8 +1,9 @@
 /**
  * Iris panel for the API console: a chat drawer (text by default, voice on
  * request) that walks a logged-in partner through the APIs they've been
- * granted. console.html loads it after its own inline script:
- *   <script src="/iris-console.js" defer></script>
+ * granted. console-app.js loads it from the same gateway once the console
+ * is mounted; the panel then mounts inside the console's shadow root
+ * (bridge.root) and calls the gateway that served this file.
  *
  * Iris fills, the partner sends. Every action goes through the bridge the
  * console hands over in its 'iris:console-ready' event (open an endpoint,
@@ -23,7 +24,11 @@
   'use strict';
 
   const SDK_URL = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.28.0/+esm';
-  const SESSION_URL = '/marketplace/iris/session';
+  // The gateway that served this file; the console may be hosted elsewhere
+  // (the partner portal's /console page).
+  const GATEWAY = document.currentScript && document.currentScript.src
+    ? new URL(document.currentScript.src).origin : location.origin;
+  const SESSION_URL = GATEWAY + '/marketplace/iris/session';
   const PROGRESS_KEY = 'iris-console-progress';
   const LANG = String(navigator.language || '').toLowerCase().startsWith('fr') ? 'fr' : 'en';
   const LANG_NAMES = { curl: 'curl', javascript: 'JavaScript', python: 'Python' };
@@ -222,20 +227,24 @@
 
   // ---- drawer -------------------------------------------------------------
   const CSS = [
-    '.irp-launch{position:fixed;right:18px;bottom:18px;z-index:60;display:inline-flex;align-items:center;gap:8px;padding:8px 16px 8px 8px;border:0;border-radius:999px;background:var(--accent,#2563eb);color:var(--accent-ink,#fff);font:700 13px var(--sans,system-ui,sans-serif);box-shadow:var(--shadow,0 8px 24px rgba(15,23,42,.12));cursor:pointer}',
+    '.irp-launch{position:fixed;right:18px;bottom:18px;z-index:2147483000;display:inline-flex;align-items:center;gap:8px;padding:8px 16px 8px 8px;border:0;border-radius:999px;background:var(--accent,#2563eb);color:var(--accent-ink,#fff);font:700 13px var(--sans,system-ui,sans-serif);box-shadow:var(--shadow,0 8px 24px rgba(15,23,42,.12));cursor:pointer}',
     '.irp-launch[hidden]{display:none}',
     '.irp-launch:hover{filter:brightness(1.08)}',
     '.irp-launch:focus-visible{outline:2px solid var(--ink,#111827);outline-offset:3px}',
     '.irp-mark{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);font:800 12px var(--sans,system-ui,sans-serif)}',
-    '.irp-drawer{position:fixed;top:0;right:0;bottom:0;z-index:61;width:360px;max-width:100%;display:flex;flex-direction:column;background:var(--panel,#fff);color:var(--ink,#111827);border-left:1px solid var(--line,#e5e7eb);box-shadow:var(--shadow,0 8px 24px rgba(15,23,42,.12));font:14px/1.5 var(--sans,system-ui,sans-serif)}',
+    '.irp-drawer{position:fixed;top:var(--mp-top,0px);right:0;bottom:0;z-index:2147483001;width:360px;max-width:100%;display:flex;flex-direction:column;background:var(--panel,#fff);color:var(--ink,#111827);border-left:1px solid var(--line,#e5e7eb);box-shadow:var(--shadow,0 8px 24px rgba(15,23,42,.12));font:14px/1.5 var(--sans,system-ui,sans-serif)}',
     '.irp-drawer[hidden]{display:none}',
+    // Room for the drawer: on the console's host element when the panel is in
+    // the console's shadow root, on the body otherwise.
+    '@media (min-width:761px){:host(.irp-open){padding-right:360px}}',
     '@media (min-width:761px){body.irp-open{padding-right:360px}}',
     // Phones: a bottom sheet instead of a full-screen drawer, so the card Iris
     // fills (and the Send button she points at) stays visible above it. The
     // page gets room below its content, and scrollIntoView keeps targets
     // clear of the sheet (scroll-padding).
     '@media (max-width:760px){.irp-drawer{top:auto;left:0;width:100%;height:min(60vh,560px);border-left:0;border-top:1px solid var(--line,#e5e7eb);border-radius:16px 16px 0 0;padding-bottom:env(safe-area-inset-bottom)}'
-      + 'body.irp-open{padding-bottom:62vh}html:has(body.irp-open){scroll-padding-bottom:62vh}'
+      + ':host(.irp-open){padding-bottom:62vh}'
+      + 'body.irp-open{padding-bottom:62vh}'
       + '.irp-launch{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:6px 14px 6px 6px;font-size:12.5px}}',
     '.irp-head{flex:none;display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line,#e5e7eb)}',
     '.irp-head .irp-mark{background:var(--accent,#2563eb);color:var(--accent-ink,#fff)}',
@@ -274,6 +283,14 @@
     '.irp-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}',
   ].join('\n');
 
+  // Inside the console's shadow root when it hands one over, else the page.
+  function mountRoot() { return bridge && bridge.root && typeof bridge.root.append === 'function' ? bridge.root : null; }
+  function openHost() { return (bridge && bridge.host && bridge.host.classList) ? bridge.host : document.body; }
+  // On phones the drawer is a bottom sheet; keep scrolled-to targets above it.
+  function sheetPadding(on) {
+    try { document.documentElement.style.scrollPaddingBottom = on && matchMedia('(max-width:760px)').matches ? '62vh' : ''; } catch (_) { /* old browser */ }
+  }
+
   function el(tag, cls, text) {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -285,7 +302,7 @@
     if (ui) return ui;
     const style = el('style');
     style.textContent = CSS;
-    document.head.appendChild(style);
+    (mountRoot() || document.head).appendChild(style);
 
     const launcher = el('button', 'irp-launch');
     launcher.type = 'button';
@@ -342,7 +359,7 @@
     form.append(label, input, actions);
 
     drawer.append(head, el('p', 'irp-disclose', T.disclosure), log, form);
-    document.body.append(launcher, drawer);
+    (mountRoot() || document.body).append(launcher, drawer);
 
     launcher.addEventListener('click', () => (drawer.hidden ? openDrawer() : closeDrawer(true)));
     close.addEventListener('click', () => closeDrawer(true));
@@ -363,7 +380,8 @@
     if (!bridge || gone || !irisEnabled()) return;
     build();
     ui.drawer.hidden = false;
-    document.body.classList.add('irp-open');
+    openHost().classList.add('irp-open');
+    sheetPadding(true);
     ui.launcher.setAttribute('aria-expanded', 'true');
     ui.input.focus();
     scrollLog();
@@ -377,7 +395,8 @@
     // drawer. A text session stays open so reopening carries on.
     if (convMode === 'voice' || switching) { endConv(); setVoiceUi(false); setState(T.offline); }
     ui.drawer.hidden = true;
-    document.body.classList.remove('irp-open');
+    openHost().classList.remove('irp-open');
+    sheetPadding(false);
     ui.launcher.setAttribute('aria-expanded', 'false');
     if (returnFocus && !ui.launcher.hidden) ui.launcher.focus();
   }
