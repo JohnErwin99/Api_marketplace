@@ -24,6 +24,16 @@
     "POST /api/orders/:id/discard-rejected": "standard",
     "POST /api/orders/:id/requests": "transaction"
   },
+  "did-orders": {
+    "GET /api/did-orders/available": "free",
+    "GET /api/did-orders/health": "free",
+    "GET /api/did-orders/orders": "standard",
+    "GET /api/did-orders/orders/:orderId": "free",
+    "GET /api/did-orders/routing-profiles": "free",
+    "POST /api/did-orders/orders": "transaction",
+    "POST /api/did-orders/orders/:orderId/cancel": "standard",
+    "POST /api/did-orders/orders/:orderId/complete": "standard"
+  },
   "lnp-enterprise": {
     "GET /api/lnp/error-dictionary": "free",
     "GET /api/lnp/numbers/:number/pons": "premium",
@@ -54,6 +64,11 @@
     "POST /api/wlnp/workflow/portin/submit": "transaction",
     "POST /api/wlnp/workflow/portout/response/submit": "premium",
     "POST /api/wlnp/workflow/portout/submit": "premium"
+  },
+  "lrn": {
+    "GET /api/lrn/basic/:number": "standard",
+    "GET /api/lrn/history/:number": "premium",
+    "POST /api/lrn/history": "premium"
   },
   "iristelx-accounts": {
     "DELETE /accounts/:accountId/services/:serviceId": "standard",

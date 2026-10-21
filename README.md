@@ -105,6 +105,12 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 | `EDID_USER` / `EDID_PASS` / `EDID_ENV` | Shared Espresso test account |
 | `WLNP_API_KEY` | Number Porting — Wireless: the IristelX key sent as `x-api-key` on `/workflow/*`. Unset → WLNP calls answer 503. |
 | `WLNP_BASE_URL` | Optional WLNP upstream origin (default `https://api.iristelx.com`) |
+| `ESPRESSO_CLIENT_ID` / `ESPRESSO_CLIENT_SECRET` | Espresso's REST API (OAuth client) for **DID Orders** and **LRN Lookup** (`lib/espresso-rest.js`). Until both are set (with a login, below) those two products are published as "soon": docs and forms show, calls answer `503 not_enabled`, nothing is metered. Setting them and redeploying switches both on. |
+| `ESPRESSO_REST_USER` / `ESPRESSO_REST_PASS` | The REST login (an email). Default: `EDID_USER` / `EDID_PASS`. |
+| `ESPRESSO_COMPANY_ID` / `ESPRESSO_SANDBOX_COMPANY_ID` | Optional: Iristel's Espresso company id (UUID) on production / on the sandbox. Default: that system's only active company. Never shared between the two systems. |
+| `ESPRESSO_ROUTING_PROFILE_ID` / `ESPRESSO_SANDBOX_ROUTING_PROFILE_ID` | Optional: the DID routing profile used when an order names none, per system. Default: that system's only active DID profile. |
+| `ESPRESSO_OCN` | Optional OCN set on DID orders and used to filter available numbers (default `154E`). |
+| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` / `_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. Sandbox partners call `api-sandbox.espressodid.com`, partners with a card `api.espressodid.com`; a system without a login answers `503 not_enabled` (not metered). The products show live once production is configured. |
 | `D365_*` | Dynamics 365 (approvals are read from here) |
 | `ADMIN_EMAILS` | Optional staff list override |
 | `GATEWAY_API_KEY` | Optional internal override key |
@@ -168,6 +174,41 @@ Espresso environment: see [Sandbox and production](#sandbox-and-production).
 | POST | `/api/orders/:id/requests` | didOrderEdit | append requests |
 | POST | `/api/orders/:id/discard-rejected` | didOrderDiscardRejected | |
 | POST | `/api/orders/:id/cancel` | didOrderCancel | |
+
+### Espresso REST products (DID Orders, LRN Lookup)
+
+Espresso's new REST API (`/ws/v1`, OAuth2) is served by `lib/espresso-rest.js`, which
+caches one token per system (Espresso allows 5 live tokens per login) and never follows
+redirects. Espresso's nginx answers the order collection, `/ws/v1/dids/orders`, with a
+301 to a static Swagger docs folder (seen 2026-10-21 on both hosts), so creating and
+listing orders go to `/index.php/ws/v1/dids/orders`, which reaches the API (`ROUTED`).
+Ask Espresso to fix the route; `GET /api/did-orders/health` lists one order to prove
+it works. OnlineOrdering calls the published path and is affected too.
+
+| Method | Path | Espresso | Notes |
+|--------|------|----------|-------|
+| GET  | `/api/did-orders/health` | auth + `general/companies` | login check |
+| GET  | `/api/did-orders/routing-profiles` | `network/routing_profiles` | DID profiles; partners don't get IPs |
+| GET  | `/api/did-orders/available?prefix=&ratecenter=&region=&limit=&offset=` | `POST dids/inventory/search` | available, OCN `154E`, not on an account, not vanity |
+| POST | `/api/did-orders/orders` | `POST dids/orders` | gateway sets company, country, OCN, vanity false; records the owner |
+| GET  | `/api/did-orders/orders?page=&size=` | `GET dids/orders` | staff: whole company; partners: their own |
+| GET  | `/api/did-orders/orders/:orderId` | `GET dids/orders/{id}` | UUID or `ORD-…` number; owner or staff only |
+| POST | `/api/did-orders/orders/:orderId/complete` | `POST …/complete` | `{ numbers? }` |
+| POST | `/api/did-orders/orders/:orderId/cancel` | `POST …/cancel` | `{ reason? }` |
+| GET  | `/api/lrn/basic/:number` | `GET dip/caus/basicdip/{company}/{number}` | 10 or 11 digits |
+| GET  | `/api/lrn/history/:number` | `GET dipping/caus/history/basicdip/{company}/{number}` | with porting history |
+| POST | `/api/lrn/history` | `POST dipping/caus/history/basicdip/{company}` | `{ numbers: [...] }`, 1–50 |
+
+DID orders are placed on Iristel's company, so the gateway records each order's owner
+(`did_orders` table) and partners see only their own, as for WLNP. Every create carries
+a reference unique to that request (`mp-<hex>` before the partner's own). If the answer
+is lost (timeout, 5xx), the order is looked up by that exact reference; if it can't be
+found yet, the partner gets `503 order_unconfirmed` ("don't order again") and the create
+stays in `did_order_pending` until their next order list finds it (dropped after a day).
+An approval for `dids` also covers `did-orders` (`lib/onboarding.js`), so partners move
+over without a CRM change. After switching on, regenerate the Iris KB
+(`node scripts/export-iris-kb.js`, which reads each product's status from the deployed
+`/catalog.json`) and upload it.
 
 ## Examples
 

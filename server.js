@@ -281,6 +281,12 @@ app.use('/api/lnp', require('./lib/routes/lnp')(resolveContext, h));
 // under this gateway's own origin (localhost in dev, Render in prod).
 app.use('/api/wlnp', require('./lib/routes/wlnp')());
 
+// Espresso's REST API (lib/espresso-rest.js): DID ordering with per-partner
+// ownership, and LRN lookups. Both answer 503 not_enabled until its login is
+// configured.
+app.use('/api/did-orders', require('./lib/routes/did-orders')(h));
+app.use('/api/lrn', require('./lib/routes/lrn')(h));
+
 // ---------------------------------------------------------------------------
 // Routes  (one REST endpoint per PDF method)
 // ---------------------------------------------------------------------------

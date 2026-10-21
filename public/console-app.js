@@ -557,6 +557,8 @@ async function main(ROOT,HOST,GATEWAY){
     'dids':           {auth:'edid',  base:ORIGIN, group:p=>p.startsWith('/api/orders')?'Orders':p.startsWith('/api/routing')?'Routing profiles':p.startsWith('/api/catalog')?'Catalog':'System'},
     'lnp-enterprise': {auth:'edid',  base:ORIGIN, group:p=>p.includes('/pons')||p.includes('/numbers')?'Porting requests (PONs)':'Reference'},
     'lnp-wireless':   {auth:'proxy', base:ORIGIN, group:p=>p.includes('/portin')?'Port In':p.includes('/portout')?'Port Out':p.includes('/cancel-svc')?'Cancel Service':'Grids & health'},
+    'did-orders':     {auth:'edid',  base:ORIGIN, group:p=>p.includes('/orders')?'Orders':p.includes('/available')?'Find numbers':'Setup'},
+    'lrn':            {auth:'edid',  base:ORIGIN, group:()=>'Lookups'},
     'e911':           {auth:'ix',base:IX('e911'), group:()=>'Listings'},
     'provisioning':{auth:'ix',base:IX('provisioning'), group:p=>/email|welcome/.test(p)?'Welcome letters':'Trunk provisioning'},
     'iristelx-accounts':{auth:'ix',base:IX('iristelx-accounts'), group:p=>/\/plans?(\/|$)/.test(p)?'Plans':/canada-post|address/.test(p)?'Addresses':/siptrunk/.test(p)?'SIP trunks':/service/.test(p)?'Services':'Accounts'},
@@ -823,7 +825,7 @@ async function main(ROOT,HOST,GATEWAY){
   products.forEach(p=>{
     const b=document.createElement('button');
     b.className='pchip'; b.dataset.id=p.id; b.setAttribute('role','tab');
-    b.innerHTML=esc(p.name)+(p.status==='planned'?'<span class="soon">soon</span>':'');
+    b.innerHTML=esc(p.name)+(p.status==='planned'||p.status==='preview'?'<span class="soon">soon</span>':'');
     b.title=p.summary||'';
     b.onclick=()=>{ productId=p.id; location.hash='#'+p.id; markProduct(); renderProduct(); };
     apiGroup.appendChild(b);
@@ -900,7 +902,10 @@ async function main(ROOT,HOST,GATEWAY){
   // Intent map: everyday phrasings -> product ids. Keys are matched as
   // whole words/phrases against the query.
   const INTENT_MAP={
-    'phone number|buy number|did|dids|order number|search number|number inventory|toll free|local number':['dids'],
+    'phone number|buy number|did|dids|order number|search number|number inventory|toll free|local number':['dids','did-orders'],
+    'available number|reserve number|new ordering|espresso rest':['did-orders'],
+    'lrn|lrn lookup|number lookup|carrier lookup|dip|dipping|who owns|porting history|local routing number':['lrn'],
+    'spid':['lrn','lnp-wireless'],
     'port|porting|port in|port out|transfer number|move number|lnp|pon|migrate number':['lnp-enterprise','lnp-wireless'],
     'wireless|mobile port|cwnpg|syniverse':['lnp-wireless'],
     'wireline|enterprise port':['lnp-enterprise'],
@@ -938,8 +943,10 @@ async function main(ROOT,HOST,GATEWAY){
     const intents=intentProducts(q);
     const scored=searchIndex.map(ix=>{
       let s=0;
+      // A product that isn't switched on yet never outranks a live one doing the same job.
+      const preview=(products.find(p=>p.id===ix.id)||{}).status==='preview';
       if(ix.nameL.includes(q))s+=100;
-      if(intents.has(ix.id))s+=60;
+      if(intents.has(ix.id)&&!preview)s+=60;
       tokens.forEach(t=>{
         if(ix.nameL.includes(t))s+=25;
         else if(ix.text.includes(t))s+=8;
@@ -948,6 +955,7 @@ async function main(ROOT,HOST,GATEWAY){
         .map(x=>({...x,score:tokens.reduce((a,t)=>a+(x.text.includes(t)?10:0),0)}))
         .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
       if(eps.length)s+=5;
+      if(preview&&s>0)s=Math.max(1,s-40);
       return {id:ix.id,score:s,eps};
     }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score);
     // Drop weak matches when a clearly better one exists.
@@ -1111,6 +1119,10 @@ async function main(ROOT,HOST,GATEWAY){
       d+='<div class="callout"><b>Coming soon.</b> This product is on the marketplace roadmap; its endpoints have not been published yet.</div>';
       return d;
     }
+    if(p.status==='preview'){
+      d+='<div class="callout"><b>Switching on soon.</b> Everything below is how this API works, and you can fill in the forms, '
+        +'but calls answer <code>503 not_enabled</code> until Iristel switches it on. Nothing is charged and no sandbox call is used.</div>';
+    }
     d+=renderFlow(p.flow)+renderImages(p.images);
 
     d+='<h3>Base URL</h3><pre>'+esc(c.base)+'</pre>'
@@ -1214,7 +1226,7 @@ async function main(ROOT,HOST,GATEWAY){
       cat.forEach(e=>{
         d+='<div class="ep" id="'+anchor(e)+'">'
           +'<div class="sig"><span class="m '+e.method+'">'+e.method+'</span><strong>'+esc(e.path)+'</strong>'+tierBadge(e)+'</div>'
-          +'<p class="soap" style="margin:6px 0 0">Maps to <code>'+esc(e.soap)+'</code></p>';
+          +(e.soap||e.upstream?'<p class="soap" style="margin:6px 0 0">Maps to <code>'+esc(e.soap||e.upstream)+'</code></p>':'');
         if(e.description)d+='<p style="margin:8px 0 0">'+esc(e.description)+'</p>';
         if(e.precondition)d+='<div class="pre-note" style="margin:10px 0 0"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
         if(e.params&&e.params.length){
@@ -1603,7 +1615,9 @@ async function main(ROOT,HOST,GATEWAY){
   function renderOpGrid(p){
     const ui=p.ui||{}, c=cfg();
     $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">'+esc(ui.title||p.name)+'</h2>'
-      +'<p class="hint" style="margin:0;font-size:13px">'+esc(ui.blurb||p.summary||'')+'</p>';
+      +'<p class="hint" style="margin:0;font-size:13px">'+esc(ui.blurb||p.summary||'')+'</p>'
+      +(p.status==='preview'?'<div class="callout" style="margin:10px 0 0"><b>Switching on soon.</b> You can fill in these forms, '
+        +'but calls answer <code>503 not_enabled</code> until Iristel turns this API on. Nothing is charged.</div>':'');
     const grid=$('#opgrid');grid.innerHTML='';
     const groups={},order=[];
     catalog().forEach(e=>{const g=c.group(e.path);if(!groups[g]){groups[g]=[];order.push(g)}groups[g].push(e)});
@@ -1866,7 +1880,7 @@ async function main(ROOT,HOST,GATEWAY){
     const h=hintFor(e);
 
     let html='<h2>'+esc(h.title||e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span></h2>';
-    if(e.soap)html+='<p class="soap">Maps to <code>'+esc(e.soap)+'</code></p>';
+    if(e.soap||e.upstream)html+='<p class="soap">Maps to <code>'+esc(e.soap||e.upstream)+'</code></p>';
     if(e.description)html+='<p class="desc">'+esc(e.description)+'</p>';
     if(e.precondition)html+='<div class="pre-note"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
     html+=formHtml(e);
@@ -2088,6 +2102,8 @@ async function main(ROOT,HOST,GATEWAY){
   const priceText=c=>c<100?c+'¢':'$'+(c/100).toFixed(2);
   function costNote(e){
     const mode=curMode(), price=priceText(priceOf(e)), left=callsLeft();
+    if((products.find(p=>p.id===e.pid)||{}).status==='preview')
+      return 'Switching on soon: calls answer 503 until Iristel turns this API on. Nothing is charged and no sandbox call is used.';
     if(mode==='exempt')return 'Internal account: calls are not billed.';
     const tn=tierName(e)?tierName(e)+' tier · ':'';
     if(mode==='production')return 'Live: '+tn+price+' per successful call today, billed to the card on file.';
@@ -2188,6 +2204,7 @@ async function main(ROOT,HOST,GATEWAY){
       description:clip(e.description||h.description||'',600),returns:clip(e.returns||h.returns||'',600),
       params:params.slice(0,40),bodyMode:mode,priceCents:priceOf(e),tier:tierName(e)||null,live:liveOnly(e),
       sandboxRule:sandboxRule(e),destructive:isDestructive(e)};
+    if(p.status==='preview')out.comingSoon='Not switched on yet: calls answer 503 not_enabled until Iristel turns this API on. Nothing is charged.';
     if(mode==='raw'&&e.body)out.bodyTemplate=clip(JSON.stringify(e.body),600);
     if(mode==='upload')out.upload={field:e.upload.field||'file',accept:e.upload.accept||''};
     if(e.precondition)out.precondition=clip(e.precondition,300);
