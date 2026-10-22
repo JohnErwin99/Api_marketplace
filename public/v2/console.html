@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iristel · API Marketplace</title>
+<!--
+  v2 of /console: the console in the Iristel brand, on its own page. The
+  partner portal's /dids page frames it (staging). Theme: ?theme=dark, else
+  light; never the device setting. The framing page keeps it in sync with
+  postMessage {type:'ir-theme', theme:'light'|'dark'} (portal origins only).
+  The console (v2/console-app.js) follows html[data-theme] live.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Ubuntu:wght@400;500;700&display=swap">
+<script>
+(function () {
+  'use strict';
+  var h = document.documentElement;
+  function setTheme(t) { h.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light'); }
+  setTheme(new URLSearchParams(location.search).get('theme'));
+  // Pages that may set the theme: the partner portal (the origins server.js
+  // allows for CORS), and local hosts when the gateway itself runs locally.
+  var ALLOWED = [
+    'https://iristelpartnerportal.com',
+    'https://www.iristelpartnerportal.com',
+    'https://iristel-portal.webflow.io',
+    'https://partner.iristel.com',
+  ];
+  var localGateway = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  window.addEventListener('message', function (ev) {
+    if (window.parent === window || ev.source !== window.parent) return;
+    if (ALLOWED.indexOf(ev.origin) < 0 && !(localGateway && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(ev.origin))) return;
+    var d = ev.data;
+    if (d && d.type === 'ir-theme') setTheme(d.theme);
+  });
+})();
+</script>
+<style>
+  /* "only light": phones that darken pages on their own leave light alone */
+  html{color-scheme:only light;background:#f5f7fb}
+  html[data-theme="dark"]{color-scheme:dark;background:#01111e}
+  body{margin:0;background:inherit}
+  #mp-console{min-height:100vh}
+</style>
+</head>
+<body>
+<!-- The console mounts itself here: v2/console-app.js renders it in a shadow
+     root and loads the v2 Iris panel. -->
+<div id="mp-console"></div>
+<script src="/marketplace-access.js"></script>
+<script src="/v2/console-app.js"></script>
+</body>
+</html>

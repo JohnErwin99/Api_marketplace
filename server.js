@@ -87,6 +87,24 @@ app.get('/iris-console.js', (req, res) => res.sendFile(path.join(__dirname, 'pub
   (err) => { if (err && !res.headersSent) res.status(404).json({ error: 'not_found', message: 'No route GET /iris-console.js' }); }));
 // The marketplace page's script (the page and its Webflow copy load it from here).
 app.get('/marketplace-page.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-page.js')));
+// v2: the console in the Iristel portal brand, light by default, theme taken
+// from the page that hosts it (public/v2/). New paths only: the routes above
+// keep serving today's console unchanged. Same headers as their v1 routes.
+app.get('/v2/console', (req, res) => res.sendFile(path.join(__dirname, 'public', 'v2', 'console.html')));
+app.get('/v2/billing-card', (req, res) => {
+  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.get('host') || '');
+  const ancestors = ["'self'", 'https://iristelpartnerportal.com', 'https://www.iristelpartnerportal.com',
+    'https://iristel-portal.webflow.io', 'https://partner.iristel.com',
+    ...(local ? ['http://localhost:*', 'http://127.0.0.1:*'] : [])];
+  res.set('Content-Security-Policy', `frame-ancestors ${ancestors.join(' ')}`);
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'public', 'v2', 'billing-card.html'));
+});
+app.get('/v2/console-app.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'v2', 'console-app.js'),
+  { headers: { 'Content-Type': 'application/javascript; charset=UTF-8' } }));
+app.get('/v2/iris-console.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'v2', 'iris-console.js'),
+  { headers: { 'Content-Type': 'application/javascript; charset=UTF-8' } },
+  (err) => { if (err && !res.headersSent) res.status(404).json({ error: 'not_found', message: 'No route GET /v2/iris-console.js' }); }));
 
 // ---------------------------------------------------------------------------
 // Credentials resolution
