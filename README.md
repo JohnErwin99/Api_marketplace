@@ -99,6 +99,7 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 |---|---|
 | `SESSION_SECRET` | Signs login sessions and partner keys. Changing it logs everyone out and rotates every partner key. |
 | `IRISTELX_API_KEY` | Unified log-in / sign-up / forgot-password, employee lookup, provisioning and 911 |
+| `EMPLOYEE_WARM_EMAIL` | Optional. A staff email the gateway looks up every 4 min so the slow IristelX employee directory stays warm for logins (default: the last staff member who logged in) |
 | `MIND_API_KEY` | IristelX accounts, SIM, commissions, mobile; creating customer billing accounts |
 | `MIND_RESELL_KEY` | Creating reseller billing accounts (RESELL provider) |
 | `MIND_SEARCH_KEY` | Get Account By Email |
