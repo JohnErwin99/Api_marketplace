@@ -714,7 +714,7 @@ async function main(ROOT,HOST,GATEWAY){
     badge.textContent='Access: '+products.length+' API'+(products.length===1?'':'s')+(em?' · '+em:'');
     badge.title='API products authorized for your partner portal login.';
     if(!products.length){
-      $('#docs-body').innerHTML='<h2>No API access yet</h2><p class="lead">Your partner portal login has no marketplace products authorized. <a href="https://iristel-portal.webflow.io/api-marketplace#request-form">Request access here</a>.</p>';
+      $('#docs-body').innerHTML='<h2>No API access yet</h2><p class="lead">Your partner portal login has no marketplace products authorized. <a href="https://iristelpartnerportal.com/api-marketplace#request-form">Request access here</a>.</p>';
       // Already asked? Say it's being reviewed instead.
       const sess=window.MarketplaceAccess.session&&window.MarketplaceAccess.session();
       if(em&&sess)fetch(ORIGIN+'/marketplace/authorizations?email='+encodeURIComponent(em),{headers:{Authorization:'Bearer '+sess}})
