@@ -22,34 +22,28 @@ const path = require('path');
 const { PRODUCTS } = require('../lib/catalogs');
 const UI_HINTS = require('../lib/catalogs/ui-hints');
 const { BUNDLES } = require('../lib/catalogs/bundles');
-const { priceFor, tierFor, TIERS, PRICING_NOTE } = require('../lib/catalogs/pricing');
-const TIER_NAME = Object.fromEntries(TIERS.map((t) => [t.id, t.name]));
+const { tierFor, PACKAGES, PRICING_NOTE, higherPackage } = require('../lib/catalogs/pricing');
+const PACKAGE_NAME = Object.fromEntries(PACKAGES.map((t) => [t.id, t.name]));
 
 const OUT = path.resolve(process.argv.slice(2).find((a) => !a.startsWith('--'))
   || path.join(__dirname, '..', '..', 'iris-ai', 'console-agent', 'kb', 'products.md'));
 const BASE_URL = 'https://api-marketplace-1im9.onrender.com';
-// Mirrors lib/entitlements.js (ESPRESSO, SANDBOX_CALLS). Not required from
-// there because that module opens the usage database.
-const ESPRESSO = new Set(['dids', 'lnp-enterprise', 'did-orders', 'lrn']);
-const SANDBOX_CALLS = 30;
+// Mirrors lib/entitlements.js (ESPRESSO). Not required from there because
+// that module opens the usage database.
+const ESPRESSO = new Set(['lnp-enterprise', 'did-orders', 'lrn']);
 
 // Gateway path for a catalog endpoint: Espresso and WLNP catalogs already
 // carry the full /api/... path; IristelX-backed products (provisioning, 911,
 // accounts, SIM, commissions, mobile) are proxied at /api/ix/<product>.
 const gatewayPrefix = (p, e) => (e.path.startsWith('/api/') ? '' : '/api/ix/' + p.id);
 
-function modeRules(p) {
-  const price = priceFor(p.id, null);
-  const cost = `Production: today ${price}¢ CAD per successful (2xx) call, whatever the operation's tier, invoiced monthly.`;
-  if (ESPRESSO.has(p.id)) {
-    return [
-      `Sandbox: runs on the Espresso **test** system — reads and writes both work, nothing is live, and each call uses one of the ${SANDBOX_CALLS} free sandbox calls.`,
-      `${cost} Once a card is on file the same key runs on the Espresso production system.`,
-    ];
-  }
+// eps: the endpoints the KB lists (staff-only ones left out).
+function modeRules(p, eps) {
+  const count = (id) => eps.filter((e) => tierFor(p.id, `${e.method} ${e.path}`) === id).length;
+  const split = PACKAGES.map((t) => `${count(t.id)} ${t.name}`).join(', ');
   return [
-    `Sandbox: there is **no test system**. GET calls return **live data** and each uses one of the ${SANDBOX_CALLS} free sandbox calls; any other method (POST, PUT, PATCH, DELETE) returns 402 until a card is added under Billing & usage.`,
-    `${cost} Every call is live.`,
+    `Packages: ${split} operation(s). Each operation's package is shown below; a caller's package must include it (Premium includes Standard, which includes Free), otherwise the call answers 403 upgrade_required.`,
+    `Every partner call is **live**${ESPRESSO.has(p.id) ? ' (Espresso production system)' : ''}: there is no sandbox. No per-call charges.`,
   ];
 }
 
@@ -69,11 +63,11 @@ function productSection(p) {
   lines.push(`- **Product id:** \`${p.id}\``);
   lines.push(`- **What it does:** ${blurb}`);
   if (p.status === 'preview') {
-    lines.push('- **Status: switching on soon.** The docs and forms are published, but every call answers `503 not_enabled` until Iristel switches it on. Nothing is charged and no sandbox call is used. Explain how it works, but don\'t highlight Send for it.');
+    lines.push('- **Status: switching on soon.** The docs and forms are published, but every call answers `503 not_enabled` until Iristel switches it on. Explain how it works, but don\'t highlight Send for it.');
   }
   if (prefix) lines.push(`- **Gateway prefix:** \`${prefix}\` — IristelX-backed; the gateway adds the upstream key, so you only send your marketplace credentials.`);
   lines.push('- **Auth:** in the console, your portal login session (automatic); from your own backend, your marketplace key as `Authorization: Bearer mk_…` or `X-Marketplace-Key: mk_…`.');
-  for (const r of modeRules(p)) lines.push(`- ${r}`);
+  for (const r of modeRules(p, eps)) lines.push(`- ${r}`);
   // Step titles only: the console's flow text is longer and is returned per
   // endpoint by the get_endpoint_docs tool.
   const steps = p.flow ? (p.flow.steps || []).map((s) => s.title).filter(Boolean).join(' → ') : '';
@@ -84,28 +78,38 @@ function productSection(p) {
     const label = h.title || e.summary || '';
     const flags = [];
     const tier = tierFor(p.id, `${e.method} ${e.path}`);
-    if (tier) flags.push(`${TIER_NAME[tier]} tier`);
+    if (tier) flags.push(`${PACKAGE_NAME[tier]} package`);
     if (e.upload) flags.push('file upload');
     else if (e.fields && e.fields.some((f) => /[.\[]/.test(f.name))) flags.push('raw JSON body');
-    if (!ESPRESSO.has(p.id) && !/^(GET|HEAD|OPTIONS)$/i.test(e.method)) flags.push('needs a card in sandbox');
     lines.push(`- \`${e.method} ${prefix}${e.path}\`${label ? ` — ${label}` : ''}${flags.length ? ` _(${flags.join('; ')})_` : ''}`);
   }
   lines.push('');
   return lines.join('\n');
 }
 
-function tiersSection() {
-  const lines = ['## Pricing tiers', '', `Every operation is in one of four tiers; its tier is shown on each endpoint above and on its card in the console. ${PRICING_NOTE}`, ''];
-  for (const t of TIERS) {
-    lines.push(`- **${t.name}**: ${t.whatsIn} Examples: ${t.examples.join(', ')}.`);
+const price = (t) => (t.priceCents ? `${t.priceCents}¢ CAD a month` : 'free');
+function packagesSection() {
+  const lines = ['## Packages and pricing', '', `${PRICING_NOTE} Every operation belongs to the lowest package that includes it, shown on each endpoint above and on its card in the console.`, ''];
+  for (const t of PACKAGES) {
+    lines.push(`- **${t.name}** (${price(t)}): ${t.whatsIn} Examples: ${t.examples.join(', ')}.`);
   }
-  lines.push('', `Once tier prices start, each tier is billed ${TIERS.map((t) => `${t.name}: ${t.billingUnit.toLowerCase()}`).join('; ')}. Until then, every successful live call costs the same.`, '');
+  lines.push('',
+    'How it works:',
+    '- The partner picks a package on the access request (API Marketplace page); Iristel staff approve it. To change package, the partner asks from the API Marketplace page (a new request) and staff apply it.',
+    '- Free needs no card. Standard and Premium need a card under **Billing & usage** in the console before the first call; until then every call answers 402.',
+    '- A call outside the partner\'s package answers **403 upgrade_required**, with the package that includes it (requiredPackage).',
+    '- The monthly fee is invoiced on the 1st for the month before and charged to the card on the 5th, with sales tax. There are no per-call charges, and calls are still counted under Billing & usage.',
+    '- There is no sandbox and there are no free test calls: every partner call is live. Iristel staff and internal employees are never billed.',
+    '');
   return lines.join('\n');
 }
 
 function bundlesSection() {
   const lines = ['## Bundles (guided multi-step use cases)', ''];
-  for (const b of BUNDLES) lines.push(`- \`${b.id}\` — **${b.name}**: ${b.summary}`);
+  for (const b of BUNDLES) {
+    const pkg = b.steps.reduce((acc, s) => higherPackage(acc, tierFor(s.product, s.endpoint) || 'premium'), 'free');
+    lines.push(`- \`${b.id}\` — **${b.name}** (needs ${PACKAGE_NAME[pkg]}): ${b.summary}`);
+  }
   lines.push('');
   return lines.join('\n');
 }
@@ -136,10 +140,10 @@ const md = [
   '',
   `Every product is called through the gateway at \`${BASE_URL}\`. A caller only reaches the products their account is approved for (others return 403). Endpoint paths below are the full gateway paths; \`:name\` segments are path parameters.`,
   '',
-  `Sandbox gives ${SANDBOX_CALLS} free calls in total (one-time). Only the Espresso products (Phone Numbers / DIDs, New ordering (DIDs), LRN Lookup and Enterprise LNP) have a test system; every other product's sandbox reads return live data and its writes return 402 until a card is on file.`,
+  'Pricing is by package (Free, Standard, Premium; see "Packages and pricing" below). There is no sandbox: every partner call is live, and there are no per-call charges.',
   '',
   ...PRODUCTS.map(productSection),
-  tiersSection(),
+  packagesSection(),
   bundlesSection(),
 ].join('\n');
 

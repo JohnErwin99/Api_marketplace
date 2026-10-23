@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const soap = require('./lib/soap');
-const { AppError, call, str, requestItems, orderRequestArray } = soap;
+const { AppError } = soap;
 
 const app = express();
 // Render sits behind Cloudflare; the visitor's own address comes from
@@ -29,8 +29,8 @@ const PORTAL_ORIGINS = [
   'https://www.iristel.com',
 ];
 const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? PORTAL_ORIGINS : [])])];
-// The console reads the caller's mode and sandbox allowance from these.
-const exposedHeaders = ['X-Marketplace-Mode', 'X-Sandbox-Calls-Remaining'];
+// The console reads the caller's mode and package from these.
+const exposedHeaders = ['X-Marketplace-Mode', 'X-Marketplace-Package'];
 app.use(cors(allowed.length ? { origin: allowed, exposedHeaders } : { exposedHeaders }));
 // 8 MB: the access-request form sends the business-registration document
 // as base64 JSON (~5 MB file cap plus encoding overhead).
@@ -43,13 +43,13 @@ app.use(express.json({ limit: '8mb' }));
 app.use('/api', require('./lib/entitlements').requireEntitlement());
 
 // Health check for Render. Also shows whether the ledger survives deploys:
-// sandboxCalls should keep its value across a redeploy (no emails exposed).
+// ledgerCalls should keep its value across a redeploy (no emails exposed).
 const STARTED_AT = new Date().toISOString();
-const qSandboxCalls = require('./lib/db').prepare(`SELECT COUNT(*) AS n FROM usage WHERE mode = 'sandbox'`);
+const qLedgerCalls = require('./lib/db').prepare('SELECT COUNT(*) AS n FROM usage');
 app.get('/healthz', (req, res) => res.json({
   ok: true, startedAt: STARTED_AT,
   persistentDisk: require('./lib/db').storage.persistent,
-  sandboxCalls: qSandboxCalls.get().n,
+  ledgerCalls: qLedgerCalls.get().n,
 }));
 
 // Test console (single static page) at /console
@@ -110,9 +110,9 @@ app.get('/v2/iris-console.js', (req, res) => res.sendFile(path.join(__dirname, '
 // Credentials resolution
 // Priority: per-request headers/basic-auth  ->  .env defaults (EDID_USER /
 // EDID_PASS, the same login on Espresso's test and production systems).
-// The system comes from the caller's marketplace mode — sandbox partners on
-// test, partners with a card on production — and only staff and internal
-// callers may pick it with X-EDID-Env (see lib/entitlements.js edidEnv).
+// Partners always use Espresso's production system; only staff and internal
+// callers may pick the test system with X-EDID-Env (see lib/entitlements.js
+// edidEnv).
 // ---------------------------------------------------------------------------
 const { edidEnv } = require('./lib/entitlements');
 function resolveContext(req) {
@@ -154,7 +154,18 @@ const h = (fn) => (req, res) => {
 // ---------------------------------------------------------------------------
 const { PRODUCTS, CLASSIFICATIONS } = require('./lib/catalogs');
 const UI_HINTS = require('./lib/catalogs/ui-hints');
-const CATALOG = PRODUCTS.find((p) => p.id === 'dids').endpoints;
+
+// Every ':name' in a path gets a path param, so the console and Iris show a
+// field for it: some IristelX catalog entries list none, and the console then
+// sent the literal ':accountId'. New arrays, so shared param objects aren't
+// edited.
+for (const p of PRODUCTS) {
+  for (const e of p.endpoints || []) {
+    const have = new Set((e.params || []).filter((x) => x.in === 'path').map((x) => x.name));
+    const missing = [...e.path.matchAll(/:([A-Za-z0-9_]+)/g)].map((m) => m[1]).filter((n) => !have.has(n));
+    if (missing.length) e.params = [...missing.map((name) => ({ name, in: 'path', required: true })), ...(e.params || [])];
+  }
+}
 
 // Attach UI hints once at startup: per-endpoint `ui` object + per-product `ui`.
 // A hint's description, returns and field help also fill the catalog's own
@@ -178,9 +189,10 @@ for (const p of PRODUCTS) {
   }
 }
 
-// Pricing tier per endpoint (lib/catalogs/tiers.json). Every operation should
-// have one; a missing tier is reported here, the same way stale bundle steps are.
-const { tierFor, TIERS, PRICING_NOTE } = require('./lib/catalogs/pricing');
+// Package tier per endpoint (lib/catalogs/tiers.json): the lowest package
+// that includes it. Every operation should have one; a missing tier is
+// reported here, the same way stale bundle steps are.
+const { tierFor, PACKAGES, PRICING_NOTE, higherPackage } = require('./lib/catalogs/pricing');
 for (const p of PRODUCTS) {
   for (const e of p.endpoints || []) {
     e.tier = tierFor(p.id, `${e.method} ${e.path}`);
@@ -209,6 +221,8 @@ for (const b of BUNDLES) {
     }
     return true;
   });
+  // The package a bundle needs: the highest tier among its steps.
+  b.package = b.steps.reduce((pkg, s) => higherPackage(pkg, tierFor(s.product, s.endpoint) || 'premium'), 'free');
 }
 
 // Onboarding: access-request intake + authorization lookup for the portal.
@@ -221,12 +235,10 @@ require('./lib/portal').register(app);
 require('./lib/usage').register(app);
 require('./lib/admin').register(app, PRODUCTS);
 
-const { priceFor } = require('./lib/catalogs/pricing');
-const { SANDBOX_CALLS } = require('./lib/entitlements');
 function catalogPayload() {
   return {
     service: 'iristel-api-marketplace',
-    upstream: soap.ENDPOINTS,
+    upstream: soap.ENDPOINTS_V4,
     default_env: (process.env.EDID_ENV || 'test'),
     classifications: CLASSIFICATIONS,
     products: PRODUCTS.map((p) => ({
@@ -238,15 +250,12 @@ function catalogPayload() {
     categories: CATEGORIES,
     accountTypes: ACCOUNT_TYPES,
     bundles: BUNDLES,
-    // Price per successful production call, in CAD cents, per product.
-    prices: Object.fromEntries(PRODUCTS.map((p) => [p.id, priceFor(p.id, null)])),
-    // Pricing tiers (each endpoint carries its `tier` id). Prices are null
-    // until they are set; pricingNote says what partners pay today.
-    tiers: TIERS,
+    // Packages (Free, Standard, Premium; monthly price in CAD cents). Each
+    // endpoint's `tier` and each bundle's `package` is the lowest package
+    // that includes it. `tiers` is the same list, for older page copies.
+    packages: PACKAGES,
+    tiers: PACKAGES,
     pricingNote: PRICING_NOTE,
-    sandboxCalls: SANDBOX_CALLS,
-    // Kept for older clients that read the flat DID list.
-    endpoints: CATALOG,
   };
 }
 
@@ -271,14 +280,17 @@ require('./lib/billing').register(app);
 require('./lib/iris').register(app);
 require('./lib/invoices').register(app, PRODUCTS);
 
-// Monthly billing, checked hourly (every step is idempotent): last month's
+// Monthly billing, checked hourly (every step is idempotent): each paid
+// package active this month is recorded for its invoice; last month's
 // invoices go out from the 1st, and are charged from the 5th. Set
-// BILLING_SCHEDULER=off to run both by hand from the dashboard instead.
+// BILLING_SCHEDULER=off to run the invoices and charges by hand from the
+// dashboard instead (paid-package calls still record their month).
 if (process.env.BILLING_SCHEDULER !== 'off') {
   const invoices = require('./lib/invoices');
-  const { chargeInvoices } = require('./lib/billing');
+  const { chargeInvoices, notePackageMonths } = require('./lib/billing');
   const billingTick = async () => {
     try {
+      await notePackageMonths();
       const mon = invoices.prevMonth();
       const sent = (await invoices.runInvoices(mon)).filter((r) => r.status === 'sent');
       if (sent.length) console.log(`[billing] ${mon}: emailed ${sent.length} invoice(s)`);
@@ -304,119 +316,6 @@ app.use('/api/wlnp', require('./lib/routes/wlnp')());
 // configured.
 app.use('/api/did-orders', require('./lib/routes/did-orders')(h));
 app.use('/api/lrn', require('./lib/routes/lrn')(h));
-
-// ---------------------------------------------------------------------------
-// Routes  (one REST endpoint per PDF method)
-// ---------------------------------------------------------------------------
-
-// testConnection
-app.get('/api/ping', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const name = req.query.name || 'ping';
-  const out = await call('testConnection', str('name', name), creds, env);
-  res.json({ result: out });
-}));
-
-// didGetProductCatalog
-app.get('/api/catalog', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  res.json({ items: await call('didGetProductCatalog', '', creds, env) });
-}));
-
-// didGetRoutingProfiles
-app.get('/api/routing-profiles', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  res.json({ items: await call('didGetRoutingProfiles', '', creds, env) });
-}));
-
-// didGetRoutingProfilesDetailsFull  (declare BEFORE :profile so "full" isn't captured)
-app.get('/api/routing-profiles/full', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  res.json({ items: await call('didGetRoutingProfilesDetailsFull', '', creds, env) });
-}));
-
-// didGetRoutingProfileDetails
-app.get('/api/routing-profiles/:profile', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('profile', decodeURIComponent(req.params.profile));
-  res.json({ profile: await call('didGetRoutingProfileDetails', inner, creds, env) });
-}));
-
-// didOrderDids
-app.post('/api/orders', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const profiles = req.body && req.body.profiles;
-  if (!Array.isArray(profiles) || profiles.length === 0) {
-    throw new AppError(400, 'validation_error', 'Body must include a non-empty "profiles" array');
-  }
-  const inner = orderRequestArray(profiles);
-  const out = await call('didOrderDids', inner, creds, env);
-  res.status(201).json({ result: out });
-}));
-
-// didGetOrders
-app.get('/api/orders', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const { from, to } = req.query;
-  if (!from || !to) {
-    throw new AppError(400, 'validation_error', 'Query params "from" and "to" are required (Y-m-d H:i:s)');
-  }
-  const inner = str('startDate', from) + str('endDate', to);
-  res.json({ items: await call('didGetOrders', inner, creds, env) });
-}));
-
-// didGetOrderInfo
-app.get('/api/orders/:id', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('didOrderId', req.params.id);
-  res.json({ order: await call('didGetOrderInfo', inner, creds, env) });
-}));
-
-// didGetOrderStatus
-app.get('/api/orders/:id/status', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('didOrderId', req.params.id);
-  res.json({ order_number: req.params.id, status: await call('didGetOrderStatus', inner, creds, env) });
-}));
-
-// didGetOrderDetails
-app.get('/api/orders/:id/details', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('didOrderId', req.params.id);
-  res.json({ order_number: req.params.id, dids: await call('didGetOrderDetails', inner, creds, env) });
-}));
-
-// didGetOrderProblems
-app.get('/api/orders/:id/problems', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('didOrderId', req.params.id);
-  res.json({ order_number: req.params.id, problems: await call('didGetOrderProblems', inner, creds, env) });
-}));
-
-// didOrderEdit  (append requests)
-app.post('/api/orders/:id/requests', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const requests = req.body && req.body.requests;
-  if (!Array.isArray(requests) || requests.length === 0) {
-    throw new AppError(400, 'validation_error', 'Body must include a non-empty "requests" array');
-  }
-  const inner = str('didOrderId', req.params.id) + `<requestArray>${requestItems(requests)}</requestArray>`;
-  res.json({ result: await call('didOrderEdit', inner, creds, env) });
-}));
-
-// didOrderDiscardRejected
-app.post('/api/orders/:id/discard-rejected', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('didOrderId', req.params.id);
-  res.json({ result: await call('didOrderDiscardRejected', inner, creds, env) });
-}));
-
-// didOrderCancel
-app.post('/api/orders/:id/cancel', h(async (req, res) => {
-  const { creds, env } = resolveContext(req);
-  const inner = str('didOrderId', req.params.id);
-  res.json({ result: await call('didOrderCancel', inner, creds, env) });
-}));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'not_found', message: `No route ${req.method} ${req.path}` }));

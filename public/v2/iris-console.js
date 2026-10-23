@@ -661,8 +661,9 @@
     const cc = await safe(() => bridge && bridge.context());
     const products = me && Array.isArray(me.products) ? me.products : [];
     const agents = me && Array.isArray(me.agents) ? me.agents : [];
-    const left = me && me.sandboxCallsLeft != null ? me.sandboxCallsLeft
-      : (cc && cc.sandboxCallsLeft != null ? cc.sandboxCallsLeft : '');
+    // The caller's package by name ("Free", "Standard", "Premium").
+    const pkg = me && me.package && typeof me.package === 'object' ? me.package.name
+      : (cc && cc.package != null ? cc.package : '');
     // The gateway looks the name up from trusted records (CRM / agent /
     // employees). greeting_name carries its own leading space so the agent's
     // first message "Hi{{greeting_name}} — …" reads cleanly when it is empty.
@@ -673,7 +674,9 @@
       product_names: products.map((p) => p && p.name).filter(Boolean).join(', '),
       agent_count: String(agents.length),
       mode: String((me && me.mode) || (cc && cc.mode) || ''),
-      sandbox_calls_left: String(left),
+      package: String(pkg || ''),
+      // Retired with the sandbox; still sent (empty) while the agent prompt names it.
+      sandbox_calls_left: '',
       lang: LANG,
     };
   }

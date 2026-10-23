@@ -1,12 +1,15 @@
-# Espresso DID — REST Gateway
+# Iristel API Marketplace — gateway
 
-A small Express service that exposes the Espresso DID **V3 SOAP** provisioning
-API as clean JSON REST endpoints, so your API-marketplace console can call
-`GET /api/catalog` instead of hand-building SOAP envelopes.
+The Express service behind the Iristel API Marketplace. It republishes Iristel's
+APIs (IristelX, 911, provisioning, wireless and enterprise number porting, and
+Espresso's DID ordering and LRN lookups) as one JSON REST API, checks every caller
+against their CRM approval and package, keeps every upstream credential on the
+server, and runs the console, the marketplace pages' scripts and monthly billing.
 
-Only the **13 methods documented in the V3 PDF** are exposed (plus `testConnection`
-as a health check). The service hand-builds the rpc/encoded SOAP envelopes and the
-`Credentials` header, then parses the response back to JSON.
+The original Espresso DID **V3 SOAP** product (`/api/ping`, `/api/catalog`,
+`/api/routing-profiles*`, `/api/orders*`) was retired on 2026-10-23; DID ordering is
+Phone Numbers (DID Orders) on Espresso's REST API. `lib/soap.js` still serves
+Enterprise LNP (Espresso v4 SOAP).
 
 ## Base URL
 
@@ -14,8 +17,8 @@ as a health check). The service hand-builds the rpc/encoded SOAP envelopes and t
 https://api-marketplace-1im9.onrender.com
 ```
 
-Every path in this document is relative to that host — `/api/catalog` means
-`https://api-marketplace-1im9.onrender.com/api/catalog`. The live console is at
+Every path in this document is relative to that host — `/api/lnp/routing-profiles`
+means `https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles`. The live console is at
 [`/console`](https://api-marketplace-1im9.onrender.com/console); it shows the
 base URL and a ready-to-run `curl` for each endpoint.
 
@@ -63,33 +66,52 @@ disables the key within a minute.
 forwarded. The portal login and sign-up pages call `/portal/*` for the same
 reason.
 
-### Sandbox and production
+### Packages
 
-The card on file is the only switch, and the partner's API key is the same in
-both modes (`lib/entitlements.js`):
+Partners are on one package (`lib/catalogs/pricing.js`), chosen on the access
+request and confirmed by staff, stored in CRM `cr57d_apimarketplacepackage`
+(649950000 Free, 649950001 Standard, 649950002 Premium; empty = Free; created by
+`node scripts/d365-marketplace-package.js`). Each package includes the one before:
+
+| Package | Price | Includes |
+|---|---|---|
+| Free | no charge | Free operations: health checks, reference data, status reads |
+| Standard | 1¢ CAD / month | Free + Standard operations |
+| Premium | 1¢ CAD / month | everything (Standard + Premium) |
+
+Every operation's tier is in `lib/catalogs/tiers.json` (free, standard or premium),
+imported from `../api-tier-map.xlsx` with `python3 scripts/import-tier-map.py` (the
+workbook's old "Service transaction" tier is Premium; operations added later are
+kept). The server warns at startup about any endpoint without a tier, and
+`/catalog.json` publishes `packages`, each endpoint's `tier` and each bundle's
+`package`. The gateway (`lib/entitlements.js`):
 
 | Partner state | Mode | What works |
 |---|---|---|
-| Chose **Sandbox → Production** on the request form, no card yet | `sandbox` | 30 free calls in total (one-time). DIDs/LNP run on the Espresso **test** system; other products (no test system) allow `GET` only. Never billed. |
-| Chose **Production**, no card yet | — | Nothing: 402 until a card is added. |
-| Card on file | `production` | Everything, live. Every successful call is billable. |
+| Free package | `free` | Free operations, live. No card, never billed. |
+| Standard or Premium, no card yet | — | Nothing: 402 until a card is added. |
+| Standard or Premium, card on file | `production` | The package's operations, live. The monthly fee is billed. |
 | Past due | — | Nothing: 402 until the outstanding charge is paid. |
 
-The choice is stored in CRM `cr57d_environment` (649950001 = Sandbox →
-Production, 649950002 = Production; the legacy "Sandbox only" value is treated
-as Sandbox → Production). Every response carries `X-Marketplace-Mode` and, in
-sandbox, `X-Sandbox-Calls-Remaining`. Only Iristel staff and internal
-accounts (Internal employee with an @iristel.com email) are exempt: no card,
-no limit, never billed. Agents are billed like any partner.
+An operation outside the package answers `403 upgrade_required` (with
+`requiredPackage`). There is no sandbox and there are no per-call charges. Every
+response carries `X-Marketplace-Mode` and `X-Marketplace-Package`. Only Iristel staff
+and internal accounts (Internal employee with an @iristel.com email) are exempt: every
+package, no card, never billed. Agents are billed like any partner.
 
-**Espresso login (DIDs, LNP).** No partner login is needed: the gateway uses
-`EDID_USER` / `EDID_PASS`, the same account on Espresso's test and production
-systems. The system follows the partner's mode; partners can't override it
-with `X-EDID-Env`. Staff and internal callers can still send
-`X-EDID-Env: test|production` (default `test`).
+The access-request form writes the package while the account isn't approved yet; an
+approved partner's package is changed by staff (`/admin`, or
+`POST /marketplace/admin/access` with `{ accountId, package }`), never by sending the
+form again.
+
+**Espresso login (LNP, DID Orders, LRN).** No partner login is needed: the gateway
+uses `EDID_USER` / `EDID_PASS` (and the Espresso REST client for DID Orders and LRN).
+Partners always run on Espresso's production system and can't override it with
+`X-EDID-Env`. Staff and internal callers can still send `X-EDID-Env: test|production`
+(default `test`).
 
 ```bash
-curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
+curl -s https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
   -H 'Authorization: Bearer mk_...'
 ```
 
@@ -111,7 +133,7 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 | `ESPRESSO_COMPANY_ID` / `ESPRESSO_SANDBOX_COMPANY_ID` | Optional: Iristel's Espresso company id (UUID) on production / on the sandbox. Default: that system's only active company. Never shared between the two systems. |
 | `ESPRESSO_ROUTING_PROFILE_ID` / `ESPRESSO_SANDBOX_ROUTING_PROFILE_ID` | Optional: the DID routing profile used when an order names none, per system. Default: that system's only active DID profile. |
 | `ESPRESSO_OCN` | Optional OCN set on DID orders and used to filter available numbers (default `154E`). |
-| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` / `_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. Sandbox partners call `api-sandbox.espressodid.com`, partners with a card `api.espressodid.com`; a system without a login answers `503 not_enabled` (not metered). The products show live once production is configured. |
+| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` / `_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. Partners always call `api.espressodid.com`; staff and internal callers can pick `api-sandbox.espressodid.com` with `X-EDID-Env: test`. A system without a login answers `503 not_enabled` (not metered). The products show live once production is configured. |
 | `D365_*` | Dynamics 365 (approvals are read from here) |
 | `ADMIN_EMAILS` | Optional staff list override |
 | `GATEWAY_API_KEY` | Optional internal override key |
@@ -125,17 +147,14 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
 ### Usage billing
 
 - Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`),
-  with its mode. A call is **billable** when it succeeded (2xx) in `production` mode —
-  sandbox calls, and calls by Iristel staff and internal employees, never are.
-- Prices are per successful call, in CAD cents, in `lib/catalogs/pricing.js`. Every
-  API is 1¢ per call for now; production mode needs a card on file regardless of price.
-- **Pricing tiers.** Every operation also has a tier (Free, Standard, Premium or Service
-  transaction) in `lib/catalogs/tiers.json`, imported from `../api-tier-map.xlsx` with
-  `python3 scripts/import-tier-map.py` (operations added later are kept). Tiers are
-  published in `/catalog.json` (`tiers`, each endpoint's `tier`, `pricingNote`) and shown
-  in the console and on the marketplace pages, but they don't change billing yet: tier
-  prices are `null` ("coming soon") until they're set in `TIERS`. The server warns at
-  startup about any endpoint without a tier.
+  with its mode, at price 0: calls are counted for the dashboards, never billed one by
+  one.
+- **The package's monthly fee is the charge.** Each month a Standard or Premium package
+  was active with a card on file is recorded in `package_months` (by every paid call,
+  and hourly by the billing scheduler for partners with a card, so a month with no
+  calls still counts; a month keeps the higher package). The invoice for that month
+  has one line, "<Package> package — <Month>", plus tax. Months billed before packages
+  (October 2026 and earlier) can still carry per-call lines.
 - **Everyone is billed except Iristel staff and internal employees** (account type
   Internal employee with an @iristel.com email). Business customers, partners and
   agents all add a card. An agent created outside the portal sign-up may have no
@@ -155,26 +174,14 @@ curl -s https://api-marketplace-1im9.onrender.com/api/catalog \
   - **Unknown** (no clear answer from MIND — the card may have been charged): staff
     check MIND, then use **Retry** or **Mark paid** on that row in `/admin` → Billing.
 
-Espresso environment: see [Sandbox and production](#sandbox-and-production).
+Espresso environment: see [Packages](#packages).
 
 ## Endpoints
 
-| Method | Path | SOAP method | Notes |
-|--------|------|-------------|-------|
-| GET  | `/api/ping?name=` | testConnection | health/auth check |
-| GET  | `/api/catalog` | didGetProductCatalog | ratecenter/NPA pairs |
-| GET  | `/api/routing-profiles` | didGetRoutingProfiles | |
-| GET  | `/api/routing-profiles/full` | didGetRoutingProfilesDetailsFull | incl. tech_prefix, format |
-| GET  | `/api/routing-profiles/:profile` | didGetRoutingProfileDetails | URL-encode the profile |
-| POST | `/api/orders` | didOrderDids | create order |
-| GET  | `/api/orders?from=&to=` | didGetOrders | dates `Y-m-d H:i:s` |
-| GET  | `/api/orders/:id` | didGetOrderInfo | |
-| GET  | `/api/orders/:id/status` | didGetOrderStatus | |
-| GET  | `/api/orders/:id/details` | didGetOrderDetails | only when Completed |
-| GET  | `/api/orders/:id/problems` | didGetOrderProblems | only when Rejected. Pending Update |
-| POST | `/api/orders/:id/requests` | didOrderEdit | append requests |
-| POST | `/api/orders/:id/discard-rejected` | didOrderDiscardRejected | |
-| POST | `/api/orders/:id/cancel` | didOrderCancel | |
+Every product's operations are in `lib/catalogs` and in `GET /catalog.json`. Enterprise
+LNP (Espresso v4 SOAP) is `/api/lnp/...` (`lib/routes/lnp.js`), wireless LNP
+`/api/wlnp/...` (`lib/routes/wlnp.js`), and the IristelX-backed products
+`/api/ix/<product>/...` (`lib/routes/ix.js`).
 
 ### Espresso REST products (DID Orders, LRN Lookup)
 
@@ -206,8 +213,8 @@ a reference unique to that request (`mp-<hex>` before the partner's own). If the
 is lost (timeout, 5xx), the order is looked up by that exact reference; if it can't be
 found yet, the partner gets `503 order_unconfirmed` ("don't order again") and the create
 stays in `did_order_pending` until their next order list finds it (dropped after a day).
-An approval for `dids` also covers `did-orders` (`lib/onboarding.js`), so partners move
-over without a CRM change. After switching on, regenerate the Iris KB
+Approvals that still list the retired `dids` product are read as `did-orders`
+(`lib/onboarding.js`), so partners move over without a CRM change. After switching on, regenerate the Iris KB
 (`node scripts/export-iris-kb.js`, which reads each product's status from the deployed
 `/catalog.json`) and upload it.
 
@@ -218,49 +225,27 @@ BASE=http://localhost:3000
 # Every /api call needs your marketplace key; add -H "$AUTH" to each example.
 AUTH='Authorization: Bearer mk_...'
 
-# health / auth
-curl -s "$BASE/api/ping?name=hello" -H "$AUTH"
+# DID Orders: find numbers, order, follow the order
+curl -s "$BASE/api/did-orders/available?prefix=1416&limit=10" -H "$AUTH"
+curl -s -X POST "$BASE/api/did-orders/orders" -H "$AUTH" -H 'Content-Type: application/json' -d '{
+  "numberRequests": [ { "quantity": 2, "ratecenter": "Toronto,ON" } ] }'
+curl -s "$BASE/api/did-orders/orders/ORD-12345" -H "$AUTH"
 
-# product catalog
-curl -s "$BASE/api/catalog"
+# Enterprise LNP: portability check and a PON's status
+curl -s "$BASE/api/lnp/portability/416555" -H "$AUTH"
+curl -s "$BASE/api/lnp/pons/PON123" -H "$AUTH"
 
-# routing profiles (+ full)
-curl -s "$BASE/api/routing-profiles"
-curl -s "$BASE/api/routing-profiles/full"
-curl -s "$BASE/api/routing-profiles/Profile%202542"
+# LRN lookup
+curl -s "$BASE/api/lrn/basic/4165551212" -H "$AUTH"
 
-# create an order
-curl -s -X POST "$BASE/api/orders" -H 'Content-Type: application/json' -d '{
-  "profiles": [
-    { "profile": "Profile 2542",
-      "requests": [ { "ratecenter": "TORONTO", "npa": "647", "quantity": 1 } ] },
-    { "profile": "Profile 373",
-      "requests": [ { "ratecenter": "TORONTO", "npa": "647", "quantity": 100 } ] }
-  ]
-}'
-
-# list orders by date range
-curl -s "$BASE/api/orders?from=2026-08-01%2000:00:00&to=2026-08-18%2023:59:59"
-
-# order lifecycle
-curl -s "$BASE/api/orders/DID1205280200006/status"
-curl -s "$BASE/api/orders/DID1205280200006/details"
-curl -s "$BASE/api/orders/DID1205280200006/problems"
-
-# append requests / discard rejected / cancel
-curl -s -X POST "$BASE/api/orders/DID1205280200006/requests" -H 'Content-Type: application/json' -d '{
-  "requests": [ { "ratecenter": "PARRY SOUND", "npa": "705", "quantity": 3 } ] }'
-curl -s -X POST "$BASE/api/orders/DID1205280200006/discard-rejected"
-curl -s -X POST "$BASE/api/orders/DID1205280200006/cancel"
-
-# staff / internal only: pick the Espresso system (partners follow their mode)
-curl -s "$BASE/api/catalog" -H "X-API-Key: $GATEWAY_API_KEY" -H 'X-EDID-Env: production'
+# staff / internal only: pick the Espresso system (partners always use production)
+curl -s "$BASE/api/lnp/routing-profiles" -H "X-API-Key: $GATEWAY_API_KEY" -H 'X-EDID-Env: production'
 ```
 
 ## Error format
 
 Every error is JSON with an HTTP status. Espresso's numeric app codes (1–8,
-431–610 from the PDF) are preserved in `code` and mapped to sensible statuses:
+431–610 from its SOAP manuals) are preserved in `code` and mapped to sensible statuses:
 
 | HTTP | Espresso codes | meaning |
 |------|----------------|---------|
@@ -299,10 +284,6 @@ Every error is JSON with an HTTP status. Espresso's numeric app codes (1–8,
   can't change which product it is checked against.
 - **CORS**: any origin when `ALLOWED_ORIGINS` is unset (dev); otherwise that list plus the partner portal origins.
 - `GET /` gives the endpoint catalog as JSON; the console can render forms from it.
-- The two **array** methods (`didOrderDids`, `didOrderEdit`) build rpc/encoded
-  arrays by hand. The shape matches the PDF, but if the live server rejects the
-  wrapping, that's the one place to tweak (`lib/soap.js` → `requestItems` /
-  `orderRequestArray`). Verify against a real order once you're on-network.
-- This sandbox can't reach Espresso, so responses were validated for routing,
-  validation, and error-shape only. The live SOAP round-trip runs from your
-  network where `connect.espressodid.com` is reachable.
+- **Packages in the console.** Each endpoint card shows its package; operations above
+  the partner's package are locked with an upgrade note, and the API answers
+  `403 upgrade_required` for them anyway.

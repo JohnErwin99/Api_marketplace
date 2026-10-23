@@ -229,7 +229,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
         <p class="lede">Order phone numbers and SIP trunks, move numbers to Iristel, keep 911 addresses current, activate mobile subscribers and manage eSIMs — straight from your own apps and tools. Built for business customers, partners, agents and Iristel’s own teams.</p>
         <div class="hero-actions">
           <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
-          <a class="ghost" href="#packages">Browse the packages</a>
+          <a class="ghost" href="#packages">Browse the bundles</a>
         </div>
       </div>
       <aside class="rule-card" aria-label="Who it is for">
@@ -249,7 +249,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
         <li><span>1</span><div><strong>Sign up</strong><small>Create your Iristel account</small></div></li>
         <li><span>2</span><div><strong>Ask</strong><small>Tell us what you need</small></div></li>
         <li><span>3</span><div><strong>Review</strong><small>Our team checks your request</small></div></li>
-        <li><span>4</span><div><strong>Try</strong><small>Test in the console</small></div></li>
+        <li><span>4</span><div><strong>Build</strong><small>Use the console</small></div></li>
         <li><span>5</span><div><strong>Connect</strong><small>Get your API key</small></div></li>
         <li><span>6</span><div><strong>Go live</strong><small>Run it in production</small></div></li>
       </ol>
@@ -257,30 +257,80 @@ fieldset { border-color: var(--line); border-radius: 6px; }
 
     <section id="packages">
       <style>
-        #packages .pk-aud{font:700 12px var(--head,inherit);text-transform:uppercase;letter-spacing:.9px;opacity:.65;margin:22px 0 10px}
-        #packages .pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-        #packages .pk-card{border:1px solid var(--line,#3333);border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;display:block;transition:transform .15s ease}
-        #packages .pk-card:hover{transform:translateY(-2px)}
-        #packages .pk-card h3{margin:0 0 4px;font-size:15px}
-        #packages .pk-card .use{font-size:12.5px;opacity:.75;margin:0 0 8px}
-        #packages .pk-card ul{margin:0;padding-left:16px;font-size:12px;opacity:.85}
-        #packages .pk-card{cursor:default}
-        #packages .pk-sum{font-size:12.5px;opacity:.8;margin:0 0 10px}
-        #packages .pk-steps{margin:0;padding-left:18px;font-size:12px}
-        #packages .pk-steps li{margin:6px 0}
-        #packages .pk-steps code{display:block;opacity:.95}
-        #packages .pk-steps span{display:block;opacity:.7}
-        #packages .pk-steps .pk-tier{display:inline;opacity:1;font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-left:4px}
-        #packages .pk-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
-        #packages .pk-filter button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
-        #packages .pk-filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface,#fff);border-color:var(--ink)}
-        #packages .pk-cat{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+        #packages .bx-filter{display:inline-flex;flex-wrap:wrap;gap:4px;margin:0 0 28px}
+        #packages .bx-count{margin-left:7px;font-size:.72rem;font-weight:700}
+        #packages .bx-group + .bx-group{margin-top:34px}
+        #packages .bx-aud{margin:0 0 12px;font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+        #packages .bx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+        #packages .bx-grid:has(details[open]){align-items:start}
+        @media (max-width:760px){#packages .bx-grid{grid-template-columns:1fr}}
+        #packages .bx-card{display:flex;flex-direction:column;min-width:0;padding:20px 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+        #packages .bx-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        #packages .bx-cat{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+        #packages .bx-cat svg{width:16px;height:16px;flex:none;color:var(--ink)}
+        #packages .pkg-pill{display:inline-block;flex:none;padding:1px 9px;border:1px solid currentColor;border-radius:999px;background:color-mix(in srgb,currentColor 9%,transparent);font-size:.7rem;font-weight:800;letter-spacing:.03em;white-space:nowrap}
+        #packages .bx-card h4{margin:14px 0 4px;font-size:1.2rem;line-height:1.25;letter-spacing:-.015em;color:var(--ink)}
+        #packages .bx-lead{margin:0 0 8px;font-weight:500;color:var(--ink)}
+        #packages .bx-sum{margin:0 0 16px;font-size:.92rem;color:var(--muted)}
+        #packages .bx-apis{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:0;list-style:none}
+        #packages .bx-apis li{padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);font-size:.76rem;font-weight:600;color:var(--ink)}
+        #packages details{margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+        #packages summary{display:flex;align-items:center;gap:10px;width:fit-content;cursor:pointer;list-style:none;font-size:.88rem;font-weight:700;color:var(--ink)}
+        #packages summary::-webkit-details-marker{display:none}
+        #packages summary::before{content:"";width:6px;height:6px;margin-left:2px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
+        #packages details[open] summary::before{transform:rotate(45deg)}
+        #packages summary:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px;border-radius:4px}
+        #packages .bx-steps{margin:16px 0 0;padding:0;list-style:none}
+        #packages .bx-steps li{position:relative;display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;padding-bottom:16px}
+        #packages .bx-steps li:last-child{padding-bottom:0}
+        #packages .bx-steps li::before{content:"";position:absolute;left:12.5px;top:30px;bottom:4px;width:1px;background:var(--line)}
+        #packages .bx-steps li:last-child::before{display:none}
+        #packages .bx-n{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);border-radius:50%;background:var(--surface-soft);font-size:.75rem;font-weight:800;color:var(--ink)}
+        #packages .bx-steps p{margin:2px 0 4px;font-size:.92rem;line-height:1.45;color:var(--ink)}
+        #packages .bx-steps code{font:.74rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere}
+        #packages .bx-steps .pkg-pill{margin-left:8px;padding:0 7px;font-size:.62rem;vertical-align:1px}
+        @media (max-width:580px){#packages .bx-card{padding:18px}}
       </style>
       <div class="section-heading">
-        <div><p class="eyebrow">Bundles &amp; packages</p><h2>Which APIs for which job</h2></div>
-        <p>Curated recipes per business model — each links straight into the guided console.</p>
+        <div><p class="eyebrow">Bundles</p><h2>Which APIs for which job</h2></div>
+        <p>Each bundle is a recipe: the APIs you call, in order, and the package it needs.</p>
       </div>
-      <div id="packages-grid"><p>Loading packages…</p></div>
+      <div id="packages-grid"><p>Loading bundles…</p></div>
+    </section>
+
+    <section class="form-section" id="pricing">
+      <style>
+        #pricing .tier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+        @media (max-width:900px){#pricing .tier-grid{grid-template-columns:1fr}}
+        #pricing .tier-card{border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface);padding:18px;display:flex;flex-direction:column}
+        #pricing .tier-card h3{margin:0;font-size:1.05rem;color:var(--tc,var(--ink))}
+        #pricing .tier-card .tier-price{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+        #pricing .tier-card .tier-price strong{font-size:2rem;line-height:1.1;letter-spacing:-.03em;color:var(--ink);margin-right:4px}
+        #pricing .tier-card .tier-unit{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:2px 0 14px}
+        #pricing .tier-card .tier-plus{font-size:.85rem;font-weight:750;color:var(--ink);margin:0 0 4px}
+        #pricing .tier-card .tier-desc{font-size:.9rem;color:var(--muted);margin:0 0 10px}
+        #pricing .tier-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
+        #pricing .tier-card .tier-foot{margin:auto 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+        #pricing .bt-wrap{overflow-x:auto;margin-top:26px}
+        #pricing .bt-wrap h3{font-size:1rem;margin:0 0 8px;color:var(--ink)}
+        #pricing table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
+        #pricing th,#pricing td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;color:var(--ink)}
+        #pricing th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+        #pricing td.mix{color:var(--muted)}
+        #pricing .bt-need{font-weight:800}
+        #pricing .bt-list{display:none;list-style:none;margin:0;padding:0}
+        #pricing .bt-list li{border-bottom:1px solid var(--line);padding:10px 0;color:var(--ink)}
+        #pricing .bt-list small{display:block;color:var(--muted);margin-top:2px}
+        @media (max-width:560px){#pricing table{display:none}#pricing .bt-list{display:block}}
+        #pricing .pricing-foot{margin:22px 0 0;color:var(--muted);font-size:.95rem}
+      </style>
+      <div class="section-heading">
+        <div><p class="eyebrow">Packages &amp; pricing</p><h2>Pick your package</h2></div>
+        <p id="pricing-note">Each package includes the one before it. Standard and Premium are one monthly fee with no per-call charges, invoiced on the 1st and charged to your card on the 5th.</p>
+      </div>
+      <div class="tier-grid" id="tier-grid"><p>Loading packages…</p></div>
+      <div class="bt-wrap" id="bundle-tiers"></div>
+      <p class="pricing-foot">You choose a package when you request access, and our team reviews every request.</p>
     </section>
 
     <section id="identity">
@@ -311,46 +361,10 @@ fieldset { border-color: var(--line); border-radius: 6px; }
             <li>Tell us who you are and what you want to build.</li>
             <li>We check your business details and registration.</li>
             <li>You get an email when your access is approved.</li>
-            <li>Try every API in the test console, then connect your app.</li>
+            <li>Use your approved APIs in the console (every call is live), then connect your app.</li>
           </ol>
           <p class="caution">Business customers, partners and agents give a business registration number, checked automatically. Iristel employees give their department instead.</p>
         </aside>
-      </div>
-    </section>
-
-    <section class="form-section" id="pricing">
-      <style>
-        #pricing .tier-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-        @media (max-width:980px){#pricing .tier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-        @media (max-width:560px){#pricing .tier-grid{grid-template-columns:1fr}}
-        #pricing .tier-card{border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface);padding:18px}
-        #pricing .tier-card h3{margin:0 0 2px;font-size:1.05rem;color:var(--ink)}
-        #pricing .tier-unit{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px}
-        #pricing .tier-card p{font-size:.9rem;color:var(--muted);margin:0 0 10px}
-        #pricing .tier-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
-        #pricing .tier-price{font-weight:800;font-size:.9rem;color:var(--tc,var(--ink));margin:0}
-        #pricing .bt-wrap{overflow-x:auto;margin-top:26px}
-        #pricing table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
-        #pricing th,#pricing td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;color:var(--ink)}
-        #pricing th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-        #pricing td.n{text-align:center;font-weight:700}
-        #pricing td.n.z{color:var(--muted);font-weight:400}
-        #pricing .bt-list{display:none;list-style:none;margin:0;padding:0}
-        #pricing .bt-list li{border-bottom:1px solid var(--line);padding:10px 0;color:var(--ink)}
-        #pricing .bt-list span{display:inline-block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin:4px 10px 0 0}
-        @media (max-width:560px){#pricing table{display:none}#pricing .bt-list{display:block}}
-        #pricing .pricing-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:26px}
-        #pricing .pricing-cta p{margin:0;color:var(--muted);font-size:.95rem;max-width:60ch}
-      </style>
-      <div class="section-heading">
-        <div><p class="eyebrow">Bundles &amp; pricing</p><h2>Four pricing tiers</h2></div>
-        <p id="pricing-note">Every API call falls in one of four tiers. Today every successful live call is 1¢ CAD, whatever its tier; sandbox calls are free. Tier prices are coming soon.</p>
-      </div>
-      <div class="tier-grid" id="tier-grid"><p>Loading tiers…</p></div>
-      <div class="bt-wrap" id="bundle-tiers"></div>
-      <div class="pricing-cta">
-        <a class="console-cta" style="justify-content:center;height:48px;font-size:.95rem;padding:0 28px" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
-        <p>Sign up once as a business customer, an Iristel partner or an agent, then tell us which APIs you need. Our team reviews every request.</p>
       </div>
     </section>
 
@@ -362,14 +376,14 @@ fieldset { border-color: var(--line); border-radius: 6px; }
       <div class="token-grid">
         <div class="code-card">
           <div class="code-title"><span>Call an API from your app</span><button id="copy-code" type="button">Copy</button></div>
-          <pre><code id="auth-code">curl https://api-marketplace-1im9.onrender.com/api/ping \
+          <pre><code id="auth-code">curl https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
   -H 'Authorization: Bearer YOUR_MARKETPLACE_KEY'</code></pre>
         </div>
         <div class="security-rules">
           <article><span>01</span><div><h3>Try it in the console</h3><p>Log in to the partner portal and every approved API is ready to try with simple forms — no code needed.</p></div></article>
           <article><span>02</span><div><h3>Get your API key</h3><p>Approved accounts get a personal key from the console to use in their own apps and scripts.</p></div></article>
           <article><span>03</span><div><h3>Access follows your approval</h3><p>Your key only works for the APIs you’re approved for, and stops working if access is removed.</p></div></article>
-          <article><span>04</span><div><h3>Sandbox first, live with a card</h3><p>Once approved you start in sandbox with 30 free test calls. Add a card in the console and the same key goes live — calls are then billed per use.</p></div></article>
+          <article><span>04</span><div><h3>Start free, add a package when you need more</h3><p>The Free package needs no card. For Standard or Premium, add a card in the console before your first call — the same key then runs everything in your package for one monthly fee. Every call is live.</p></div></article>
         </div>
       </div>
     </section>
@@ -405,8 +419,9 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
           <details><summary>What if I need an API that isn’t listed?</summary><p>After you sign up, choose “Other” on your access request and describe what you need.</p></details>
-          <details><summary>Can I try it before paying?</summary><p>Yes. Choose “Sandbox → Production” on your access request and you get 30 free test calls after approval. Nothing is billed until you add a card — from then on your calls are live.</p></details>
-          <details><summary>What does it cost?</summary><p>Every API call falls in one of four tiers: Free, Standard, Premium and Service transaction (see Bundles &amp; pricing above). Today every successful live call is 1¢ CAD, whatever its tier, invoiced on the 1st of each month and charged to your card on the 5th. Tier prices are coming soon.</p></details>
+          <details><summary>Can I try it before paying?</summary><p>Yes. The Free package needs no card: once you’re approved you can run health checks, reference-data lookups and status reads straight away. Pick Standard or Premium when you need more, and add a card in the console before your first call.</p></details>
+          <details><summary>What does it cost?</summary><p>There are three packages — Free, Standard and Premium (see Packages &amp; pricing above) — and each includes the one before it. Standard and Premium are one monthly fee with no per-call charges, invoiced on the 1st of each month and charged to your card on the 5th. A call outside your package is never billed: it’s blocked with a message saying which package it needs.</p></details>
+          <details><summary>Can I change my package later?</summary><p>Yes. Ask for an upgrade from the API Marketplace page in the portal. Our team switches your package and the same key keeps working.</p></details>
         </div>
       </div>
     </section>
@@ -534,43 +549,111 @@ const ACCOUNT_TYPE_CTA = (t) =>
       `<p style="font-size:.85rem;opacity:.75">Iristel employees already have a portal login — open API Marketplace from the menu to request access.</p>`
     : `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?type=${encodeURIComponent(t.id)}&from=marketplace">Sign up as ${t.label} →</a></p>`;
 
-// ---- Pricing tiers (data-driven from the catalog) -------------------------
-// Each catalog endpoint carries its tier id; reg.tiers describes the tiers.
-// Prices aren't set yet, so the price line says so.
-const TIER_COLOR = { free: "var(--green)", standard: "var(--muted)", premium: "var(--orange)", transaction: "var(--blue)" };
+// ---- Packages & pricing (data-driven from the catalog) ---------------------
+// reg.packages lists Free, Standard and Premium in order (older catalogs call
+// them tiers); each includes the one before it and costs priceCents a month.
+// Every catalog endpoint carries the package it belongs to (its tier), every
+// bundle the package it needs.
+const TIER_COLOR = { free: "var(--green)", standard: "var(--blue)", premium: "var(--orange)" };
 let TIER_OF = {}, TIER_NAME = {};
-function stepTier(s) {
-  const t = TIER_OF[s.product + " " + s.endpoint];
-  return t ? ` <span class="pk-tier" style="color:${TIER_COLOR[t] || "inherit"}">${escHtml(TIER_NAME[t] || t)}</span>` : "";
-}
+const centsLabel = (c) => (c < 100 ? c + "¢" : "$" + (c / 100).toFixed(2));
 function renderTiers(reg) {
-  const tiers = reg.tiers || [];
-  if (reg.pricingNote) document.getElementById("pricing-note").textContent =
-    "Every API call falls in one of four tiers. " + reg.pricingNote;
-  const counts = {};
-  (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { if (e.tier) counts[e.tier] = (counts[e.tier] || 0) + 1; }));
-  document.getElementById("tier-grid").innerHTML = tiers.length ? tiers.map((t) =>
-    `<article class="tier-card" style="--tc:${TIER_COLOR[t.id] || "var(--blue)"}">` +
-    `<h3>${escHtml(t.name)}</h3><p class="tier-unit">${t.priceCents != null ? escHtml(t.billingUnit) + (counts[t.id] ? " · " : "") : ""}${counts[t.id] ? counts[t.id] + " operations" : ""}</p>` +
-    `<p>${escHtml(t.whatsIn)}</p><ul>${(t.examples || []).map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>` +
-    `<p class="tier-price">${t.priceCents != null ? (t.priceCents === 0 ? "Free" : (t.priceCents < 100 ? t.priceCents + "¢" : "$" + (t.priceCents / 100).toFixed(2)) + " " + escHtml(t.billingUnit.toLowerCase())) : (t.id === "free" ? "1¢ per call today · free once tier prices start" : "1¢ per call today · tier price coming soon")}</p>` +
-    `</article>`).join("") : "<p>Tiers unavailable.</p>";
+  const pkgs = (reg.packages || reg.tiers || []).map((p, i) => ({ ...p, rank: p.rank ?? i }));
+  const byId = Object.fromEntries(pkgs.map((p) => [p.id, p]));
+  // An endpoint or bundle without a package counts as the top one, as on the gateway.
+  const rank = (id) => (byId[id] ? byId[id].rank : pkgs.length - 1);
+  const tiers = (reg.products || []).flatMap((p) => (p.endpoints || []).map((e) => e.tier));
+  document.getElementById("tier-grid").innerHTML = pkgs.length ? pkgs.map((t) => {
+    const prev = byId[t.includes];
+    const ops = tiers.filter((x) => rank(x) <= t.rank).length;
+    // whatsIn opens with "Everything in Free, plus …" for the packages that
+    // build on another one; that part becomes the card's lead-in line.
+    const desc = prev ? String(t.whatsIn || "").replace(/^Everything in [^,]+,\s*plus\s*/i, "") : String(t.whatsIn || "");
+    return `<article class="tier-card" style="--tc:${TIER_COLOR[t.id] || "var(--blue)"}">` +
+      `<h3>${escHtml(t.name)}</h3>` +
+      `<p class="tier-price"><strong>${t.priceCents ? centsLabel(t.priceCents) : "$0"}</strong>${t.priceCents ? "CAD" : ""}</p>` +
+      `<p class="tier-unit">${escHtml(t.billingUnit || "")}${ops ? " · " + ops + " operations" : ""}</p>` +
+      (prev ? `<p class="tier-plus">Everything in ${escHtml(prev.name)}, plus…</p>` : "") +
+      `<p class="tier-desc">${escHtml(desc.charAt(0).toUpperCase() + desc.slice(1))}</p>` +
+      `<ul>${(t.examples || []).map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>` +
+      `<p class="tier-foot">${t.priceCents ? "Add a card in the console before your first call. No per-call charges." : "Never billed."}</p>` +
+      `</article>`;
+  }).join("") : "<p>Packages unavailable.</p>";
+
+  // Which package each bundle needs, and how its steps spread over the packages.
   const bundles = reg.bundles || [];
-  if (!bundles.length || !tiers.length) return;
-  const mix = (b) => { const n = {}; (b.steps || []).forEach((s) => { const t = TIER_OF[s.product + " " + s.endpoint]; if (t) n[t] = (n[t] || 0) + 1; }); return n; };
+  if (!bundles.length || !pkgs.length) return;
+  const audience = (id) => ((reg.audiences || []).find((a) => a.id === id) || {}).label || "";
+  const need = (b) => b.package || (b.steps || []).map((s) => TIER_OF[s.product + " " + s.endpoint])
+    .reduce((m, t) => (rank(t) > rank(m) ? t : m), pkgs[0].id);
+  const mix = (b) => pkgs.map((t) => [t, (b.steps || []).filter((s) => TIER_OF[s.product + " " + s.endpoint] === t.id).length])
+    .filter(([, n]) => n).map(([t, n]) => `${n} ${escHtml(t.name)}`).join(" · ");
+  const needTag = (b) => `<span class="bt-need" style="color:${TIER_COLOR[need(b)] || "inherit"}">${escHtml((byId[need(b)] || { name: need(b) }).name)}</span>`;
   document.getElementById("bundle-tiers").innerHTML =
-    `<ul class="bt-list">` + bundles.map((b) => { const n = mix(b);
-      return `<li><strong>📦 ${escHtml(b.name)}</strong><br>` + tiers.filter((t) => n[t.id]).map((t) =>
-        `<span style="color:${TIER_COLOR[t.id]}">${n[t.id]} ${escHtml(t.name)}</span>`).join("") + `</li>`; }).join("") + `</ul>` +
-    `<table><thead><tr><th>Bundle</th>${tiers.map((t) => `<th style="text-align:center">${escHtml(t.name)}</th>`).join("")}</tr></thead><tbody>` +
-    bundles.map((b) => {
-      const n = mix(b);
-      return `<tr><td><strong>📦 ${escHtml(b.name)}</strong></td>` +
-        tiers.map((t) => `<td class="n${n[t.id] ? "" : " z"}">${n[t.id] || "—"}</td>`).join("") + `</tr>`;
-    }).join("") + `</tbody></table>`;
+    `<h3>Which package each bundle needs</h3>` +
+    `<ul class="bt-list">` + bundles.map((b) =>
+      `<li><strong>${escHtml(b.name)}</strong> — needs ${needTag(b)}<small>Steps: ${mix(b)}</small></li>`).join("") + `</ul>` +
+    `<table><thead><tr><th>Bundle</th><th>For</th><th>Steps by package</th><th>Package needed</th></tr></thead><tbody>` +
+    bundles.map((b) => `<tr><td><strong>${escHtml(b.name)}</strong></td><td class="mix">${escHtml(audience(b.audience))}</td>` +
+      `<td class="mix">${mix(b)}</td><td>${needTag(b)}</td></tr>`).join("") + `</tbody></table>`;
 }
 
-// ---- Packages section + access-request form (data-driven from the catalog)
+// ---- Bundles (data-driven from the catalog) --------------------------------
+// One card per bundle, grouped by who it's for, with a filter on top. The
+// steps (the APIs called, in order) fold away under "See the N steps"; a step
+// that needs a paid package says which.
+const CATEGORY_ICON = {
+  voice: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  numbers: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
+  mobile: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  partner: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
+};
+const categoryIcon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
+  (CATEGORY_ICON[id] || '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/>') + `</svg>`;
+const pkgPill = (id) => (id ? `<span class="pkg-pill" style="color:${TIER_COLOR[id] || "var(--ink)"}">${escHtml(TIER_NAME[id] || id)}</span>` : "");
+function renderBundles(reg) {
+  const grid = document.getElementById("packages-grid");
+  const bundles = reg.bundles || [];
+  const audiences = (reg.audiences || []).filter((a) => bundles.some((b) => b.audience === a.id));
+  const catLabel = (id) => ((reg.categories || []).find((c) => c.id === id) || {}).label || "";
+  const productName = (id) => ((reg.products || []).find((p) => p.id === id) || { name: id }).name;
+  const card = (b) => {
+    const steps = b.steps || [];
+    return `<article class="bx-card">` +
+      `<div class="bx-head"><span class="bx-cat">${categoryIcon(b.category)}${escHtml(catLabel(b.category))}</span>${pkgPill(b.package)}</div>` +
+      `<h4>${escHtml(b.name)}</h4><p class="bx-lead">${escHtml(b.useCase || "")}</p>` +
+      (b.summary ? `<p class="bx-sum">${escHtml(b.summary)}</p>` : "") +
+      `<ul class="bx-apis" aria-label="APIs used">${[...new Set(steps.map((s) => s.product))]
+        .map((id) => `<li>${escHtml(productName(id))}</li>`).join("")}</ul>` +
+      (steps.length ? `<details><summary>See the ${steps.length} steps</summary><ol class="bx-steps">` + steps.map((s, i) => {
+        const t = TIER_OF[s.product + " " + s.endpoint];
+        return `<li><span class="bx-n" aria-hidden="true">${i + 1}</span><div><p>${escHtml(s.note || s.endpoint)}</p>` +
+          `<code>${escHtml(s.endpoint)}</code>${t && t !== "free" ? pkgPill(t) : ""}</div></li>`;
+      }).join("") + `</ol></details>` : "") +
+      `</article>`;
+  };
+  let active = "";
+  const draw = () => {
+    const filter = audiences.length > 1
+      ? `<div class="segmented bx-filter" role="group" aria-label="Who it’s for">` +
+        [{ id: "", label: "All" }, ...audiences].map((a) =>
+          `<button type="button" data-aud="${escHtml(a.id)}" class="${a.id === active ? "active" : ""}" aria-pressed="${a.id === active}">` +
+          `${escHtml(a.label)}<span class="bx-count">${bundles.filter((b) => !a.id || b.audience === a.id).length}</span></button>`).join("") +
+        `</div>`
+      : "";
+    grid.innerHTML = filter + (audiences.filter((a) => !active || a.id === active).map((a) =>
+      `<div class="bx-group">${active ? "" : `<h3 class="bx-aud">${escHtml(a.label)}</h3>`}<div class="bx-grid">` +
+      bundles.filter((b) => b.audience === a.id).map(card).join("") + `</div></div>`).join("") || "<p>No bundles published yet.</p>");
+    grid.querySelectorAll("[data-aud]").forEach((btn) => btn.addEventListener("click", () => {
+      active = btn.dataset.aud;
+      draw();
+      grid.querySelector(`[data-aud="${active}"]`).focus();   // keep keyboard focus on the filter
+    }));
+  };
+  draw();
+}
+
+// ---- Catalog --------------------------------------------------------------
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // When this page is copied into Webflow, relative fetches would hit the
 // Webflow domain (404) — call the gateway absolutely unless we ARE the gateway.
@@ -585,51 +668,23 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
     return;
   }
 
-  // Packages grid
   (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { if (e.tier) TIER_OF[p.id + " " + e.method + " " + e.path] = e.tier; }));
-  (reg.tiers || []).forEach((t) => { TIER_NAME[t.id] = t.name; });
+  (reg.packages || reg.tiers || []).forEach((t) => { TIER_NAME[t.id] = t.name; });
   renderAccountTypes(reg);
-  const grid = document.getElementById("packages-grid");
-  const bundles = reg.bundles || [], audiences = reg.audiences || [];
-  // Self-contained cards: every step visible with its explanation, no console
-  // link — visitors without marketplace access can still see how each package
-  // would be used.
-  // Filter by what the bundle does (category); grouped by who it's for.
-  const categories = reg.categories || [];
-  const catLabel = (id) => (categories.find((c) => c.id === id) || {}).label || "";
-  let activeCat = "";
-  const drawPackages = () => {
-    const filter = categories.length
-      ? `<div class="pk-filter" role="group" aria-label="Filter bundles">` +
-        [{ id: "", label: "All" }, ...categories].map((c) =>
-          `<button type="button" data-cat="${escHtml(c.id)}" aria-pressed="${c.id === activeCat}">${escHtml(c.label)}</button>`).join("") +
-        `</div>`
-      : "";
-    grid.innerHTML = filter + (audiences.map((a) => {
-      const list = bundles.filter((b) => b.audience === a.id && (!activeCat || b.category === activeCat));
-      if (!list.length) return "";
-      return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
-        `<div class="pk-card">${b.category ? `<span class="pk-cat">${escHtml(catLabel(b.category))}</span>` : ""}` +
-        `<h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
-        `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
-        `<ol class="pk-steps">${(b.steps || []).map((s) =>
-          `<li><code>${escHtml(s.endpoint)}</code>${stepTier(s)}<span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
-      ).join("") + `</div>`;
-    }).join("") || "<p>No packages published yet.</p>");
-    grid.querySelectorAll("[data-cat]").forEach((btn) => btn.addEventListener("click", () => { activeCat = btn.dataset.cat; drawPackages(); }));
-  };
-  drawPackages();
+  renderBundles(reg);
   renderTiers(reg);
 
 })();
 
 document.getElementById("copy-code").addEventListener("click", async (event) => {
+  // currentTarget is gone once the handler awaits: keep the button.
+  const btn = event.currentTarget;
   try {
     await navigator.clipboard.writeText(document.getElementById("auth-code").innerText);
-    event.currentTarget.textContent = "Copied";
-    setTimeout(() => { event.currentTarget.textContent = "Copy"; }, 1600);
+    btn.textContent = "Copied";
+    setTimeout(() => { btn.textContent = "Copy"; }, 1600);
   } catch {
-    event.currentTarget.textContent = "Select text";
+    btn.textContent = "Select text";
   }
 });
 

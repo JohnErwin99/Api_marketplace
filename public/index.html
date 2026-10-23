@@ -204,10 +204,19 @@ fieldset { border-color: var(--line); border-radius: 6px; }
 .req-fields{display:grid;gap:16px;min-width:0}
 .req-picker{position:sticky;top:84px;max-height:calc(100vh - 120px);overflow:auto;display:grid;gap:10px;min-width:0}
 .req-picker fieldset{margin:0}
-.req-picker .price-tag{display:inline-block;margin:0 0 0 6px;padding:1px 7px;border-radius:999px;background:#e8f7ee;color:#11733d;font-size:.7rem;font-weight:800;white-space:nowrap}
-[data-theme="dark"] .req-picker .price-tag{background:#0f3d2a;color:#86efac}
+.req-picker .pkg-tag{display:inline-block;margin:0 0 0 6px;padding:1px 7px;border-radius:999px;border:1px solid currentColor;background:transparent;font-size:.7rem;font-weight:800;white-space:nowrap}
 .price-summary{position:sticky;bottom:0;background:var(--surface-soft,#f4f8fc);border:1px solid var(--line);padding:10px 12px;font-size:.78rem;color:var(--muted)}
 .price-summary strong{color:var(--ink)}
+.price-summary .pkg-warn{margin:6px 0 0;color:var(--orange)}
+.price-summary button{font:inherit;font-weight:700;margin-top:8px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
+/* Package choice: one radio card per package, filled from the catalog. */
+.pkg-choice{display:grid;gap:8px;margin:0}
+.pkg-choice label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font-weight:400;cursor:pointer}
+.pkg-choice label:has(input:checked){border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.pkg-choice input{grid-row:span 2;margin:2px 0 0;padding:0;accent-color:var(--ink)}
+.pkg-choice strong{font-size:.9rem}
+.pkg-choice .pkg-price{justify-self:end;font-weight:700;white-space:nowrap}
+.pkg-choice .pkg-note{grid-column:2 / -1;color:var(--muted);font-size:.74rem;line-height:1.4}
 .reg-status{display:block;margin-top:6px;font-weight:600;font-size:.74rem}
 .reg-status.ok{color:#11733d}.reg-status.review{color:#9a6400}.reg-status.bad{color:#b42318}
 .form-layout .field-notes ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 22px}
@@ -265,7 +274,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
         <li><span>1</span><div><strong>Sign up</strong><small>Create your Iristel account</small></div></li>
         <li><span>2</span><div><strong>Ask</strong><small>Tell us what you need</small></div></li>
         <li><span>3</span><div><strong>Review</strong><small>Our team checks your request</small></div></li>
-        <li><span>4</span><div><strong>Try</strong><small>Test in the console</small></div></li>
+        <li><span>4</span><div><strong>Build</strong><small>Use the console</small></div></li>
         <li><span>5</span><div><strong>Connect</strong><small>Get your API key</small></div></li>
         <li><span>6</span><div><strong>Go live</strong><small>Run it in production</small></div></li>
       </ol>
@@ -289,13 +298,14 @@ fieldset { border-color: var(--line); border-radius: 6px; }
         #packages .pk-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
         #packages .pk-filter button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
         #packages .pk-filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface,#fff);border-color:var(--ink)}
+        #packages .pk-need{font-size:.78rem;color:var(--muted);margin:0 0 8px}
         #packages .pk-cat{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
       </style>
       <div class="section-heading">
-        <div><p class="eyebrow">Bundles &amp; packages</p><h2>Which APIs for which job</h2></div>
+        <div><p class="eyebrow">Bundles</p><h2>Which APIs for which job</h2></div>
         <p>Curated recipes per business model — each links straight into the guided console.</p>
       </div>
-      <div id="packages-grid"><p>Loading packages…</p></div>
+      <div id="packages-grid"><p>Loading bundles…</p></div>
     </section>
 
     <section id="identity">
@@ -326,7 +336,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
             <li>Tell us who you are and what you want to build.</li>
             <li>We check your business details and registration.</li>
             <li>You get an email when your access is approved.</li>
-            <li>Try every API in the test console, then connect your app.</li>
+            <li>Use your approved APIs in the console (every call is live), then connect your app.</li>
           </ol>
           <p class="caution">Business customers, partners and agents give a business registration number, checked automatically. Iristel employees give their department instead.</p>
         </aside>
@@ -368,7 +378,11 @@ fieldset { border-color: var(--line); border-radius: 6px; }
                 <span class="reg-status" id="reg-status" aria-live="polite"></span></label>
             </div>
             <label data-for="business">Business registration document<input name="registrationFile" type="file" required accept=".pdf,.png,.jpg,.jpeg" /></label>
-            <label>How do you want to start?<select name="environment"><option value="sandbox">Sandbox → Production (30 free test calls, then add a card)</option><option value="production">Production (add a card before your first call)</option></select></label>
+            <fieldset class="pkg-choice" id="package-choices" data-for="business"><legend>Package</legend>
+              <label><input type="radio" name="package" value="free" checked style="width:auto" /><strong>Free</strong><small class="pkg-price">No charge</small><small class="pkg-note">Health checks, reference data and status reads. No card needed.</small></label>
+              <label><input type="radio" name="package" value="standard" style="width:auto" /><strong>Standard</strong><small class="pkg-price">Monthly fee</small><small class="pkg-note">Everything in Free, plus everyday reads and changes.</small></label>
+              <label><input type="radio" name="package" value="premium" style="width:auto" /><strong>Premium</strong><small class="pkg-price">Monthly fee</small><small class="pkg-note">Everything in Standard, plus the calls that create or change real service.</small></label>
+            </fieldset>
             <label style="display:flex;gap:8px;align-items:center;font-weight:400">
               <input type="checkbox" name="existingCustomer" style="width:auto" /> I already have an Iristel Partner Portal login
             </label>
@@ -377,7 +391,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           </div>
           <aside class="req-picker" aria-label="Bundles and APIs">
             <fieldset id="product-choices"><legend>Requested bundles</legend><span>Loading catalog…</span></fieldset>
-            <div class="price-summary" id="price-summary">Pick bundles or APIs to see the price.</div>
+            <div class="price-summary" id="price-summary">Pick a package and the bundles or APIs you need.</div>
           </aside>
         </form>
         <div class="field-notes">
@@ -387,7 +401,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
             <li><strong>Contacts</strong><span>Who we talk to about the business and the technical side</span></li>
             <li><strong>Registration</strong><span>Business number (checked automatically) and document — or your department, for Iristel staff</span></li>
             <li><strong>What you’re building</strong><span>A few lines on how you’ll use the APIs</span></li>
-            <li><strong>Which APIs</strong><span>Pick a bundle, individual APIs, or tell us under Other</span></li>
+            <li><strong>Which APIs</strong><span>Pick a bundle, individual APIs, or tell us under Other — and your package</span></li>
           </ul>
           <div class="anti-pattern"><strong>Never send passwords</strong><span>We will never ask for passwords, API keys or other secrets in this form.</span></div>
         </div>
@@ -402,14 +416,14 @@ fieldset { border-color: var(--line); border-radius: 6px; }
       <div class="token-grid">
         <div class="code-card">
           <div class="code-title"><span>Call an API from your app</span><button id="copy-code" type="button">Copy</button></div>
-          <pre><code id="auth-code">curl https://api-marketplace-1im9.onrender.com/api/ping \
+          <pre><code id="auth-code">curl https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
   -H 'Authorization: Bearer YOUR_MARKETPLACE_KEY'</code></pre>
         </div>
         <div class="security-rules">
           <article><span>01</span><div><h3>Try it in the console</h3><p>Log in to the partner portal and every approved API is ready to try with simple forms — no code needed.</p></div></article>
           <article><span>02</span><div><h3>Get your API key</h3><p>Approved accounts get a personal key from the console to use in their own apps and scripts.</p></div></article>
           <article><span>03</span><div><h3>Access follows your approval</h3><p>Your key only works for the APIs you’re approved for, and stops working if access is removed.</p></div></article>
-          <article><span>04</span><div><h3>Sandbox first, live with a card</h3><p>Once approved you start in sandbox with 30 free test calls. Add a card in the console and the same key goes live — calls are then billed per use.</p></div></article>
+          <article><span>04</span><div><h3>Start free, add a package when you need more</h3><p>The Free package needs no card. For Standard or Premium, add a card in the console before your first call — the same key then runs everything in your package for one monthly fee. Every call is live.</p></div></article>
         </div>
       </div>
     </section>
@@ -445,8 +459,9 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
           <details><summary>What if I need an API that isn’t listed?</summary><p>Choose “Other” on the request form and describe what you need.</p></details>
-          <details><summary>Can I try it before paying?</summary><p>Yes. Choose “Sandbox → Production” on the request form and you get 30 free test calls after approval. Nothing is billed until you add a card — from then on your calls are live.</p></details>
-          <details><summary>What does it cost?</summary><p>Every API call falls in one of four tiers: Free, Standard, Premium and Service transaction — the console shows each call’s tier. Today every successful live call is 1¢ CAD, whatever its tier; tier prices are coming soon. Sandbox calls are free, and failed calls are never billed. You get an invoice on the 1st of each month (sales tax added for Canadian accounts) and your card on file is charged on the 5th. Internal Iristel usage isn’t billed.</p></details>
+          <details><summary>Can I try it before paying?</summary><p>Yes. Choose the Free package on the request form — it needs no card. Once you’re approved you can run health checks, reference-data lookups and status reads straight away, and move to Standard or Premium when you need more.</p></details>
+          <details><summary>What does it cost?</summary><p>There are three packages — Free, Standard and Premium — and each includes the one before it. The request form above shows what each one costs. Standard and Premium are one monthly fee with no per-call charges. You get an invoice on the 1st of each month (sales tax added for Canadian accounts) and your card on file is charged on the 5th. A call outside your package is never billed: it’s blocked with a message saying which package it needs. Internal Iristel usage isn’t billed.</p></details>
+          <details><summary>Can I change my package later?</summary><p>Yes. Send another request from this page with the package you want. Our team switches your package and the same key keeps working.</p></details>
         </div>
       </div>
     </section>

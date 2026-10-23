@@ -122,7 +122,8 @@ document.addEventListener("click", (ev) => {
 const a = ev.target.closest("[data-request-as]");
 if (!a) return;
 const sel = document.querySelector('#access-form select[name="accountType"]');
-if (sel) { sel.value = a.dataset.requestAs; sel.dispatchEvent(new Event("change")); }
+// Bubbles, so the form's own change listener redraws the price summary too.
+if (sel) { sel.value = a.dataset.requestAs; sel.dispatchEvent(new Event("change", { bubbles: true })); }
 });
 
 // ---- Console links only for partners logged into the portal --------------
@@ -166,18 +167,27 @@ window.__showRequestStatus = function (a) {
 const box = document.getElementById("req-status");
 const form = document.getElementById("access-form");
 if (!box || !a) return;
+// "Submit another request" opens the form on the package already asked for
+// (or held), rather than resetting it to Free.
+const reopen = () => {
+  const pick = a.package && !a.isInternal && form.querySelector(`input[name="package"][value="${escHtml(a.package)}"]`);
+  if (pick) { pick.checked = true; form.dispatchEvent(new Event("change", { bubbles: true })); }
+  form.hidden = false; form.scrollIntoView({ behavior: "smooth" });
+};
 const when = a.requestedAt ? new Date(a.requestedAt).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" }) : "";
 if (a.status === "pending") {
   box.innerHTML = `<strong>Your request is under review${a.id ? " (" + escHtml(a.id) + ")" : ""}</strong>` +
     `Submitted${when ? " " + escHtml(when) : ""}. We'll email you as soon as it's approved — the API Console then appears in your portal menu. ` +
     `<button type="button" id="req-again">Submit another request</button>`;
   form.hidden = true;
-  box.querySelector("#req-again").onclick = () => { form.hidden = false; form.scrollIntoView({ behavior: "smooth" }); };
+  box.querySelector("#req-again").onclick = reopen;
 } else if (a.status === "approved") {
-  box.innerHTML = `<strong>You have API access</strong>Open the API console to get your key and start calling. ` +
-    `<a href="/console">Open the API console →</a> · <button type="button" id="req-again">Request more APIs</button>`;
+  const pkg = !a.isInternal && a.package && ((((window.__mpCatalog || {}).packages) || []).find((p) => p.id === a.package)
+    || { name: a.package.charAt(0).toUpperCase() + a.package.slice(1) });
+  box.innerHTML = `<strong>You have API access</strong>${pkg ? `You're on the ${escHtml(pkg.name)} package. ` : a.isInternal ? "Internal usage isn't billed or limited by package. " : ""}Open the API console to get your key and start calling. ` +
+    `<a href="/console">Open the API console →</a> · <button type="button" id="req-again">Request more APIs or another package</button>`;
   form.hidden = true;
-  box.querySelector("#req-again").onclick = () => { form.hidden = false; form.scrollIntoView({ behavior: "smooth" }); };
+  box.querySelector("#req-again").onclick = reopen;
 } else return;
 box.hidden = false;
 };
@@ -198,13 +208,31 @@ catch {
   return;
 }
 
-// Packages grid
+// Bundles grid
 window.__mpCatalog = reg;   // the submit handler reads bundles from here
 renderAccountTypes(reg);
+// Packages (Free, Standard, Premium; older catalogs call them tiers): each
+// includes the one before it and costs priceCents a month. Every endpoint
+// carries the package it is in (its tier), every bundle the package it needs.
+// An endpoint without one counts as the top package, as on the gateway.
+const PKGS = (reg.packages || reg.tiers || []).map((p, i) => ({ ...p, rank: p.rank ?? i }));
+const PKG = Object.fromEntries(PKGS.map((p) => [p.id, p]));
+const PKG_COLOR = { free: "var(--green)", standard: "var(--blue)", premium: "var(--orange)" };
+const rankOf = (id) => (PKG[id] ? PKG[id].rank : PKGS.length - 1);
+const highest = (ids) => ids.reduce((m, t) => (rankOf(t) > rankOf(m) ? t : m));
+const lowest = (ids) => ids.reduce((m, t) => (rankOf(t) < rankOf(m) ? t : m));
+const pkgName = (id) => (PKG[id] || { name: id }).name;
+const tiersOf = (id) => (((reg.products || []).find((p) => p.id === id) || {}).endpoints || []).map((e) => e.tier);
+const centsLabel = (c) => (c < 100 ? (Number.isInteger(c) ? c : c.toFixed(2)) + "¢" : "$" + (c / 100).toFixed(2));
+const pkgPrice = (p) => (p.priceCents ? `${centsLabel(p.priceCents)} CAD ${String(p.billingUnit || "per month").toLowerCase()}` : p.billingUnit || "No charge");
+// One line per package: the first clause of whatsIn ("Everything in Free,
+// plus …"), without the examples in brackets.
+const pkgNote = (p) => String(p.whatsIn || "").replace(/\s*\([^)]*\)/g, "").split(/[:.]/)[0].trim() + "." + (p.priceCents ? "" : " No card needed.");
+
 const grid = document.getElementById("packages-grid");
 const bundles = reg.bundles || [], audiences = reg.audiences || [];
 // Self-contained cards: every step visible with its explanation, no console
-// link — visitors without marketplace access can still see how each package
+// link — visitors without marketplace access can still see how each bundle
 // would be used.
 // Filter by what the bundle does (category); grouped by who it's for.
 const categories = reg.categories || [];
@@ -223,38 +251,64 @@ const drawPackages = () => {
     return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
       `<div class="pk-card">${b.category ? `<span class="pk-cat">${escHtml(catLabel(b.category))}</span>` : ""}` +
       `<h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
+      (PKG[b.package] ? `<p class="pk-need">Needs the <strong style="color:${PKG_COLOR[b.package] || "inherit"}">${escHtml(pkgName(b.package))}</strong> package</p>` : "") +
       `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
       `<ol class="pk-steps">${(b.steps || []).map((s) =>
         `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
     ).join("") + `</div>`;
-  }).join("") || "<p>No packages published yet.</p>");
+  }).join("") || "<p>No bundles published yet.</p>");
   grid.querySelectorAll("[data-cat]").forEach((btn) => btn.addEventListener("click", () => { activeCat = btn.dataset.cat; drawPackages(); }));
 };
 drawPackages();
 
-// Requests can be BUNDLE-based (ready-made packages), individual APIs, or
+// The package the partner asks for. Older copies of this markup (the
+// Webflow embed) still carry the "Sandbox / Production" select: swap it for
+// the package choice.
+const form = document.getElementById("access-form");
+let pkgBox = document.getElementById("package-choices");
+const oldEnv = form.querySelector('select[name="environment"]');
+if (!pkgBox && oldEnv && PKGS.length) {
+  // The old markup has no styles for it: the same rules as public/index.html.
+  if (!document.getElementById("mp-pkg-css"))
+    document.head.insertAdjacentHTML("beforeend", '<style id="mp-pkg-css">' + ".req-picker .pkg-tag{display:inline-block;margin:0 0 0 6px;padding:1px 7px;border-radius:999px;border:1px solid currentColor;background:transparent;font-size:.7rem;font-weight:800;white-space:nowrap}.price-summary .pkg-warn{margin:6px 0 0;color:var(--orange)}.price-summary button{font:inherit;font-weight:700;margin-top:8px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}.pkg-choice{display:grid;gap:8px;margin:0}.pkg-choice label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font-weight:400;cursor:pointer}.pkg-choice label:has(input:checked){border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.pkg-choice input{grid-row:span 2;margin:2px 0 0;padding:0;accent-color:var(--ink)}.pkg-choice strong{font-size:.9rem}.pkg-choice .pkg-price{justify-self:end;font-weight:700;white-space:nowrap}.pkg-choice .pkg-note{grid-column:2 / -1;color:var(--muted);font-size:.74rem;line-height:1.4}" + "</style>");
+  pkgBox = document.createElement("fieldset");
+  pkgBox.id = "package-choices"; pkgBox.className = "pkg-choice"; pkgBox.dataset.for = "business";
+  oldEnv.closest("label").replaceWith(pkgBox);
+}
+if (pkgBox && PKGS.length) {
+  const cur = (pkgBox.querySelector("input:checked") || {}).value || PKGS[0].id;
+  pkgBox.innerHTML = "<legend>Package</legend>" + PKGS.map((p) =>
+    `<label title="${escHtml(p.whatsIn || "")}"><input type="radio" name="package" value="${escHtml(p.id)}"${p.id === cur ? " checked" : ""} style="width:auto" />` +
+    `<strong style="color:${PKG_COLOR[p.id] || "inherit"}">${escHtml(p.name)}</strong><small class="pkg-price">${escHtml(pkgPrice(p))}</small>` +
+    `<small class="pkg-note">${escHtml(pkgNote(p))}</small></label>`).join("");
+}
+const chosenPkg = () => (form.querySelector('input[name="package"]:checked') || {}).value || "free";
+
+// Requests can be BUNDLE-based (ready-made bundles), individual APIs, or
 // Other free text — any mix. Everything is reviewed by the team.
 const okClass = new Set(["public", "customer-confidential"]);
 const choices = document.getElementById("product-choices");
-// Per-call price (CAD cents) per product, from the catalog.
-const priceOf = (id) => ((reg.prices || {})[id] ?? 1);
-const centsLabel = (c) => (c < 100 ? (Number.isInteger(c) ? c : c.toFixed(2)) + "¢" : "$" + (c / 100).toFixed(2));
-const priceTag = (ids) => {
-  const ps = [...new Set(ids.map(priceOf))];
-  if (!ps.length) return "";
-  return `<span class="price-tag">${ps.length === 1 ? centsLabel(ps[0]) : centsLabel(Math.min(...ps)) + "–" + centsLabel(Math.max(...ps))} / call</span>`;
+// Tag: the package a bundle needs; for an API, the packages its operations span.
+const pkgTag = (ids, title) => {
+  const ts = ids.filter(Boolean);
+  if (!ts.length || !PKGS.length) return "";
+  const lo = lowest(ts), hi = highest(ts);
+  return `<span class="pkg-tag" style="color:${PKG_COLOR[hi] || "inherit"}" title="${escHtml(title(lo, hi))}">` +
+    `${escHtml(lo === hi ? pkgName(hi) : pkgName(lo) + "–" + pkgName(hi))}</span>`;
 };
+const bundleTag = (b) => pkgTag([b.package], (lo, hi) => `Needs the ${pkgName(hi)} package`);
+const apiTag = (id) => pkgTag(tiersOf(id), (lo, hi) => lo === hi ? `Every operation is in ${pkgName(hi)}` : `Some operations are in ${pkgName(lo)}; all are in ${pkgName(hi)}`);
 choices.innerHTML = "<legend>Requested access</legend>" +
   `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Every request is reviewed by our team. Pick the bundles that match your use case, choose individual APIs, or Other and tell us what you need.</p>` +
   `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:6px 0 2px">Bundles</div>` +
   bundles.map((b) => `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:6px 0">` +
     `<input type="checkbox" data-bundle="${escHtml(b.id)}" style="width:auto;margin-top:3px" />` +
-    `<span>📦 <strong>${escHtml(b.name)}</strong>${priceTag([...new Set((b.steps || []).map((s) => s.product))])} — ${escHtml(b.useCase)}<br>` +
+    `<span>📦 <strong>${escHtml(b.name)}</strong>${bundleTag(b)} — ${escHtml(b.useCase)}<br>` +
     `<span style="opacity:.6;font-size:.74rem">APIs: ${escHtml([...new Set((b.steps || []).map((s) => s.product))].map((id) => ((reg.products || []).find((p) => p.id === id) || { name: id }).name).join(", "))}</span></span></label>`).join("") +
   `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:12px 0 2px">Individual APIs</div>` +
   (reg.products || []).filter((p) => okClass.has(p.classification))
     .map((p) => `<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:4px 0">` +
-      `<input type="checkbox" data-api="${escHtml(p.id)}" style="width:auto" /> ${escHtml(p.name)}${priceTag([p.id])}</label>`).join("") +
+      `<input type="checkbox" data-api="${escHtml(p.id)}" style="width:auto" /> ${escHtml(p.name)}${apiTag(p.id)}</label>`).join("") +
   `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:12px 0 4px">` +
   `<input type="checkbox" id="bundle-other" style="width:auto;margin-top:3px" /><span><strong>Other</strong> — something not covered above</span></label>` +
   `<textarea id="other-text" placeholder="Describe what you need and which systems you want to reach…" style="display:none;margin-top:6px"></textarea>`;
@@ -305,8 +359,7 @@ const applyType = () => {
 typeSel.addEventListener("change", applyType);
 
 // Business customers, partners and agents give a registration number (checked live) and
-// document; internal employees give their department instead.
-const form = document.getElementById("access-form");
+// document; internal employees give their department instead (and have no package).
 const applyTypeFields = () => {
   const t = typeSel.value;
   const needsReg = t === "business" || t === "partner" || t === "agent";
@@ -345,18 +398,46 @@ const checkReg = async () => {
 regInput.addEventListener("input", () => { clearTimeout(regTimer); regTimer = setTimeout(checkReg, 700); });
 countrySel.addEventListener("change", () => { regInput.placeholder = REG_HINT[countrySel.value] || ""; checkReg(); });
 
-// Running price summary under the picker.
+// Running summary under the picker: the chosen package's price, and a warning
+// for each picked bundle or API that needs a higher package. A bundle's APIs
+// are judged by the bundle (its steps); APIs picked on their own by their
+// highest operation.
 const summary = document.getElementById("price-summary");
+const apiName = (id) => ((reg.products || []).find((p) => p.id === id) || { name: id }).name;
 const drawSummary = () => {
   const ids = [...choices.querySelectorAll("[data-api]:checked")].map((cb) => cb.dataset.api);
-  const nb = choices.querySelectorAll("[data-bundle]:checked").length;
-  if (!ids.length) { summary.innerHTML = "Pick bundles or APIs to see the price."; return; }
-  const ps = [...new Set(ids.map(priceOf))];
-  const price = ps.length === 1 ? centsLabel(ps[0]) : centsLabel(Math.min(...ps)) + "–" + centsLabel(Math.max(...ps));
-  summary.innerHTML = `<strong>${ids.length} API${ids.length > 1 ? "s" : ""}</strong>${nb ? ` from ${nb} bundle${nb > 1 ? "s" : ""}` : ""} · ` +
-    `<strong>${price} CAD</strong> per successful live call · first ${reg.sandboxCalls || 30} sandbox calls free · invoiced monthly`;
+  const picked = [...choices.querySelectorAll("[data-bundle]:checked")].map((cb) => bundles.find((x) => x.id === cb.dataset.bundle)).filter(Boolean);
+  const count = ids.length ? `<strong>${ids.length} API${ids.length > 1 ? "s" : ""}</strong>${picked.length ? ` from ${picked.length} bundle${picked.length > 1 ? "s" : ""}` : ""} · ` : "";
+  if (typeSel.value === "internal") { summary.innerHTML = count + "Internal Iristel usage isn't billed or limited by package."; return; }
+  const chosen = chosenPkg(), p = PKG[chosen];
+  const price = !p ? "" : `<strong>${escHtml(p.name)}</strong> package: ` + (p.priceCents
+    ? `<strong>${escHtml(pkgPrice(p))}</strong>, invoiced on the 1st and charged on the 5th · no per-call charges`
+    : "no charge, no card needed");
+  const warn = [];
+  let needs = chosen;
+  picked.forEach((b) => {
+    if (!PKG[b.package] || rankOf(b.package) <= rankOf(chosen)) return;
+    warn.push(`📦 ${escHtml(b.name)} needs ${escHtml(pkgName(b.package))}.`);
+    needs = highest([needs, b.package]);
+  });
+  const inBundles = new Set(picked.flatMap((b) => membersOf(b.id)));
+  ids.filter((id) => !inBundles.has(id)).forEach((id) => {
+    const tiers = tiersOf(id);
+    if (!tiers.length || !PKGS.length || rankOf(highest(tiers)) <= rankOf(chosen)) return;
+    const hi = highest(tiers), n = tiers.filter((t) => rankOf(t) <= rankOf(chosen)).length;
+    warn.push(`${escHtml(apiName(id))}: ${n ? n + " of " + tiers.length : "none of its " + tiers.length} operations are in ${escHtml(pkgName(chosen))}; all are in ${escHtml(pkgName(hi))}.`);
+    needs = highest([needs, hi]);
+  });
+  summary.innerHTML = count + (price || "Pick a package") + (ids.length || picked.length ? "" : " · pick bundles or APIs above") +
+    warn.map((w) => `<p class="pkg-warn">⚠ ${w}</p>`).join("") +
+    (needs !== chosen && PKG[needs] ? `<button type="button" data-pick-pkg="${escHtml(needs)}">Switch to ${escHtml(pkgName(needs))}</button>` : "");
 };
-choices.addEventListener("change", () => setTimeout(drawSummary, 0));
+summary.addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-pick-pkg]");
+  const radio = b && form.querySelector(`input[name="package"][value="${b.dataset.pickPkg}"]`);
+  if (radio) { radio.checked = true; drawSummary(); }
+});
+form.addEventListener("change", () => setTimeout(drawSummary, 0));
 drawSummary();
 
 const otherBox = document.getElementById("bundle-other");
@@ -374,6 +455,8 @@ const out = document.getElementById("form-result");
 const data = Object.fromEntries(new FormData(form).entries());
 delete data.registrationFile;
 data.existingCustomer = !!form.querySelector('input[name="existingCustomer"]').checked;
+data.package = data.package || "free";   // Free, Standard or Premium (radio)
+delete data.environment;                 // old markup's Sandbox / Production select
 
 // Bundles selected (+ Other free text). Products derived from the bundles.
 const reg2 = window.__mpCatalog || {};
@@ -426,13 +509,19 @@ try {
 } catch { out.textContent = "⚠ Could not reach the gateway. Try again."; }
 });
 
+// The live Webflow copy of the page may still show the retired /api/ping
+// example until it is pasted again: point it at a live Free operation.
+const authCode = document.getElementById("auth-code");
+if (authCode) authCode.textContent = authCode.textContent.replace("/api/ping ", "/api/lnp/routing-profiles ");
 document.getElementById("copy-code").addEventListener("click", async (event) => {
+// currentTarget is gone once the handler awaits: keep the button.
+const btn = event.currentTarget;
 try {
   await navigator.clipboard.writeText(document.getElementById("auth-code").innerText);
-  event.currentTarget.textContent = "Copied";
-  setTimeout(() => { event.currentTarget.textContent = "Copy"; }, 1600);
+  btn.textContent = "Copied";
+  setTimeout(() => { btn.textContent = "Copy"; }, 1600);
 } catch {
-  event.currentTarget.textContent = "Select text";
+  btn.textContent = "Select text";
 }
 });
 
