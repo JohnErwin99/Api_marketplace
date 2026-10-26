@@ -280,29 +280,64 @@
   .soap{color:var(--muted);font-size:12px;margin:0 0 10px}
   .soap code{font-family:var(--mono)}
   .desc{font-size:14px;margin:0 0 10px;max-width:70ch;color:var(--text)}
+  /* Mode bar: live (rates, card), sandbox, payment due or staff, with the
+     sandbox switch and the sandbox calls left this month. */
   .modebar{position:sticky;top:var(--mp-top,0px);z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:9px 24px;font-size:13.5px;border-bottom:1px solid var(--line)}
   .modebar[hidden]{display:none}
-  .modebar b{font:700 11.5px var(--head);letter-spacing:.8px;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid currentColor}
-  .modebar.free{background:var(--chip-bg);color:var(--chip-ink)}
+  .modebar b{font:700 11.5px var(--head);letter-spacing:.8px;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
   .modebar.live{background:var(--ok-bg);color:var(--ok)}
+  .modebar.sandbox{background:var(--warn-bg);color:var(--warn)}
+  .modebar.staff{background:var(--chip-bg);color:var(--chip-ink)}
   .modebar.block{background:var(--err-bg);color:var(--err)}
   .modebar .grow{flex:1}
+  .mb-state{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-width:0}
+  .mb-proposed{font:500 12px var(--sans);border:1px dashed currentColor;border-radius:999px;padding:1px 10px;white-space:nowrap}
+  .mb-card{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;flex-basis:100%}
+  .mb-card[hidden]{display:none}
   .modebar button,.modebar a{font:500 13px var(--sans);padding:5px 14px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer;text-decoration:none}
   .modebar button:hover,.modebar a:hover{background:color-mix(in srgb,currentColor 10%,transparent)}
   .modebar button:focus-visible,.modebar a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .needs-card{font:600 11px var(--mono);color:var(--err);border:1px solid currentColor;border-radius:999px;padding:2px 8px;margin-left:8px}
-  /* An operation above the caller's package: Send is off, with this note. */
-  .lock-note{flex:1 1 220px;font-size:12.5px;color:var(--muted)}
-  .lock-note a,.resp-next a{color:var(--accent)}
-  .btn[data-locked]{cursor:not-allowed}
-  /* Package tier of an operation (lib/catalogs/tiers.json): the lowest
-     package that includes it; .locked when the caller's package doesn't. */
-  .tier{flex:none;font:700 10px/1.6 var(--head);text-transform:uppercase;letter-spacing:.6px;padding:1px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
-  .tier.free{color:var(--ok)} .tier.standard{color:var(--muted)} .tier.premium{color:var(--t3)} .tier.locked{color:var(--warn);border-style:dashed}
-  /* The access badge in the tool bar also has the class "tier": keep it a chip */
-  .badge.tier{font:500 12.5px var(--head);text-transform:none;letter-spacing:0;padding:4px 12px;border-color:var(--chip-line);color:var(--chip-ink);background:var(--chip-bg)}
-  .op-title .tier{margin-left:auto}
-  .docs .ep .sig .tier{margin-left:auto}
+  .mb-side{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+  .mb-sbx{display:inline-flex;align-items:center;gap:8px;font:600 13.5px var(--head);cursor:pointer;user-select:none;position:relative}
+  .mb-sbx[hidden]{display:none}
+  .mb-sbx input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+  .mb-sbx .sw{position:relative;width:34px;height:20px;border-radius:999px;border:1.5px solid currentColor;flex:none;transition:background .15s}
+  .mb-sbx .sw::after{content:'';position:absolute;top:2.5px;left:2.5px;width:12px;height:12px;border-radius:50%;background:currentColor;transition:transform .15s}
+  .mb-sbx input:checked+.sw{background:currentColor}
+  .mb-sbx input:checked+.sw::after{transform:translateX(14px);background:var(--panel)}
+  .mb-sbx input:focus-visible+.sw{outline:2px solid var(--focus);outline-offset:2px}
+  .mb-count{font-size:12.5px;white-space:nowrap}
+  /* Per-card cues that follow the mode bar without a re-render: the
+     .mp-app carries .sbx (sandbox on) and .nocard (no card on file). */
+  .needs-card{display:none;font:600 11px var(--mono);color:var(--err);border:1px solid currentColor;border-radius:999px;padding:2px 8px}
+  .mp-app.nocard:not(.sbx) .needs-card{display:inline-block}
+  .sbx-ro{display:none;flex-basis:100%;font-size:12.5px;color:var(--warn)}
+  .mp-app.sbx .sbx-ro{display:block}
+  .btn .sbx-tag{display:none}
+  .mp-app.sbx .btn .sbx-tag{display:inline}
+  .resp-next{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 10px;font-size:13px;color:var(--text)}
+  .resp-next a{color:var(--accent)}
+  /* Rate class of an operation (lib/catalogs/rate-card.json). */
+  .rate{flex:none;display:inline-flex;align-items:center;font:600 10.5px/1.6 var(--head);text-transform:uppercase;letter-spacing:.6px;padding:1px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+  .rate.free{color:var(--ok)} .rate.standard{color:var(--accent)} .rate.advanced{color:var(--t3)} .rate.service,.rate.bundle{color:var(--muted)} .rate.service{border-style:dashed}
+  .op-title{flex-wrap:wrap}
+  .op-title .rate{margin-left:auto}
+  .docs .ep .sig .rate{margin-left:auto}
+  .price-note{font-size:13px;color:var(--muted);margin:8px 0 0}
+  .price-note b{color:var(--heading)}
+  .svc-note{font-size:13px;color:var(--muted);margin:0 0 10px}
+  /* Service orders: Send asks first, in the card (never a browser dialog). */
+  .svc-confirm{margin-top:12px;border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);background:var(--warn-bg);border-radius:var(--r-sm);padding:12px 14px;animation:fadein .18s ease}
+  .svc-confirm p{margin:0 0 4px;font-size:13.5px;color:var(--ink);max-width:none}
+  .svc-confirm p b{color:var(--warn)}
+  .svc-confirm .row{margin-top:10px}
+  .btn-line{background:none;border:1px solid var(--outline);color:var(--accent);border-radius:999px;padding:9px 20px;font:500 14px/1.3 var(--sans);cursor:pointer;transition:background .15s,border-color .15s}
+  .btn-line:hover{background:var(--hover);border-color:var(--accent)}
+  .btn-line:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .resp-next .btn-line{padding:5px 14px;font-size:13px}
+  .btn-line[aria-checked="true"]{border-color:var(--warn);color:var(--warn)}
+  .docs td.num,.docs th.num{text-align:right;white-space:nowrap}
+  .docs tr.total td{font-weight:700;color:var(--heading);border-top:2px solid var(--line-strong)}
   .pre-note{font-size:13px;background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);color:var(--ink);border-radius:var(--r-sm);padding:9px 12px;margin:0 0 12px}
   .pre-note b{color:var(--warn)}
   .doc h3{font:600 11px var(--sans);text-transform:uppercase;letter-spacing:1.5px;color:var(--eyebrow);margin:16px 0 6px}
@@ -470,7 +505,15 @@
     .base{order:4;width:100%;min-width:0}
     .base code{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
     header .grow{display:none}
-    .modebar{padding:8px 16px;font-size:13px}
+    .modebar{padding:8px 16px;font-size:13px;position:static}
+    /* The state reads as one line of text that wraps, badge included. */
+    .mb-state{display:block;line-height:1.75}
+    .mb-state>*{margin-right:8px}
+    .mb-state>b,.mb-state>.mb-proposed,.mb-state>button{display:inline-block}
+    /* Billing tables: no breaks inside a word or a number; scroll if needed. */
+    .docs table.bill td{white-space:nowrap;overflow-wrap:normal}
+    .docs table.bill.names td:first-child{white-space:normal}
+    .docs table.bill td code{white-space:nowrap;overflow-wrap:normal}
     .layout{display:block}
     .products{display:flex;flex-direction:column;gap:8px;max-height:none;overflow:visible;padding:12px 16px}
     #product-bar{display:none!important}
@@ -510,14 +553,22 @@
   </div>
   <div class="base"><b>Base URL</b><code id="baseurl">—</code></div>
   <div class="grow"></div>
-  <span class="badge tier" id="partner-badge" hidden></span>
+  <span class="badge acct" id="partner-badge" hidden></span>
   <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
     <span class="sun" aria-hidden="true">☀</span>
     <span class="moon" aria-hidden="true">☾</span>
     <span class="theme-label">Light</span>
   </button>
 </header>
-<div class="modebar" id="modebar" role="status" aria-live="polite" hidden></div>
+<div class="modebar" id="modebar" hidden>
+  <span class="mb-state" aria-live="polite"></span>
+  <span class="grow"></span>
+  <span class="mb-side">
+    <label class="mb-sbx" hidden><input type="checkbox" role="switch" id="sandbox-toggle"><span class="sw" aria-hidden="true"></span>Sandbox</label>
+    <span class="mb-count" aria-live="polite"></span>
+  </span>
+  <span class="mb-card" aria-live="polite" hidden></span>
+</div>
 <div class="layout">
 <nav class="products" aria-label="Products">
   <label class="m-pick" for="m-product"><span>API</span><select id="m-product"></select></label>
@@ -561,7 +612,7 @@ async function main(ROOT,HOST,GATEWAY){
   // The gateway that served this script (console-app.js); every API call
   // goes there, whichever page hosts the console.
   const ORIGIN=GATEWAY;
-  // The marketplace page's request form: access, and package upgrades.
+  // The marketplace page's request form (access requests).
   const REQUEST_URL='https://iristelpartnerportal.com/api-marketplace#request-form';
   const USER_PH='YOUR_ESPRESSO_USERNAME', PASS_PH='YOUR_ESPRESSO_PASSWORD', KEY_PH='YOUR_MARKETPLACE_KEY';
   // No upstream API keys live in this page. IristelX and 911 calls go through
@@ -631,10 +682,10 @@ async function main(ROOT,HOST,GATEWAY){
   //       'ix'    -> IristelX API; gateway injects the upstream key
   // Every product also needs the caller's marketplace session or key.
   const IX=id=>ORIGIN+'/api/ix/'+id;
-  // Partners always reach Espresso's production system and the gateway
-  // ignores this header for them. Only staff can pick the system with it;
-  // the console keeps staff on test.
-  const CONSOLE_ENV='test';
+  // Partners reach Espresso's production system live and its test system in
+  // the sandbox (X-Marketplace-Mode); the gateway ignores X-EDID-Env for
+  // them. Staff are never billed, so for them the same Sandbox switch picks
+  // the Espresso system instead: off = production, on = test (staffEnv()).
   const PRODUCT_CFG={
     'lnp-enterprise': {auth:'edid',  base:ORIGIN, group:p=>p.includes('/pons')||p.includes('/numbers')?'Porting requests (PONs)':'Reference'},
     'lnp-wireless':   {auth:'proxy', base:ORIGIN, group:p=>p.includes('/portin')?'Port In':p.includes('/portout')?'Port Out':p.includes('/cancel-svc')?'Cancel Service':'Grids & health'},
@@ -646,6 +697,9 @@ async function main(ROOT,HOST,GATEWAY){
     'iristelx-sim':{auth:'ix',base:IX('iristelx-sim'), group:p=>/esim/i.test(p)?'eSIM':'SIM cards'},
     'iristelx-commission':{auth:'ix',base:IX('iristelx-commission'), group:()=>'Commissions'},
     'iristelx-mobile':{auth:'ix',base:IX('iristelx-mobile'), group:p=>/service-now/.test(p)?'Support tickets':/esim|qr/.test(p)?'eSIM':/port-in/.test(p)?'Port in':/notification/.test(p)?'Notifications':/payment/.test(p)?'Payment':'Plans & usage'},
+    // BroadWorks: scoped to the enterprise linked to the caller's account
+    // (403 broadworks_not_linked when there is none); staff name one with ?enterprise=.
+    'broadworks':     {auth:'bw',    base:ORIGIN, group:p=>/\/dns(\/|$)/.test(p)?'Numbers':/\/users(\/|$)/.test(p)?'Users':/\/groups(\/|$)/.test(p)?'Groups':'Enterprise'},
   };
   const cfg=()=>PRODUCT_CFG[productId]||{auth:'proxy',base:ORIGIN,group:()=>'Endpoints'};
   // Config of the product an endpoint belongs to (e.pid, set at load). Bundle
@@ -659,47 +713,85 @@ async function main(ROOT,HOST,GATEWAY){
     requestNumber:'', RequestNumber:'', PortType:'', HomeSpid:'', PortedTn:'',
     code:'', };
 
-  // ---- packages ---------------------------------------------------------
-  // Free, Standard, Premium (/catalog.json packages; each includes the ones
-  // below it, ranked 0-2). Every endpoint carries its tier id: the lowest
-  // package that includes it (lib/catalogs/tiers.json). The caller's own
-  // package comes from /marketplace/billing (ACCOUNT) or /marketplace/me (ME);
-  // an endpoint above it is locked here and refused by the gateway (403
-  // upgrade_required). Staff, internal accounts and an unknown package see
-  // everything unlocked: the gateway has the last word.
-  const priceText=c=>c<100?c+'¢':'$'+(c/100).toFixed(2);
-  const pkgById=id=>tiers.find(t=>t.id===id)||null;
-  // No tier counts as Premium, as on the gateway (fails closed).
-  function tierOf(e){return e?pkgById(e.tier)||pkgById('premium'):null;}
-  function tierName(e){const t=tierOf(e);return t?t.name:'';}
-  // {id,name,priceCents} of the caller's package, or null when unknown.
-  const myPkg=()=>{const p=(ACCOUNT&&ACCOUNT.package)||(ME&&ME.package);return p&&p.id?p:null;};
-  const pkgFee=p=>p&&p.priceCents?priceText(p.priceCents)+' CAD a month':'no charge';
-  const unlocked=()=>(ACCOUNT&&ACCOUNT.mode==='exempt')||!!(ME&&(ME.isStaff||ME.mode==='exempt'));
-  // Is this package (an entry of tiers) above the caller's?
-  function pkgLocked(need){
-    const mine=myPkg(), have=mine&&pkgById(mine.id);
-    return !!(have&&need&&!unlocked()&&have.rank<need.rank);
+  // ---- pricing ------------------------------------------------------------
+  // Per event (/catalog.json pricing, lib/catalogs/pricing.js). Every
+  // endpoint carries its rateClass and priceCents:
+  //   free      reads, lists, searches, status: never charged
+  //   standard  1¢ per successful event      } need a card on file live
+  //   advanced  2.5¢ per successful event    } (402 card_required without one)
+  //   service   orders telecom service: no API fee; the service is billed
+  //             under Iristel's tariff
+  // Only successful (2xx) live calls are billable. The sandbox (header
+  // X-Marketplace-Mode: sandbox) gives 1,000 calls a month, never billed.
+  // The gateway has the last word; the console only explains.
+  const priceText=c=>{c=Number(c||0);return c<100?(Math.round(c*10)/10)+'¢':'$'+(c/100).toFixed(2);};
+  const FALLBACK_CLASSES=[
+    {id:'free',name:'Free',priceCents:0},{id:'standard',name:'Standard',priceCents:1},
+    {id:'advanced',name:'Advanced',priceCents:2.5},{id:'service',name:'Service order',priceCents:0}];
+  const rateClasses=()=>(pricing&&Array.isArray(pricing.classes)&&pricing.classes.length?pricing.classes:FALLBACK_CLASSES);
+  const classById=id=>rateClasses().find(c=>c.id===id)||null;
+  const rateOf=e=>(e&&classById(e.rateClass))||null;
+  const priced=e=>{const r=rateOf(e);return !!(r&&r.priceCents);};
+  const isService=e=>!!e&&e.rateClass==='service';
+  const sandboxLimit=()=>Number((ACCOUNT&&ACCOUNT.sandbox&&ACCOUNT.sandbox.limit)||(ME&&ME.sandbox&&ME.sandbox.limit)||(pricing&&pricing.sandboxCalls)||1000);
+  const num=n=>Number(n).toLocaleString('en-CA');
+  const proposed=()=>!!pricing&&pricing.status==='proposed';
+  const PROPOSED='Proposed rates, subject to approval';
+  // What is billed, said the same way everywhere.
+  const BILLABLE_EVENT='a successful (2xx) live call; failed calls, sandbox calls and repeated Idempotency-Key requests aren\'t billed';
+  const TARIFF='The service ordered is billed under Iristel\'s tariff.';
+  // "Standard 1¢ · Advanced 2.5¢" from the catalog's classes; pricedSentence
+  // says "Standard 1¢ and Advanced 2.5¢".
+  const pricedText=()=>rateClasses().filter(c=>c.priceCents).map(c=>c.name+' '+priceText(c.priceCents)).join(' · ');
+  const pricedSentence=()=>rateClasses().filter(c=>c.priceCents).map(c=>c.name+' '+priceText(c.priceCents)).join(' and ');
+  // Short, for Iris: "reads free; Standard 1¢; Advanced 2.5¢ per successful event; service orders no API fee".
+  const rateCardText=()=>'reads free; '+rateClasses().filter(c=>c.priceCents).map(c=>c.name+' '+priceText(c.priceCents)).join('; ')
+    +' per successful event; service orders no API fee'+(proposed()?' ('+PROPOSED.toLowerCase()+')':'');
+  function rateLabel(r){
+    if(!r)return '';
+    if(r.id==='service')return 'Service order · no API fee';
+    return r.priceCents?r.name+' · '+priceText(r.priceCents):'Free';
   }
-  const lockedFor=e=>pkgLocked(tierOf(e));
-  const inPackage=e=>!lockedFor(e);
-  function pkgBadge(t){
-    if(!t)return '';
-    if(pkgLocked(t))return '<span class="tier locked" title="'+esc('Needs the '+t.name+' package. Your package is '+myPkg().name+'. '+(pricingNote||''))+'">🔒 '+esc(t.name)+' package</span>';
-    return '<span class="tier '+esc(t.id)+'" title="'+esc(t.name+' package and up. '+(pricingNote||''))+'">'+esc(t.name)+'</span>';
+  function rateTitle(r){
+    if(!r)return '';
+    if(r.id==='service')return 'Orders telecom service: no API fee. '+TARIFF;
+    if(!r.priceCents)return 'Free: never charged.';
+    return r.name+' event: '+priceText(r.priceCents)+' CAD per successful live call. Billable event: '+BILLABLE_EVENT+'.'+(proposed()?' '+PROPOSED+'.':'');
   }
-  const tierBadge=e=>pkgBadge(tierOf(e));
-  const upgradeLink=label=>'<a href="'+REQUEST_URL+'" target="_top">'+label+'</a>';
-  function lockNote(e){
-    return 'Your '+esc(myPkg().name)+' package doesn\'t include this. '+upgradeLink('Ask for an upgrade on the API Marketplace page')+'.';
+  function rateBadge(e){
+    const r=rateOf(e);
+    return r?'<span class="rate '+esc(r.id)+'" title="'+esc(rateTitle(r))+'">'+esc(rateLabel(r))+'</span>':'';
   }
+  // A bundle's API cost per run (its Standard and Advanced steps).
+  function bundleCost(b){
+    if(!b||b.apiCents==null)return '';
+    const api=Number(b.apiCents)||0, svc=Number(b.serviceSteps)||0;
+    const title='API cost per run: '+(api?priceText(api)+' CAD, for its Standard and Advanced steps':'none')+'.'
+      +(svc?' '+svc+' step'+(svc===1?' orders':'s order')+' telecom service: no API fee; '+TARIFF.charAt(0).toLowerCase()+TARIFF.slice(1):'');
+    return '<span class="rate bundle" title="'+esc(title)+'">'+esc(api?priceText(api)+' per run':'No API fee')+'</span>';
+  }
+  // One line per endpoint in the docs.
+  function priceLine(e){
+    const r=rateOf(e);
+    if(!r)return '<p class="price-note"><b>Pricing:</b> not in the rate card, never charged.</p>';
+    if(r.id==='service')return '<p class="price-note"><b>Service order:</b> no API fee. '+esc(TARIFF)+'</p>';
+    if(!r.priceCents)return '<p class="price-note"><b>Free:</b> never charged.</p>';
+    return '<p class="price-note"><b>'+esc(r.name)+':</b> '+esc(priceText(r.priceCents))+' CAD per successful live call.</p>';
+  }
+  // Staff and internal accounts are never billed.
+  const exempt=()=>(ACCOUNT&&ACCOUNT.mode==='exempt')||!!(ME&&(ME.isStaff||ME.mode==='exempt'));
+  // Espresso products have a test system the sandbox uses; the others are
+  // read-only in the sandbox (409 no_test_system on a change).
+  const ESPRESSO_IDS=['lnp-enterprise','did-orders','lrn'];
+  const sandboxReadOnly=e=>!ESPRESSO_IDS.includes(e.pid)&&!/^(GET|HEAD|OPTIONS)$/.test(e.method);
 
   // ---- load registry ----------------------------------------------------
-  let products,bundles=[],audiences=[],categories=[],tiers=[],pricingNote='';
+  let products,bundles=[],audiences=[],categories=[],pricing=null,pricingNote='';
   try{
     const reg=await (await fetch(ORIGIN+'/catalog.json')).json();
     products=reg.products; bundles=reg.bundles||[]; audiences=reg.audiences||[]; categories=reg.categories||[];
-    tiers=reg.packages||reg.tiers||[]; pricingNote=reg.pricingNote||'';
+    pricing=reg.pricing&&typeof reg.pricing==='object'?reg.pricing:null;
+    pricingNote=reg.pricingNote||(pricing&&pricing.pricingNote)||'';
   }
   catch(e){
     const msg='Could not load <code>GET /catalog.json</code>. Is the gateway running?';
@@ -709,7 +801,7 @@ async function main(ROOT,HOST,GATEWAY){
     return;
   }
 
-  // ---- partner tier badge -----------------------------------------------
+  // ---- partner type badge -----------------------------------------------
   const partnerType=(getCookie('partnerType')||'').trim();
   if(partnerType){
     const b=$('#partner-badge'); b.hidden=false; b.textContent=partnerType;
@@ -754,42 +846,98 @@ async function main(ROOT,HOST,GATEWAY){
     }
   }
 
-  // ---- package and mode ---------------------------------------------------
-  // The partner's package and mode come from /marketplace/billing and are
-  // refreshed from the X-Marketplace-Package / X-Marketplace-Mode headers on
-  // every call (lib/entitlements.js). Every call reaches the live systems.
-  // free: Free endpoints, no card; production: Standard or Premium with a
-  // card on file (a monthly fee, no per-call charges); card_required: a paid
-  // package with no card yet, past_due: a failed payment (calls blocked).
+  // ---- account mode and the sandbox --------------------------------------
+  // ACCOUNT is /marketplace/billing. Its mode: exempt (staff, never billed) |
+  // live (card on file) | card_required (no card: Standard and Advanced need
+  // one; free reads and service orders don't) | past_due (only free reads
+  // work live). Separately, each call is live or sandbox: the Sandbox switch
+  // in the mode bar sends X-Marketplace-Mode: sandbox on every console call
+  // (1,000 a month, never billed). The switch is remembered per browser.
+  // After each call the gateway's X-Sandbox-Calls-Remaining refreshes the
+  // count (lib/entitlements.js).
   let ACCOUNT=null;
-  // A paid package needs a card before any call; the Free package never does.
-  const needsCard=()=>!!ACCOUNT&&ACCOUNT.mode==='card_required';
+  const SANDBOX_KEY='iristel-api-sandbox';
+  let SANDBOX=false;
+  try{SANDBOX=localStorage.getItem(SANDBOX_KEY)==='1';}catch(_){/* storage blocked: live */}
+  // Partners only: staff calls ignore the header (never billed anyway); for
+  // staff the switch picks the Espresso system instead.
+  const sandboxOn=()=>SANDBOX&&!exempt();
+  const staffEnv=()=>SANDBOX?'test':'production';
+  const callMode=()=>exempt()?null:(SANDBOX?'sandbox':'live');
+  const acctMode=()=>ACCOUNT&&ACCOUNT.mode?ACCOUNT.mode:(ME&&ME.mode)||null;
+  const sandboxState=()=>(ACCOUNT&&ACCOUNT.sandbox)||(ME&&ME.sandbox)||null;
+  function setSandbox(on){
+    SANDBOX=!!on;
+    try{localStorage.setItem(SANDBOX_KEY,SANDBOX?'1':'0');}catch(_){/* not remembered */}
+    renderModebar();
+    // Code samples carry the sandbox header when it is on.
+    ROOT.querySelectorAll('[data-snippet]').forEach(pre=>pre.dispatchEvent(new Event('mp-refresh')));
+    try{irisNav();}catch(_){/* before the Iris hooks are set up */}
+  }
   function openBilling(){const b=ROOT.querySelector('.pchip[data-id="billing"]');if(b)b.click();}
-  ROOT.addEventListener('click',ev=>{if(ev.target.closest('[data-open-billing]')){ev.preventDefault();openBilling();}});
+  ROOT.addEventListener('click',ev=>{
+    if(ev.target.closest('[data-open-billing]')){ev.preventDefault();openBilling();return;}
+    // "Try in sandbox" / "Send it live instead" switches in a response.
+    const sw=ev.target.closest('[data-sandbox-set]');
+    if(sw){
+      ev.preventDefault();
+      const on=sw.dataset.sandboxSet==='on';
+      setSandbox(on);
+      sw.setAttribute('aria-checked','true');
+      sw.textContent=on?'Sandbox on: press Send again':'Live: press Send again';
+    }
+  });
   function renderModebar(){
-    const el=$('#modebar'), d=ACCOUNT;
-    if(!d||d.mode==='exempt'){el.hidden=true;return;}
-    const cta=label=>'<span class="grow"></span><button type="button" data-open-billing>'+label+'</button>';
-    const p=d.package&&d.package.id?d.package:{id:'free',name:'Free',priceCents:0};
-    el.className='modebar '+(d.mode==='production'?'live':d.mode==='free'?'free':'block');
-    el.innerHTML=d.mode==='production'
-      ?'<b>'+esc(p.name)+' package</b><span>'+esc(priceText(p.priceCents))+'/month · live. No per-call charges.</span>'
-      :d.mode==='free'
-      ?'<b>Free package</b><span>Free endpoints · no card needed · live.</span><span class="grow"></span>'
-        +'<a href="'+REQUEST_URL+'" target="_top">Ask for an upgrade →</a>'
-      :d.mode==='past_due'
-      ?'<b>Paused</b><span>Your last payment didn\'t go through, so API calls are paused.</span>'+cta('Update card →')
-      :'<b>Card required</b><span>Add a card to start your '+esc(p.name)+' package ('+esc(pkgFee(p))+'). Until then calls are refused.</span>'+cta('Add a card →');
+    const el=$('#modebar'), app=ROOT.querySelector('.mp-app');
+    const mode=acctMode(), staff=exempt();
+    app.classList.toggle('sbx',sandboxOn());
+    app.classList.toggle('nocard',!staff&&mode==='card_required');
+    if(!mode&&!staff&&!mpSession()){el.hidden=true;return;}
+    const stateEl=el.querySelector('.mb-state'), cardEl=el.querySelector('.mb-card'), sbx=el.querySelector('.mb-sbx'), toggle=$('#sandbox-toggle'), countEl=el.querySelector('.mb-count');
+    const prop=proposed()?'<span class="mb-proposed" title="'+esc((pricing&&pricing.note)||PROPOSED)+'">'+PROPOSED+'</span>':'';
+    const rates='<span>'+esc(pricedText())+' per successful event · reads free</span>'+prop;
+    const cta=label=>'<button type="button" data-open-billing>'+label+'</button>';
+    let cls, h, card='';
+    if(staff){
+      cls='staff';
+      h='<b>Staff</b><span>Not billed · '+(SANDBOX?'Sandbox on: Espresso APIs use Espresso\'s test system (DID Orders and LRN have none yet)':'Live: Espresso APIs use Espresso\'s production system')+'</span>';
+    }else if(sandboxOn()){
+      cls='sandbox';
+      h='<b>Sandbox</b><span>Test calls, never billed · Espresso APIs use its test system; other APIs are read-only</span>';
+    }else if(mode==='past_due'){
+      cls='block';
+      h='<b>Payment due</b><span>Your last payment didn\'t go through. Free reads still work; other live calls are paused until you update your card.</span>'+cta('Update card →');
+    }else{
+      cls='live';
+      h='<b>Live</b>'+rates;
+      // Second row: what a card is for.
+      if(mode==='card_required')card='<span>Add a card under Billing &amp; usage for Standard and Advanced calls</span>'+cta('Add a card →');
+    }
+    el.className='modebar '+cls;
+    stateEl.innerHTML=h;
+    cardEl.innerHTML=card;cardEl.hidden=!card;
+    // The switch for everyone (staff: Espresso test or production); the
+    // count for partners only.
+    sbx.hidden=false;
+    toggle.checked=SANDBOX;
+    const s=sandboxState();
+    countEl.textContent=staff||!s||s.left==null?'':num(s.left)+' of '+num(s.limit||sandboxLimit())+' sandbox calls left this month';
     el.hidden=false;
   }
-  function noteMode(r){
+  $('#sandbox-toggle').addEventListener('change',ev=>setSandbox(ev.target.checked));
+  // After every call: the sandbox calls left, and what a refusal says about
+  // the account (a card removed elsewhere, a payment that failed).
+  function noteCall(r,parsed){
     if(!ACCOUNT||ACCOUNT.mode==='exempt')return;
-    const m=r.headers.get('X-Marketplace-Mode'), pk=r.headers.get('X-Marketplace-Package');
-    if(m)ACCOUNT.mode=m;
-    // A package changed by staff since the page loaded: the bar follows now,
-    // the locks when a page is next drawn (re-rendering would wipe the forms).
-    const np=pk&&pkgById(pk);
-    if(np&&(!ACCOUNT.package||ACCOUNT.package.id!==np.id))ACCOUNT.package={id:np.id,name:np.name,priceCents:np.priceCents};
+    const left=r.headers.get('X-Sandbox-Calls-Remaining');
+    if(left!==null&&left!==''&&Number.isFinite(Number(left))){
+      const lim=sandboxLimit(), n=Math.max(0,Number(left));
+      ACCOUNT.sandbox={limit:lim,used:Math.max(0,lim-n),left:n};
+    }
+    const err=parsed&&typeof parsed==='object'?parsed.error:null;
+    if(r.status===402&&err==='card_required'&&ACCOUNT.mode==='live'){ACCOUNT.mode='card_required';ACCOUNT.cardOnFile=false;}
+    if(r.status===402&&err==='payment_required'){ACCOUNT.mode='past_due';ACCOUNT.pastDue=true;}
+    if(r.status===429&&err==='sandbox_limit'&&ACCOUNT.sandbox){ACCOUNT.sandbox.used=ACCOUNT.sandbox.limit;ACCOUNT.sandbox.left=0;}
     renderModebar();
   }
   // Who is calling (/marketplace/me): own agent ids, staff flag, granted
@@ -828,6 +976,7 @@ async function main(ROOT,HOST,GATEWAY){
   // empty and untouched. Runs after the synchronous first render below.
   if(meLate)meLate.then(m=>{
     setMe(m);
+    renderModebar();   // staff, mode and sandbox from /me when billing had none
     irisReady();   // the Iris panel re-reads me() (its pilot flag) on this event
     const id=ME&&ME.agents.length===1?String(ME.agents[0].id):'';
     if(!id)return;
@@ -1022,6 +1171,7 @@ async function main(ROOT,HOST,GATEWAY){
     'sim|esim|qr|sim card|activate sim':['iristelx-sim','iristelx-mobile'],
     'commission|agent|payout|revenue':['iristelx-commission'],
     'app|subscriber|notification|support ticket|top up|topup|payment|pay':['iristelx-mobile'],
+    'broadworks|hosted pbx|pbx|seat|ucaas|hosted voice|service pack':['broadworks'],
   };
   const norm=s=>String(s||'').toLowerCase();
   function intentProducts(q){
@@ -1104,7 +1254,7 @@ async function main(ROOT,HOST,GATEWAY){
     });
     resultsEl.innerHTML='';
     const frag=document.createDocumentFragment();
-    // Bundle matches first — "order a sip trunk" should surface the package.
+    // Bundle matches first — "order a sip trunk" should surface the bundle.
     const qn=norm(q), qTokens=qn.split(/\s+/).filter(t=>t.length>2);
     bundles.map(b=>{
       const text=norm([b.name,b.useCase,b.summary,b.audience].join(' '));
@@ -1246,10 +1396,10 @@ async function main(ROOT,HOST,GATEWAY){
       +'so you don\'t need the key here.</p>';
 
     if(c.auth==='edid'){
-      d+='<h3>Live system</h3>'
-        +'<p>No Espresso login is needed — the gateway signs in to Espresso for you. Your calls go to Espresso\'s '
-        +'<strong>production</strong> system: orders, ports and changes you make here are real. Espresso\'s separate test '
-        +'system is reserved for Iristel staff.</p>';
+      d+='<h3>Live system and sandbox</h3>'
+        +'<p>No Espresso login is needed — the gateway signs in to Espresso for you. Live calls go to Espresso\'s '
+        +'<strong>production</strong> system: orders, ports and changes you make there are real. Sandbox calls '
+        +'(<code>X-Marketplace-Mode: sandbox</code>) go to Espresso\'s separate test system instead.</p>';
     }else if(p.id==='e911'){
       d+='<h3>Account code</h3>'
         +'<p>Every request also carries <code>?code=</code>, the account code the listing belongs to. In the partner '
@@ -1262,14 +1412,30 @@ async function main(ROOT,HOST,GATEWAY){
         +'(<a href="https://iristel-x.readme.io/reference/portin-submit" target="_blank" rel="noopener">IristelX reference</a>). '
         +'Call it at <code>'+esc(c.base)+'/api/wlnp/…</code> with your marketplace key; the gateway adds the IristelX key. '
         +'If IristelX doesn\'t answer you get <code>504 upstream_unreachable</code>.</div>';
+    }else if(c.auth==='bw'){
+      d+='<h3>Your enterprise</h3>'
+        +'<p>Calls reach only the BroadWorks enterprise linked to your account. If your account isn\'t linked to one yet, '
+        +'every call answers <code>403 broadworks_not_linked</code>: contact Iristel support and we\'ll link it. '
+        +'Iristel staff name the enterprise with <code>?enterprise=</code>.</p>';
     }
 
-    // Packages: what each endpoint below needs, and the caller's own.
-    if(tiers.length&&(p.endpoints||[]).length){
-      const mine=myPkg(), locked=(p.endpoints||[]).filter(lockedFor).length;
-      d+='<h3>Packages</h3><p>Each endpoint below shows the lowest package that includes it. '+esc(pricingNote)+'</p>';
-      if(mine&&!unlocked())d+='<p>Your package: <strong>'+esc(mine.name)+'</strong> ('+esc(pkgFee(mine))+').'
-        +(locked?' Endpoints marked 🔒 need a higher package: '+upgradeLink('ask for an upgrade on the API Marketplace page')+'.':' It includes every endpoint of this API.')+'</p>';
+    // Pricing: per successful event, by rate class (badges on every endpoint below).
+    if((p.endpoints||[]).length){
+      const counts=rateClasses().map(r=>{const n=(p.endpoints||[]).filter(e=>e.rateClass===r.id).length;return n?n+' '+(r.id==='service'?'service order'+(n===1?'':'s'):r.name):'';}).filter(Boolean);
+      d+='<h3>Pricing</h3>'
+        +(proposed()?'<div class="callout"><b>Not final:</b> '+esc((pricing&&pricing.note)||PROPOSED+'.')+'</div>':'')
+        +'<p>'+esc(pricingNote||('Reads are free; '+pricedSentence()+' CAD per successful event; service orders add no API fee.'))+'</p>'
+        +'<table><tr><th>Rate</th><th>Price (CAD)</th><th>What\'s in it</th></tr>'
+        +rateClasses().map(r=>'<tr><td>'+rateBadge({rateClass:r.id})+'</td><td>'
+          +(r.id==='service'?'No API fee':r.priceCents?'<b>'+esc(priceText(r.priceCents))+'</b><br><span class="hint">'+esc(String(r.billingUnit||'per successful event').toLowerCase())+'</span>':'No charge')+'</td><td>'
+          +esc(r.whatsIn||(r.id==='service'?TARIFF:''))+'</td></tr>').join('')
+        +'</table>'
+        +'<p><b>Billable event:</b> '+esc(BILLABLE_EVENT)+'.</p>'
+        +'<p><b>Sandbox:</b> add <code>X-Marketplace-Mode: sandbox</code> to a call (or switch on <b>Sandbox</b> at the top of this console): '
+        +esc(num(sandboxLimit()))+' calls per account per calendar month, never billed. '
+        +(ESPRESSO_IDS.includes(p.id)?'This API runs on Espresso\'s test system in the sandbox.'
+          :'This API has no test system, so in the sandbox it is read-only: a change answers <code>409 no_test_system</code>.')+'</p>'
+        +(counts.length?'<p class="hint">This API: '+esc(counts.join(' · '))+'.</p>':'');
     }
 
     if(p.id==='lnp-enterprise'){
@@ -1291,7 +1457,7 @@ async function main(ROOT,HOST,GATEWAY){
         +'<li>On rejection: fix and <code>POST /api/lnp/pons/{pon}/edit</code>.</li>'
         +'<li>Once Confirmed, on the due date: <code>POST /api/lnp/pons/{pon}/activate</code>.</li></ol>'
         +'<p><code>POST /api/lnp/pons/{pon}/status</code> forces a status to walk the whole flow without a real losing carrier. '
-        +'It works only on Espresso\'s test system, which only Iristel staff can reach; on production it does nothing.</p>';
+        +'It works only on Espresso\'s test system (sandbox calls); on production it does nothing.</p>';
     }
     if(p.id==='lnp-wireless'){
       d+='<h3>Rules that trip people up</h3><table><tr><th>Rule</th><th>Detail</th></tr>'
@@ -1338,8 +1504,9 @@ async function main(ROOT,HOST,GATEWAY){
       d+='</div>';
       cat.forEach(e=>{
         d+='<div class="ep" id="'+anchor(e)+'">'
-          +'<div class="sig"><span class="m '+e.method+'">'+e.method+'</span><strong>'+esc(e.path)+'</strong>'+tierBadge(e)+'</div>'
-          +(e.soap||e.upstream?'<p class="soap" style="margin:6px 0 0">Maps to <code>'+esc(e.soap||e.upstream)+'</code></p>':'');
+          +'<div class="sig"><span class="m '+e.method+'">'+e.method+'</span><strong>'+esc(e.path)+'</strong>'+rateBadge(e)+'</div>'
+          +(e.soap||e.upstream?'<p class="soap" style="margin:6px 0 0">Maps to <code>'+esc(e.soap||e.upstream)+'</code></p>':'')
+          +priceLine(e);
         if(e.description)d+='<p style="margin:8px 0 0">'+esc(e.description)+'</p>';
         if(e.precondition)d+='<div class="pre-note" style="margin:10px 0 0"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
         if(e.params&&e.params.length){
@@ -1397,12 +1564,14 @@ async function main(ROOT,HOST,GATEWAY){
     rail.className='railnote';
     let t='<strong>Base URL:</strong> <code>'+esc(c.base)+'</code><br>Every path above is relative to it.';
     if(c.auth==='edid'){
-      t+='<br><br>No Espresso login needed — the gateway signs in for you. Calls go to Espresso\'s production '
-        +'system, so orders and changes are real.';
+      t+='<br><br>No Espresso login needed — the gateway signs in for you. Live calls go to Espresso\'s production '
+        +'system, so orders and changes are real; sandbox calls go to its test system.';
     }else if(c.auth==='ix'){
       t+='<br><br>Calls go through the marketplace gateway, which adds the IristelX key on the server — '
         +'no IristelX key is needed from you.'
         +(productId==='e911'?' These are live emergency records — dispatch sees what you save here.':'');
+    }else if(c.auth==='bw'){
+      t+='<br><br>Calls go through the marketplace gateway to Iristel\'s BroadWorks platform and reach only the enterprise linked to your account.';
     }else{
       t+='<br><br>Calls go through the marketplace gateway to the IristelX WLNP API; the gateway adds the IristelX key.';
     }
@@ -1419,9 +1588,10 @@ async function main(ROOT,HOST,GATEWAY){
     $('#baseurl').textContent=ORIGIN;
     nav.innerHTML='<div class="empty" style="padding:14px">Pick a bundle in the menu to run its steps in a guided console.</div>';
     $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
-    let h='<h2>Bundles &amp; packages</h2>'
+    let h='<h2>Bundles</h2>'
       +'<p class="lead">Curated recipes per business model: the exact APIs to call, in order, for each use case. Open a bundle to run its steps in a guided console.</p>'
-      +(tiers.length?'<p class="hint">Each bundle shows the package it needs: the highest package among its steps.</p>':'');
+      +'<p class="hint">Each bundle shows its API cost per run: the Standard and Advanced steps, per successful live call. '
+      +'Service-order steps add no API fee; the services they order are billed under Iristel\'s tariff.'+(proposed()?' '+PROPOSED+'.':'')+'</p>';
     audiences.forEach(a=>{
       const list=bundles.filter(b=>b.audience===a.id);
       if(!list.length)return;
@@ -1429,7 +1599,7 @@ async function main(ROOT,HOST,GATEWAY){
       list.forEach(b=>{
         const cat=(categories.find(c=>c.id===b.category)||{}).label;
         h+='<div class="bundle-card" id="bundle-'+esc(b.id)+'">'+(cat?'<div class="pgroup-sub" style="padding:0 0 4px">'+esc(cat)+'</div>':'')
-          +'<h3><a href="#bundle-'+esc(b.id)+'" data-bopen="'+esc(b.id)+'">'+esc(b.name)+' →</a> '+pkgBadge(pkgById(b.package))+'</h3>'
+          +'<h3><a href="#bundle-'+esc(b.id)+'" data-bopen="'+esc(b.id)+'">'+esc(b.name)+' →</a> '+bundleCost(b)+'</h3>'
           +'<p class="buse">'+esc(b.useCase)+'</p><p>'+esc(b.summary)+'</p><ol>';
         (b.steps||[]).forEach((s,i)=>{
           const p=products.find(x=>x.id===s.product);
@@ -1485,9 +1655,10 @@ async function main(ROOT,HOST,GATEWAY){
   });
   async function renderBillingView(){
     $('#baseurl').textContent=ORIGIN;
-    nav.innerHTML='<div class="railnote" style="border:0;margin:0"><strong>Billing &amp; usage</strong><br>'
-      +'Your package sets which APIs you can call. Free needs no card; Standard and Premium are a monthly fee '
-      +'charged to your card on file, with no per-call charges.</div>';
+    const help='Reads are free; '+pricedSentence()+' CAD per successful event; service orders add no API fee '
+      +'(the service is billed under Iristel\'s tariff). Each month is invoiced on the 1st and charged to your card on the 5th.';
+    nav.innerHTML='<div class="railnote" style="border:0;margin:0"><strong>Billing &amp; usage</strong><br>'+esc(help)
+      +(proposed()?'<br><br>'+PROPOSED+'.':'')+'</div>';
     $('#op-intro').hidden=true;$('#opgrid').hidden=true;$('#req').hidden=true;$('#resp-card').hidden=true;
     const body=$('#docs-body');
     body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">Loading…</p>';
@@ -1495,27 +1666,17 @@ async function main(ROOT,HOST,GATEWAY){
     let d;
     try{d=await billingApi('GET');}
     catch(err){body.innerHTML='<h2>💳 Billing &amp; usage</h2><p class="lead">'+esc(err.message)+'</p>';return;}
-    const pk=d.package&&d.package.id?d.package:{id:'free',name:'Free',priceCents:0};
-    const paid=!!pk.priceCents&&!d.exempt;
+    ACCOUNT=d;renderModebar();
+    const usage=Array.isArray(d.usage)?d.usage:[], byClass=Array.isArray(d.byClass)?d.byClass:[];
     let h='<h2>💳 Billing &amp; usage</h2>'
       +'<p class="lead">'+(d.exempt?'Your API usage for '+esc(d.month)+'. Internal Iristel accounts are not billed.'
-        :paid?'Your package\'s monthly fee is invoiced on the 1st of the next month (sales tax added for Canadian accounts) and charged to your card on file on the 5th.'
-        :'The Free package has no charge and needs no card.')+'</p>';
-    ACCOUNT=d;renderModebar();
-    if(d.mode==='card_required')h+='<div class="callout"><b>Card required:</b> your '+esc(pk.name)+' package starts once a card is on file. '
-      +'Add one below; until then API calls are refused.</div>';
-    if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through, so API calls are paused. Save a card below and we\'ll retry the payment right away.</div>';
-    if(!d.exempt){
-      // The package: name, monthly price, what's in it, and this month's fee.
-      const full=pkgById(pk.id)||{}, fee=Number(d.estimatedCents||0);
-      const older=(d.usage||[]).reduce((s,u)=>s+Number(u.cents||0),0);
-      h+='<h3>Your package</h3>'
-        +'<p><strong>'+esc(pk.name)+'</strong> · '+esc(pkgFee(pk))+(full.whatsIn?'<br><span class="hint">'+esc(full.whatsIn)+'</span>':'')+'</p>'
-        +'<p>Card: '+(d.card?'on file':paid?'<strong>none yet</strong> (needed before any call)':'not needed')+'</p>'
-        +'<p>This month: <strong>'+(fee?esc(priceText(fee))+' CAD + tax':d.mode==='card_required'?'nothing yet — your package starts when you add a card':'no charge')+'</strong>'
-        +(older?' <span class="hint">(includes '+esc(priceText(older))+' of per-call charges from before packages started)</span>':'')+'</p>'
-        +'<p class="hint">'+(full.rank===2?'Premium includes every API.':'Need more APIs? '+upgradeLink('Ask for an upgrade on the API Marketplace page')+'.')+'</p>';
-    }
+        :'You pay per successful event: reads are free, '+esc(pricedSentence())+' CAD per successful event, and service orders add no API fee '
+          +'(the service ordered is billed under Iristel\'s tariff). Each month\'s total is invoiced on the 1st of the next month '
+          +'(sales tax added for Canadian accounts) and charged to your card on file on the 5th.')+'</p>'
+      +(!d.exempt&&proposed()?'<p class="hint">'+esc((pricing&&pricing.note)||PROPOSED+'.')+'</p>':'');
+    if(d.pastDue)h+='<div class="callout"><b>Payment problem:</b> your last payment didn\'t go through. Free reads still work; '
+      +'other live calls are paused. Save a card below and we\'ll retry the payment right away.</div>';
+
     h+='<h3>Card on file</h3>';
     if(d.exempt){
       h+='<p>Internal Iristel accounts aren\'t billed for API usage, so there\'s no card to add. Your calls are still listed below.</p>';
@@ -1526,36 +1687,61 @@ async function main(ROOT,HOST,GATEWAY){
         +' · '+esc(d.card.holder)+'</p>'
         +'<p><button class="btn" type="button" data-card-edit>Replace card</button> '
         +'<button class="btn danger" type="button" data-card-remove>Remove card</button></p>';
-    }else if(paid){
-      h+='<p>No card yet. Add one to start your '+esc(pk.name)+' package ('+esc(pkgFee(pk))+', no per-call charges).</p>';
     }else{
-      h+='<p>The Free package needs no card. If you move to Standard or Premium, you\'ll add one here.</p>';
+      h+='<p><strong>No card yet.</strong> Free reads, service orders and the sandbox work without one. '
+        +'Add a card below for Standard and Advanced calls.</p>';
     }
-    // Free with no card: no form to show.
-    if(d.mindAccount&&!d.exempt&&(paid||d.card)){
+    if(d.mindAccount&&!d.exempt){
       // The card form runs on the gateway in its own frame (v2/billing-card.html),
       // so the page hosting the console never sees the card number or CVV.
       const src=ORIGIN+'/v2/billing-card?theme='+encodeURIComponent(HOST.dataset.theme||'light')+'&origin='+encodeURIComponent(location.origin);
       h+='<iframe data-card-frame title="Card details" src="'+esc(src)+'" style="display:'+(d.card?'none':'block')
         +';width:100%;max-width:480px;height:360px;border:0;background:transparent"></iframe>';
     }
-    // Calls are listed for information: they carry no price.
-    h+='<h3>Calls this month</h3>';
-    if(d.usage.length){
-      h+='<table><tr><th>API</th><th>Calls</th></tr>'
-        +d.usage.map(u=>'<tr><td>'+esc(productName(u.product))+'</td><td>'+u.calls+'</td></tr>').join('')
-        +'<tr><td><b>Total</b></td><td><b>'+d.usage.reduce((s,u)=>s+Number(u.calls||0),0)+'</b></td></tr></table>'
-        +'<p class="hint">For your information: calls are included in your package, with no per-call charge.</p>';
+
+    if(!d.exempt){
+      // This month's live calls by rate class: what the invoice bills.
+      const line=id=>byClass.find(l=>l.rateClass===id)||{calls:0,billableCalls:0,cents:0};
+      const rows=rateClasses().map(r=>{
+        const l=line(r.id), paid=!!r.priceCents;
+        return '<tr><td>'+esc(r.name)+'</td><td class="num">'+num(l.calls||0)+'</td>'
+          +'<td class="num">'+(paid?num(l.billableCalls||0)+' × '+esc(priceText(r.priceCents)):'—')+'</td>'
+          +'<td class="num">'+(paid?cad(l.cents):r.id==='service'?'No API fee':'No charge')+'</td></tr>';
+      });
+      const other=byClass.filter(l=>!classById(l.rateClass));
+      other.forEach(l=>rows.push('<tr><td>'+esc(l.name||'Not in the rate card')+'</td><td class="num">'+num(l.calls||0)+'</td><td class="num">—</td><td class="num">Not charged</td></tr>'));
+      const tot=k=>byClass.reduce((s,l)=>s+Number(l[k]||0),0);
+      h+='<h3>This month ('+esc(d.month)+')</h3>'
+        +'<table class="bill names"><tr><th>Rate</th><th class="num">Live calls</th><th class="num">Billed events</th><th class="num">Amount</th></tr>'
+        +rows.join('')
+        +'<tr class="total"><td>Estimated total, before tax</td><td class="num">'+num(tot('calls'))+'</td><td class="num">'+num(tot('billableCalls'))+'</td>'
+        +'<td class="num">'+cad(d.estimatedCents)+'</td></tr></table>'
+        +'<p class="hint">Billable event: '+esc(BILLABLE_EVENT)+'. Each rate\'s total is rounded to the cent.</p>';
+      const sb=d.sandbox||{};
+      if(sb.limit!=null)h+='<h3>Sandbox</h3><p>'+num(sb.used||0)+' used · <strong>'+num(sb.left!=null?sb.left:Math.max(0,sb.limit-(sb.used||0)))
+        +' of '+num(sb.limit)+' left</strong> this month. Sandbox calls are never billed; the allowance resets on the 1st. '
+        +'Switch on <b>Sandbox</b> at the top of the console to use it.</p>';
+    }
+
+    h+='<h3>Calls by API</h3>';
+    if(usage.length){
+      h+='<table class="bill names"><tr><th>API</th><th class="num">Calls</th><th class="num">Billed events</th><th class="num">Amount</th></tr>'
+        +usage.map(u=>'<tr><td>'+esc(productName(u.product))+'</td><td class="num">'+num(u.calls||0)+'</td><td class="num">'+num(u.billableCalls||0)+'</td>'
+          +'<td class="num">'+cad(u.cents)+'</td></tr>').join('')
+        +'<tr class="total"><td>Total</td><td class="num">'+num(usage.reduce((s,u)=>s+Number(u.calls||0),0))+'</td>'
+        +'<td class="num">'+num(usage.reduce((s,u)=>s+Number(u.billableCalls||0),0))+'</td>'
+        +'<td class="num">'+cad(usage.reduce((s,u)=>s+Number(u.cents||0),0))+'</td></tr></table>'
+        +'<p class="hint">Every call this month, live and sandbox. Amounts by API are rounded to the cent.</p>';
     }else h+='<p>No API calls yet this month.</p>';
     h+='<h3>Invoices</h3>';
     h+=(d.invoices||[]).length
-      ?'<table><tr><th>Month</th><th>Invoice</th><th>Total (tax incl.)</th><th>Charged on</th><th></th></tr>'
+      ?'<table class="bill"><tr><th>Month</th><th>Invoice</th><th>Total (tax incl.)</th><th>Charged on</th><th></th></tr>'
         +d.invoices.map(i=>'<tr><td>'+esc(i.month)+'</td><td><code>'+esc(i.number)+'</code></td><td>'+cad(i.cents)+'</td><td>'+esc(i.dueOn)+'</td>'
           +'<td><a href="'+esc(i.url)+'" target="_blank" rel="noopener">View</a></td></tr>').join('')+'</table>'
       :'<p>No invoices yet. Each month\'s invoice is emailed on the 1st and charged on the 5th.</p>';
     h+='<h3>Past charges</h3>';
-    h+=d.charges.length
-      ?'<table><tr><th>Month</th><th>Amount</th><th>Status</th><th>Reference</th></tr>'
+    h+=(d.charges||[]).length
+      ?'<table class="bill"><tr><th>Month</th><th>Amount</th><th>Status</th><th>Reference</th></tr>'
         +d.charges.map(c=>'<tr><td>'+esc(c.month)+'</td><td>'+cad(c.cents)+'</td><td>'+esc(c.status)+'</td><td><code>'+esc(c.reference||'')+'</code></td></tr>').join('')+'</table>'
       :'<p>No charges yet.</p>';
     body.innerHTML=h;
@@ -1565,7 +1751,7 @@ async function main(ROOT,HOST,GATEWAY){
     if(edit&&frame)edit.onclick=()=>{frame.style.display='block';frame.focus();};
     const remove=body.querySelector('[data-card-remove]');
     if(remove)remove.onclick=async()=>{
-      if(!confirm(paid?'Remove this card? API calls will stop working until you add a new one.':'Remove this card?'))return;
+      if(!confirm('Remove this card? Standard and Advanced calls stop working until you add a new one.'))return;
       try{await billingApi('DELETE');renderBillingView();}catch(err){alert(err.message);}
     };
   }
@@ -1621,7 +1807,7 @@ async function main(ROOT,HOST,GATEWAY){
 
     // Console: intro + one card per step.
     $('#op-intro').hidden=false;$('#opgrid').hidden=false;
-    $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">📦 '+esc(b.name)+' '+pkgBadge(pkgById(b.package))+'</h2>'
+    $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">📦 '+esc(b.name)+' '+bundleCost(b)+'</h2>'
       +'<p class="hint" style="margin:0;font-size:13px">'+esc(b.useCase)+' — '+steps.length+' steps. '
       +'Run them in order: values returned by one step fill in the next ones automatically.</p>';
     const grid=$('#opgrid');grid.innerHTML='';
@@ -1734,8 +1920,9 @@ async function main(ROOT,HOST,GATEWAY){
     card.className='card';card.dataset.ep=e.method+' '+e.path;
     card.innerHTML=(extra.before||'')
       +'<h2 class="op-title"><span class="op-icon" aria-hidden="true">'+(h.icon||AUTO_ICON[e.method]||'⚙')+'</span>'
-      +esc(h.title||autoTitle(e))+tierBadge(e)+'</h2>'
+      +esc(h.title||autoTitle(e))+rateBadge(e)+'</h2>'
       +(e.description?'<p class="desc" style="font-size:12.5px;color:var(--muted)">'+esc(e.description)+'</p>':'')
+      +(isService(e)?'<p class="svc-note">Service order: no API fee. '+esc(TARIFF)+'</p>':'')
       +formHtml(e,{compact:true})
       +devDetailsHtml(e)
       +'<div class="op-resp"></div>';
@@ -1811,6 +1998,9 @@ async function main(ROOT,HOST,GATEWAY){
       const m=fm[p.name]||{};
       html+=fieldHtml('query',p.name,m,dflt(m,p.name,()=>DEFAULTS[p.name]||''),p.required,p.description);
     });
+    // BroadWorks: partners reach their own linked enterprise; staff name one.
+    if(e.pid==='broadworks'&&exempt()&&!(e.params||[]).some(p=>p.name==='enterprise'))
+      html+=fieldHtml('query','enterprise',{label:'Enterprise id (staff)'},'',true,'Staff name the BroadWorks enterprise; partners always reach the one linked to their account.');
     if(e.upload){
       html+='<div class="gfield"><label>File <span class="req">*</span></label><input type="file" data-upload accept="'+esc(e.upload.accept||'')+'">'
         +'<div class="ghelp">Sent as multipart/form-data field "'+esc(e.upload.field)+'".</div></div>';
@@ -1833,12 +2023,14 @@ async function main(ROOT,HOST,GATEWAY){
     }
     if(h.info)html+='<div class="info-box"><strong>Note:</strong> '+esc(h.info)+'</div>';
     const danger=h.danger!==undefined?h.danger:e.method==='DELETE';
-    // Above the caller's package: Send stays off (the gateway would answer 403).
-    const locked=lockedFor(e);
-    html+='<div class="row"><button class="btn'+(danger?' danger':'')+'" data-send'+(locked?' disabled data-locked':'')+'>'
-      +'<span class="spin" aria-hidden="true"></span><span>'+esc(h.submitLabel||'Send request')+'</span></button>'
-      +(locked?'<span class="lock-note">'+lockNote(e)+'</span>'
-        :needsCard()?'<span class="needs-card" title="'+esc('Your '+(myPkg()||{name:'paid'}).name+' package starts once a card is on file. Add one under Billing & usage.')+'">Needs a card</span>':'')
+    // Cues that follow the mode bar through CSS (.mp-app.sbx / .nocard): the
+    // Send label says "sandbox", Standard and Advanced calls say they need a
+    // card, and writes to an API with no test system say they're refused.
+    const r=rateOf(e);
+    html+='<div class="row"><button class="btn'+(danger?' danger':'')+'" data-send>'
+      +'<span class="spin" aria-hidden="true"></span><span>'+esc(h.submitLabel||'Send request')+'</span><span class="sbx-tag"> · sandbox</span></button>'
+      +(priced(e)?'<span class="needs-card" title="'+esc(r.name+' events ('+priceText(r.priceCents)+' CAD) need a card on file. Add one under Billing & usage, or switch on the sandbox.')+'">Needs a card</span>':'')
+      +(sandboxReadOnly(e)?'<span class="sbx-ro">Sandbox: this API has no test system, so a change is refused (409). Switch the sandbox off to send it live.</span>':'')
       +(opts.compact?'':'<span class="url" data-url></span>')+'</div>';
     return html;
   }
@@ -1898,18 +2090,28 @@ async function main(ROOT,HOST,GATEWAY){
         r.body=b;
       }
     }
-    const mine=myPkg(), need=tierOf(e);
-    r.note=!ACCOUNT||!mine||ACCOUNT.mode==='exempt'?''
-      :lockedFor(e)?'Needs the '+need.name+' package: on your '+mine.name+' package this answers 403 upgrade_required.'
-      :ACCOUNT.mode==='card_required'?'Your '+mine.name+' package starts once a card is on file; until then this answers 402.'
-      :ACCOUNT.mode==='past_due'?'Paused: your last payment didn\'t go through, so this answers 402 until the card is updated under Billing & usage.'
-      :'Live system: included in your '+mine.name+' package, no per-call charge.';
+    // The sandbox header goes in the sample when the console sends it.
+    r.sandbox=sandboxOn();
+    r.note=snippetNote(e,r.sandbox);
     return r;
+  }
+  // One comment line on what the call costs, for the code samples.
+  function snippetNote(e,sandbox){
+    if(exempt())return '';
+    const r=rateOf(e), mode=acctMode();
+    if(sandbox)return 'Sandbox call: never billed ('+num(sandboxLimit())+' a month). Drop the X-Marketplace-Mode header to send it live.';
+    if(mode==='past_due'&&!(r&&r.id==='free'))return 'Payment past due: live, this answers 402 payment_required until the card is updated under Billing & usage.';
+    if(!r)return 'Not in the rate card: never charged.';
+    if(r.id==='service')return 'Service order: no API fee. '+TARIFF;
+    if(!r.priceCents)return 'Free: never charged.';
+    return r.name+' event: '+priceText(r.priceCents)+' CAD per successful live call.'
+      +(mode==='card_required'?' Needs a card on file: without one this answers 402 card_required.':'');
   }
   const shq=s=>"'"+String(s).replace(/'/g,"'\\''")+"'";
   function curlTextFor(root,e){
     const r=requestParts(root,e);
     const L=["curl -s -X "+r.method+" "+shq(r.url),...authHeaderLines(null,e)];
+    if(r.sandbox)L.push("  -H 'X-Marketplace-Mode: sandbox'");
     if(r.upload){L.push("  -F "+shq(r.upload.field+'=@'+r.upload.filename));}
     else if(r.body!==undefined){
       L.push("  -H 'Content-Type: application/json'");
@@ -1933,6 +2135,7 @@ async function main(ROOT,HOST,GATEWAY){
     }
     L.push('  const res = await fetch('+jsq(r.url)+', {','    method: '+jsq(r.method)+',','    headers: {',
       "      Authorization: 'Bearer ' + process.env.IRISTEL_API_KEY,");
+    if(r.sandbox)L.push("      'X-Marketplace-Mode': 'sandbox',");
     if(r.body!==undefined)L.push("      'Content-Type': 'application/json',");
     L.push('    },');
     if(r.upload)L.push('    body: form,');
@@ -1963,6 +2166,7 @@ async function main(ROOT,HOST,GATEWAY){
     L.push('import os','','import requests  # pip install requests','');
     const ind=r.upload?'    ':'';
     const hdr='{"Authorization": "Bearer " + os.environ["IRISTEL_API_KEY"]'
+      +(r.sandbox?', "X-Marketplace-Mode": "sandbox"':'')
       +(r.body!==undefined&&r.json===undefined?', "Content-Type": "application/json"':'')+'}';
     if(r.upload)L.push('with open('+JSON.stringify(r.upload.filename)+', "rb") as f:');
     L.push(ind+'res = requests.request(',ind+'    '+JSON.stringify(r.method)+',',ind+'    '+JSON.stringify(r.url)+',',
@@ -1988,6 +2192,7 @@ async function main(ROOT,HOST,GATEWAY){
     root.querySelectorAll('[data-path],[data-query],[data-body],[data-rawbody]').forEach(i=>{
       i.addEventListener('input',refresh);i.addEventListener('change',refresh);
     });
+    if(pre)pre.addEventListener('mp-refresh',refresh);
     root.querySelectorAll('[data-snip-lang]').forEach(t=>{
       t.onclick=()=>{
         root.querySelectorAll('[data-snip-lang]').forEach(x=>x.setAttribute('aria-selected',String(x===t)));
@@ -2020,9 +2225,10 @@ async function main(ROOT,HOST,GATEWAY){
     nav.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
     const h=hintFor(e);
 
-    let html='<h2>'+esc(h.title||e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span></h2>';
+    let html='<h2 class="op-title">'+esc(h.title||e.summary||e.path)+'<span class="mono">'+e.method+' '+e.path+'</span>'+rateBadge(e)+'</h2>';
     if(e.soap||e.upstream)html+='<p class="soap">Maps to <code>'+esc(e.soap||e.upstream)+'</code></p>';
     if(e.description)html+='<p class="desc">'+esc(e.description)+'</p>';
+    if(isService(e))html+='<p class="svc-note">Service order: no API fee. '+esc(TARIFF)+'</p>';
     if(e.precondition)html+='<div class="pre-note"><b>Precondition:</b> '+esc(e.precondition)+'</div>';
     html+=formHtml(e);
 
@@ -2031,7 +2237,7 @@ async function main(ROOT,HOST,GATEWAY){
       +'<p class="hint" style="margin:0 0 8px">Replace <code>'+KEY_PH+'</code> with your marketplace API key '
       +'(<b>Show my API key</b> on the Docs tab).</p>';
     if(a==='edid'){
-      html+='<p class="hint" style="margin:0 0 8px">Calls go to Espresso\'s production system: orders and changes are real.</p>';
+      html+='<p class="hint" style="margin:0 0 8px">Live calls go to Espresso\'s production system: orders and changes are real. Sandbox calls go to its test system.</p>';
     }else if(productId==='e911'){
       html+='<p class="hint" style="margin:0 0 8px">The account code in <code>?code=</code> selects whose listings you touch.</p>';
     }
@@ -2059,7 +2265,6 @@ async function main(ROOT,HOST,GATEWAY){
     const inlineEl=opts.inline?root.querySelector('.op-resp'):null;
     const fail=msg=>{showResult(e,vals,0,msg,0,inlineEl);recordLast(e,0,0,'',msg);};
 
-    if(lockedFor(e)){fail('Your '+myPkg().name+' package doesn\'t include this. Ask for an upgrade on the API Marketplace page.');return;}
     const miss=[...root.querySelectorAll('[data-req]')].find(i=>!String(i.value).trim());
     if(miss){
       const g=miss.closest('.gfield');
@@ -2072,12 +2277,17 @@ async function main(ROOT,HOST,GATEWAY){
       const lb=g?g.querySelector('label').textContent.replace(/\s*\*\s*$/,'').trim():'A path value';
       fail('“'+lb+'” can\'t be “.” or “..”: the request would reach a different endpoint.');dot.focus();return;
     }
+    // Asked in the card first, never in a browser dialog: a service order
+    // (except in the sandbox) and any destructive call.
     const confirmMsg=h.confirm||(e.method==='DELETE'?'This permanently deletes the record. Continue?':null);
-    if(confirmMsg&&!window.confirm(interp(confirmMsg,vals)))return;
+    const svcOrder=isService(e)&&!sandboxOn();
+    if((svcOrder||confirmMsg)&&!opts.confirmed){askConfirm(root,e,opts,svcOrder,confirmMsg?interp(confirmMsg,vals):'');return;}
+    const pending=root.querySelector('.svc-confirm');if(pending)pending.remove();
 
     const c=cfgOf(e);
     const headers={};
-    if(c.auth==='edid')headers['X-EDID-Env']=CONSOLE_ENV;
+    if(c.auth==='edid')headers['X-EDID-Env']=staffEnv();
+    if(sandboxOn())headers['X-Marketplace-Mode']='sandbox';
     const session=mpSession();
     if(!session){fail('Your portal login has expired. Log in to the partner portal again and reopen the console.');return;}
     headers['Authorization']='Bearer '+session;
@@ -2105,11 +2315,12 @@ async function main(ROOT,HOST,GATEWAY){
     const t0=performance.now();
     try{
       const r=await fetch(c.base+buildPathFrom(root,e),reqOpts);
-      noteMode(r);
       const txt=await r.text();
       const ms=performance.now()-t0;
+      let parsed=null;try{parsed=JSON.parse(txt);}catch(_){/* not JSON */}
+      noteCall(r,parsed);
       showResult(e,vals,r.status,txt,ms,inlineEl);
-      recordLast(e,r.status,ms,txt,'',sentPath);
+      recordLast(e,r.status,ms,txt,'',sentPath,{mode:r.headers.get('X-Marketplace-Mode'),price:r.headers.get('X-Marketplace-Price')});
       if(opts.onResult)opts.onResult(r.status,txt);
     }catch(err){
       const ms=performance.now()-t0;
@@ -2117,6 +2328,27 @@ async function main(ROOT,HOST,GATEWAY){
       recordLast(e,0,ms,'','Network error: '+err.message,sentPath);
     }
     btn.disabled=false;btn.removeAttribute('aria-busy');
+  }
+  // The confirmation step under a card's Send row. Confirm sends; Cancel or
+  // Escape closes it. Pressing Send again shows it again.
+  function askConfirm(root,e,opts,svcOrder,msg){
+    const btn=root.querySelector('[data-send]'), row=btn&&btn.closest('.row');
+    if(!row)return;
+    const old=root.querySelector('.svc-confirm');if(old)old.remove();
+    const danger=btn.classList.contains('danger');
+    const box=document.createElement('div');
+    box.className='svc-confirm';box.setAttribute('role','group');box.setAttribute('aria-label','Confirm before sending');
+    box.innerHTML=(svcOrder?'<p><b>This orders telecom service.</b> Service charges apply per the tariff.</p>':'')
+      +(msg?'<p>'+esc(msg)+'</p>':'')
+      +'<div class="row"><button type="button" class="btn'+(danger?' danger':'')+'" data-confirm-ok>Confirm</button>'
+      +'<button type="button" class="btn-line" data-confirm-cancel>Cancel</button></div>';
+    row.insertAdjacentElement('afterend',box);
+    const close=()=>{box.remove();if(btn)btn.focus();};
+    box.querySelector('[data-confirm-ok]').onclick=()=>{box.remove();sendFrom(root,e,Object.assign({},opts,{confirmed:true}));};
+    box.querySelector('[data-confirm-cancel]').onclick=close;
+    box.addEventListener('keydown',ev=>{if(ev.key==='Escape'){ev.preventDefault();close();}});
+    box.querySelector('[data-confirm-ok]').focus({preventScroll:true});
+    box.scrollIntoView({block:'nearest',behavior:'smooth'});
   }
   // ---- friendly response rendering -------------------------------------
   function humanize(k){
@@ -2150,13 +2382,42 @@ async function main(ROOT,HOST,GATEWAY){
     }
     return '<table class="listing-table">'+rows+'</table>';
   }
+  // Refusals the console explains: the next step for each (buttons to
+  // Billing & usage, or to switch the sandbox on or off for the next Send).
+  const billingBtn=label=>'<button type="button" class="btn-line" data-open-billing>'+label+'</button>';
+  const sandboxBtn=on=>'<button type="button" class="btn-line" role="switch" aria-checked="false" data-sandbox-set="'+(on?'on':'off')+'">'
+    +(on?'Try in sandbox':'Send it live instead')+'</button>';
+  // title: the banner; text: said when the gateway sends no message;
+  // actions: what to do next.
+  const GATEWAY_REFUSALS={
+    card_required:{status:402,title:'A card is needed for this call',
+      text:'Standard and Advanced events are charged to a card on file. Add one, or try the call in the sandbox (never billed).',
+      actions:()=>billingBtn('Open Billing &amp; usage')+sandboxBtn(true)},
+    payment_required:{status:402,title:'Your last payment didn\'t go through',
+      text:'Free reads still work. Update your card and we\'ll retry the payment right away.',
+      actions:()=>billingBtn('Update card in Billing &amp; usage')},
+    no_test_system:{status:409,title:'Read-only in the sandbox',
+      text:'This API has no test system, so the sandbox can\'t make changes. Send it live to make the change.',
+      actions:()=>sandboxBtn(false)},
+    sandbox_limit:{status:429,title:'This month\'s sandbox calls are used up',
+      text:'The sandbox allowance resets on the 1st. Live calls aren\'t affected.',
+      actions:()=>sandboxBtn(false)},
+    sandbox_unavailable:{status:503,title:'The sandbox isn\'t switched on for this API yet',
+      text:'Espresso\'s test system for this API isn\'t connected yet. Call it live instead.',
+      actions:()=>sandboxBtn(false)},
+    broadworks_not_linked:{status:403,title:'Your account isn\'t linked to a BroadWorks enterprise yet',
+      text:'Contact Iristel support and we\'ll link your account to its enterprise; these calls then work.',
+      actions:()=>''},
+  };
+  const refusalOf=(code,parsed)=>{const g=parsed&&typeof parsed==='object'?GATEWAY_REFUSALS[parsed.error]:null;return g&&g.status===code?g:null;};
   function respTitle(code,parsed){
     if(code===0)return 'Connection error';
     if(code>=200&&code<300)return 'Success';
+    const gw=refusalOf(code,parsed);
+    if(gw)return gw.title;
     if(parsed&&parsed.message)return String(parsed.message);
     if(code===401)return 'Not authorized — check your API key or credentials';
     if(code===402)return 'Payment required — add or update your card under Billing & usage';
-    if(code===403&&parsed&&parsed.error==='upgrade_required')return 'Not included in your package';
     if(code===404)return 'Not found — verify the identifier';
     if(code===409)return 'Wrong state — the record already exists or cannot change';
     if(code===422||code===400)return 'Invalid request — check the fields';
@@ -2172,20 +2433,11 @@ async function main(ROOT,HOST,GATEWAY){
     let h='<div class="resp-banner '+(good?'good':'bad')+'">'
       +'<span class="icon">'+(good?'✓':'✕')+'</span>'
       +'<span>'+esc(title)+'</span></div>';
-    // Package and card refusals (lib/entitlements.js): the message is the
-    // banner; say where to go next instead of listing the error fields.
-    const pkgErr=!good&&parsed&&typeof parsed==='object'&&(parsed.error==='upgrade_required'||parsed.error==='payment_required');
-    if(pkgErr){
-      if(parsed.error==='upgrade_required'){
-        const need=pkgById(parsed.requiredPackage);
-        // The gateway knows the package best: the mode bar follows it.
-        const have=pkgById(parsed.package);
-        if(ACCOUNT&&have&&(!ACCOUNT.package||ACCOUNT.package.id!==have.id)){ACCOUNT.package={id:have.id,name:have.name,priceCents:have.priceCents};renderModebar();}
-        h+='<p class="hint resp-next" style="margin:0 0 8px">'+(need?'This needs the '+esc(need.name)+' package. ':'')
-          +upgradeLink('Ask for an upgrade on the API Marketplace page')+'.</p>';
-      }else{
-        h+='<p class="hint resp-next" style="margin:0 0 8px"><a href="#" data-open-billing>Open Billing &amp; usage</a> to add or update your card.</p>';
-      }
+    // Billing and sandbox refusals (lib/entitlements.js): the gateway's
+    // message is the banner; say what to do next instead of listing fields.
+    const gw=good?null:refusalOf(code,parsed);
+    if(gw){
+      h+='<div class="resp-next"><span>'+esc(parsed.message||gw.text)+'</span>'+gw.actions(parsed)+'</div>';
       h+='<details class="raw"><summary>View raw JSON</summary><pre class="out">'
         +esc(JSON.stringify(parsed,null,2))+'</pre></details>';
     }else if(parsed&&typeof parsed==='object'){
@@ -2248,24 +2500,31 @@ async function main(ROOT,HOST,GATEWAY){
     return e?{p,e}:{error:'not_found',message:'No '+clip(m+' '+pa,80)+' in '+p.name+'. Use find_endpoint for the exact path template.'};
   }
   const grantedBundle=id=>{id=String(id||'').replace(/^bundle:/,'');return bundles.find(b=>b.id===id)||null;};
-  const curMode=()=>ACCOUNT&&ACCOUNT.mode?ACCOUNT.mode:(ME&&ME.mode)||null;
-  // Changes real data: any write, since partners always reach the live
-  // systems. Staff Espresso calls go to its test system (CONSOLE_ENV).
-  const changesData=e=>!/^(GET|HEAD|OPTIONS)$/.test(e.method)&&!(unlocked()&&cfgOf(e).auth==='edid'&&CONSOLE_ENV==='test');
+  // Changes real data: any write sent live. Staff Espresso calls go to its
+  // test system when the Sandbox switch is on; sandbox calls go to Espresso's test system or
+  // are refused (no test system), so neither changes real data.
+  const changesData=e=>!/^(GET|HEAD|OPTIONS)$/.test(e.method)&&!(exempt()&&cfgOf(e).auth==='edid'&&SANDBOX)&&!sandboxOn();
   const epTitle=e=>hintFor(e).title||autoTitle(e);
   const bodyModeOf=e=>e.upload?'upload':(e.fields&&e.fields.length)?(e.fields.some(f=>/[.\[]/.test(f.name))?'raw':'fields'):e.body?'raw':'none';
   const isDestructive=e=>{const h=hintFor(e);return (h.danger!==undefined?!!h.danger:e.method==='DELETE')||!!h.confirm;};
+  // What a call costs the caller right now, for Iris (one or two sentences).
   function costNote(e){
-    const mode=curMode(), mine=myPkg(), need=tierOf(e);
+    const mode=acctMode(), r=rateOf(e);
     if((products.find(p=>p.id===e.pid)||{}).status==='preview')
-      return 'Switching on soon: calls answer 503 until Iristel turns this API on.';
-    if(mode==='exempt'||unlocked())return 'Internal account: never billed'+(cfgOf(e).auth==='edid'?' (Espresso test system).':'.');
-    if(lockedFor(e))return 'Not in the '+mine.name+' package: needs '+need.name+'. The call answers 403 upgrade_required; ask for an upgrade on the API Marketplace page.';
-    if(mode==='past_due')return 'Paused: the last payment failed, so calls are blocked until the card is updated under Billing & usage.';
-    if(mode==='card_required')return 'Card required: the '+(mine?mine.name+' ':'')+'package starts once a card is added under Billing & usage. Until then calls answer 402.';
-    if(mine&&(mode==='production'||mode==='free'))
-      return 'Live: included in the '+mine.name+' package ('+pkgFee(mine)+'), no per-call charge.';
-    return need?'In the '+need.name+' package and up. No per-call charge.':'';
+      return 'Switching on soon: calls answer 503 until Iristel turns this API on. Nothing is charged.';
+    if(exempt())return 'Internal account: never billed'+(cfgOf(e).auth==='edid'?(SANDBOX?' (Espresso test system).':' (Espresso production system).'):'.');
+    if(sandboxOn()){
+      const sb=sandboxState();
+      return 'Sandbox call: never billed'+(sb&&sb.left!=null?' ('+sb.left+' of '+(sb.limit||sandboxLimit())+' sandbox calls left this month)':'')+'.'
+        +(ESPRESSO_IDS.includes(e.pid)?' Runs on Espresso\'s test system.'
+          :sandboxReadOnly(e)?' This API has no test system, so the change answers 409 no_test_system; switch the sandbox off to send it live.':' Reads live data.');
+    }
+    if(mode==='past_due'&&!(r&&r.id==='free'))return 'Payment past due: only free reads work until the card is updated under Billing & usage (402 payment_required).';
+    if(!r)return 'Not in the rate card: never charged.';
+    if(r.id==='service')return 'Service order: no API fee; '+TARIFF.charAt(0).toLowerCase()+TARIFF.slice(1)+' Send asks the user to confirm first.';
+    if(!r.priceCents)return 'Free: never charged.';
+    return r.name+' event: '+priceText(r.priceCents)+' CAD per successful live call.'
+      +(mode==='card_required'?' No card on file, so it answers 402 card_required: add a card under Billing & usage, or switch on the sandbox.':'');
   }
   function flowText(flow){
     if(!flow||!flow.steps||!flow.steps.length)return '';
@@ -2281,8 +2540,11 @@ async function main(ROOT,HOST,GATEWAY){
     // Fields of the retired sandbox model, should an older gateway send them.
     ['sandboxCallsUsed','sandboxCallsLimit','sandboxCallsLeft','environment'].forEach(k=>{delete m[k];});
     if(ACCOUNT&&ACCOUNT.mode)m.mode=ACCOUNT.mode;
-    // {id,name,priceCents} (priceCents a month): billing's is the freshest.
-    const pk=myPkg();if(pk)m.package={id:pk.id,name:pk.name,priceCents:pk.priceCents};
+    // Billing's sandbox count is the freshest (updated after every call).
+    const sb=sandboxState();if(sb)m.sandbox={limit:sb.limit,used:sb.used,left:sb.left};
+    m.callMode=callMode();
+    m.rateCard=rateCardText();
+    if(proposed())m.ratesStatus='proposed';
     return m;
   }
   // Where the user is: allowlisted fields only.
@@ -2296,8 +2558,9 @@ async function main(ROOT,HOST,GATEWAY){
       tab:$('#view-docs').hidden?'console':'docs',
       bundleId:b?b.id:null, bundleName:b?b.name:null, bundleStep:b&&irisStep!=null?irisStep:null,
       visibleEndpoints:eps.filter(e=>!hiddenFromIris(e)).slice(0,40)
-        .map(e=>({productId:e.pid,method:e.method,path:e.path,title:clip(epTitle(e),80),package:tierName(e)||null,inPackage:inPackage(e)})),
-      mode:curMode(), package:(myPkg()||{}).name||null,
+        .map(e=>({productId:e.pid,method:e.method,path:e.path,title:clip(epTitle(e),80),rateClass:e.rateClass||null,priceCents:Number(e.priceCents)||0})),
+      mode:acctMode(), callMode:callMode(),
+      sandbox:(s=>s?{limit:s.limit,used:s.used,left:s.left}:null)(sandboxState()),
     };
   }
   // { results: endpoints only (max 5), products (max 5), bundles (max 3) }.
@@ -2345,9 +2608,10 @@ async function main(ROOT,HOST,GATEWAY){
       ...(mode==='fields'?e.fields.map(x=>param(x,'body')):[])];
     const out={productId:p.id,productName:p.name,method:e.method,path:e.path,title:clip(epTitle(e),100),
       description:clip(e.description||h.description||'',600),returns:clip(e.returns||h.returns||'',600),
-      params:params.slice(0,40),bodyMode:mode,tier:tierName(e)||null,package:tierName(e)||null,inPackage:inPackage(e),
-      live:changesData(e),destructive:isDestructive(e)};
-    if(lockedFor(e))out.upgrade='Not in the caller\'s '+myPkg().name+' package: the call answers 403 upgrade_required. They can ask for an upgrade on the API Marketplace page.';
+      params:params.slice(0,40),bodyMode:mode,rateClass:e.rateClass||null,priceCents:Number(e.priceCents)||0,
+      costNote:costNote(e),live:changesData(e),destructive:isDestructive(e)};
+    if(isService(e))out.serviceOrder='Orders telecom service: no API fee. '+TARIFF+' Send asks the user to confirm in the card first (not in the sandbox).';
+    if(priced(e))out.billableEvent=BILLABLE_EVENT;
     if(p.status==='preview')out.comingSoon='Not switched on yet: calls answer 503 not_enabled until Iristel turns this API on. Nothing is charged.';
     if(mode==='raw'&&e.body)out.bodyTemplate=clip(JSON.stringify(e.body),600);
     if(mode==='upload')out.upload={field:e.upload.field||'file',accept:e.upload.accept||''};
@@ -2488,7 +2752,9 @@ async function main(ROOT,HOST,GATEWAY){
   function openShape(t){
     const e=t.e;
     const o={ok:true,productId:e.pid,method:e.method,path:e.path,fields:cardFields(t.card),bodyMode:cardBodyMode(t.card),
-      live:changesData(e),destructive:isDestructive(e),costNote:costNote(e),package:tierName(e)||null,inPackage:inPackage(e)};
+      live:changesData(e),destructive:isDestructive(e),costNote:costNote(e),rateClass:e.rateClass||null,priceCents:Number(e.priceCents)||0,
+      callMode:callMode()};
+    if(isService(e)&&!sandboxOn())o.confirmStep=true;
     if(t.bundleId!=null){o.bundleId=t.bundleId;o.step=t.step;}
     if(staffOnly(e))o.staffOnly=true;
     const pr=cardProblem(t.card);if(pr)o.warning=pr.message;
@@ -2587,8 +2853,6 @@ async function main(ROOT,HOST,GATEWAY){
     const t=irisTarget({productId:pick(a,'productId'),method:a.method,path:a.path,step:a.step},true);if(t.error)return t;
     const btn=t.card.querySelector('[data-send]');
     if(!btn)return {error:'not_found',message:'No Send button on that card.'};
-    if(lockedFor(t.e))return {error:'upgrade_required',message:'Send is off: the caller\'s '+myPkg().name+' package doesn\'t include this (needs '
-      +tierName(t.e)+'). They can ask for an upgrade on the API Marketplace page.'};
     const pr=cardProblem(t.card);if(pr)return pr;
     clearCue();
     showTab('console');
@@ -2608,9 +2872,10 @@ async function main(ROOT,HOST,GATEWAY){
   // ---- last send attempt, summarised for Iris ----------------------------
   // path: the path actually requested (secret-named values masked), so the
   // summary never reports only the card's template for a different call.
-  function recordLast(e,status,ms,txt,message,path){
+  // call: {mode, price} from the gateway's X-Marketplace-Mode / -Price.
+  function recordLast(e,status,ms,txt,message,path,call){
     try{
-      LAST={e,status,ms,txt:String(txt||''),message:message||'',path:path||''};
+      LAST={e,status,ms,txt:String(txt||''),message:message||'',path:path||'',call:call||{}};
       if(irisListeners.result.length)irisEmit('result',summarizeLast(3));
     }catch(_){/* never break the console over Iris */}
   }
@@ -2657,22 +2922,30 @@ async function main(ROOT,HOST,GATEWAY){
       case 0:return 'Not sent: a form check or the network failed. See message, then retry.';
       case 400:return 'Bad input: check formats and required fields, then send again.';
       case 401:return 'Portal login expired: log in again and reopen the console.';
-      case 402:return 'Payment required: add a card (paid package) or update it (past due).';
-      case 403:return err==='upgrade_required'?'Not in this package: ask for an upgrade on the API Marketplace page.'
+      case 402:return err==='payment_required'?'Payment past due: update the card under Billing & usage.'
+        :'Card needed for Standard/Advanced calls: add one, or use the sandbox.';
+      case 403:return err==='broadworks_not_linked'?'Account not linked to a BroadWorks enterprise: contact Iristel.'
         :'This API product is not granted to this account.';
       case 404:return 'not_found: path not in the catalog, or no such record. Check the ID.';
-      case 409:case 422:return 'Upstream rejected it (wrong state or invalid data). Fix the input.';
-      case 429:return 'Too many requests: slow down and try again shortly.';
+      case 409:return err==='no_test_system'?'No test system: read-only in the sandbox. Send it live to change it.'
+        :'Upstream rejected it (wrong state or invalid data). Fix the input.';
+      case 422:return 'Upstream rejected it (wrong state or invalid data). Fix the input.';
+      case 429:return err==='sandbox_limit'?'This month\'s sandbox calls are used up. Send it live instead.'
+        :'Too many requests: slow down and try again shortly.';
       case 502:return 'The upstream service is unavailable right now. Try again later.';
-      case 503:return 'A gateway dependency is unavailable right now. Try again later.';
+      case 503:return err==='sandbox_unavailable'?'Sandbox not switched on for this API yet. Send it live instead.'
+        :'A gateway dependency is unavailable right now. Try again later.';
     }
     return s>=500?'Server-side problem upstream. Try again later.':'The request failed (HTTP '+clip(s,6)+'). Read the message.';
   }
   function summarizeLast(maxRows){
     if(!LAST)return {none:true};
     let n=parseInt(maxRows,10);if(!Number.isFinite(n))n=3;n=Math.max(0,Math.min(10,n));
-    const {e,status,ms,txt,message,path}=LAST, ok=status>=200&&status<300;
+    const {e,status,ms,txt,message,path,call}=LAST, ok=status>=200&&status<300;
     const out={endpoint:e.method+' '+e.path,productId:e.pid,status,ms:Math.round(ms||0),ok,rows:null,columns:[],sample:[]};
+    // live | sandbox, and the call's rate ("standard 1"), as the gateway answered.
+    if(call&&call.mode)out.callMode=clip(call.mode,10);
+    if(call&&call.price)out.rate=clip(call.price,30);
     if(path)out.path=clip(scrub(path),200);
     let parsed;try{parsed=txt?JSON.parse(txt):undefined;}catch(_){parsed=undefined;}
     if(message)out.message=clip(scrub(message),80);
@@ -2698,7 +2971,7 @@ async function main(ROOT,HOST,GATEWAY){
       const m=parsed.message||parsed.error_description||parsed.error||parsed.detail;
       out.message=clip(scrub(typeof m==='string'?m:JSON.stringify(redactDeep(parsed,0))),80);
       if(parsed.code!==undefined)out.errorCode=clip(parsed.code,40);
-      if(parsed.error==='upgrade_required'&&pkgById(parsed.requiredPackage))out.requiredPackage=pkgById(parsed.requiredPackage).name;
+      if(typeof parsed.error==='string')out.error=clip(parsed.error,40);
     }else if(!message&&txt){
       out.message=clip(scrub(txt.replace(/\s+/g,' ')),80);
     }

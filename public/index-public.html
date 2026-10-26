@@ -15,193 +15,7 @@
   </script>
   <style>
 :root{--ink:#102237;--muted:#607086;--blue:#0b63ce;--cyan:#18b8c9;--navy:#07192c;--line:#dce5ee;--paper:#f6f9fc;--white:#fff;--green:#0b8f68;--orange:#e36d25;--shadow:0 18px 50px rgba(12,37,64,.09)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--white);font-size:16px;line-height:1.55}.topbar{position:sticky;top:0;z-index:20;height:68px;display:flex;align-items:center;gap:36px;padding:0 max(24px,calc((100vw - 1180px)/2));background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none;white-space:nowrap}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;color:#fff;font-size:20px;font-weight:900;background:linear-gradient(145deg,var(--blue),var(--cyan))}.brand strong{color:var(--blue)}nav{display:flex;gap:24px;margin:auto}nav a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:700}nav a:hover{color:var(--blue)}.version{font-size:.78rem;color:var(--muted)}main>section{max-width:1180px;margin:auto;padding:96px 24px}.intro{display:grid;grid-template-columns:1.5fr .72fr;gap:74px;align-items:end;min-height:580px;background:radial-gradient(circle at 75% 20%,rgba(24,184,201,.12),transparent 32%)}.eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.75rem;font-weight:850;color:var(--blue);margin:0 0 14px}.intro h1{font-size:clamp(3.2rem,7vw,6.6rem);line-height:.91;letter-spacing:-.065em;margin:0 0 30px;max-width:780px}.intro h1 span{color:var(--blue)}.lede{font-size:1.2rem;color:var(--muted);max-width:710px}.rule-card{background:var(--navy);color:#fff;padding:36px;border-radius:3px;box-shadow:var(--shadow);position:relative;overflow:hidden}.rule-card:after{content:"";position:absolute;width:180px;height:180px;border:34px solid rgba(24,184,201,.17);border-radius:50%;right:-80px;bottom:-90px}.rule-icon{font-size:3.8rem;line-height:1;font-weight:900;color:rgba(255,255,255,.12)}.rule-card .eyebrow{color:#58d9e2}.rule-card h2{font-size:1.65rem;line-height:1.15;margin:10px 0}.rule-card p:last-child{color:#b9c8d9}.journey-section{background:var(--paper);max-width:none!important;padding-left:max(24px,calc((100vw - 1180px)/2))!important;padding-right:max(24px,calc((100vw - 1180px)/2))!important}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:36px;margin-bottom:42px}.section-heading h2{font-size:clamp(2rem,4vw,3.3rem);line-height:1;margin:0;letter-spacing:-.04em}.section-heading>p{max-width:440px;color:var(--muted);margin:0}.journey{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid #bfcddd}.journey li{position:relative;padding:24px 13px;border-right:1px solid var(--line)}.journey li:last-child{border:0}.journey li:before{content:"";position:absolute;width:9px;height:9px;background:var(--blue);border-radius:50%;top:-5px}.journey span{font-size:.72rem;color:var(--blue);font-weight:850}.journey strong,.journey small{display:block}.journey strong{font-size:1.04rem;margin-top:14px}.journey small{color:var(--muted);margin-top:3px}.segmented{padding:4px;background:var(--paper);border:1px solid var(--line);border-radius:10px}.segmented button{font:inherit;font-weight:750;border:0;background:transparent;padding:9px 16px;border-radius:7px;color:var(--muted);cursor:pointer}.segmented button.active{color:#fff;background:var(--blue)}.identity-grid{display:grid;grid-template-columns:1fr 1fr .85fr;gap:20px}.type-card,.decision-panel{border:1px solid var(--line);padding:30px;background:#fff}.type-card{opacity:.52;transition:.2s}.type-card.active{opacity:1;border-top:4px solid var(--blue);box-shadow:var(--shadow);transform:translateY(-3px)}.tag{display:inline-block;font-size:.68rem;font-weight:900;letter-spacing:.12em;padding:5px 8px;margin-bottom:18px}.tag.internal{color:var(--blue);background:#e8f1fc}.tag.external{color:var(--orange);background:#fff0e7}.type-card h3,.decision-panel h3{font-size:1.35rem;margin:0 0 8px}.type-card>p{color:var(--muted);min-height:50px}.type-card dl{margin-top:25px}.type-card dl div{border-top:1px solid var(--line);padding:13px 0}.type-card dt{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}.type-card dd{margin:3px 0 0;font-weight:650}.decision-panel{background:var(--paper)}.decision-panel ul,.field-notes ul,.audit-controls ul{padding:0;list-style:none}.decision-panel li,.audit-controls li{padding:11px 0 11px 24px;position:relative;border-bottom:1px solid var(--line)}.decision-panel li:before,.audit-controls li:before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:900}.caution{font-size:.85rem;color:#704520;background:#fff3df;padding:14px;margin-top:24px}.form-section{max-width:none!important;background:var(--navy);color:#fff;padding-left:max(24px,calc((100vw - 1180px)/2))!important;padding-right:max(24px,calc((100vw - 1180px)/2))!important}.form-section .eyebrow{color:#58d9e2}.form-section .section-heading>p{color:#a7b9cc}.form-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:58px}.mock-form{background:#fff;color:var(--ink);padding:30px;display:grid;gap:16px;box-shadow:0 26px 70px rgba(0,0,0,.25)}label,legend{font-size:.78rem;font-weight:800;color:#4b5f76}input,textarea,select{display:block;width:100%;font:inherit;margin-top:6px;padding:12px;border:1px solid var(--line);background:#f9fbfd;color:var(--ink);border-radius:3px}textarea{height:82px;resize:none}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}fieldset{border:1px solid var(--line);padding:12px}fieldset span,.chips span{display:inline-block;background:#e9f2fc;color:var(--blue);font-size:.73rem;font-weight:750;padding:6px 9px;margin:4px}.submit-demo{background:var(--blue);color:#fff;border:0;padding:14px 18px;font:inherit;font-weight:800;display:flex;justify-content:space-between}.field-notes h3{font-size:1.3rem}.field-notes li{display:flex;justify-content:space-between;gap:25px;border-bottom:1px solid #254057;padding:15px 0}.field-notes li span{color:#9fb3c8;text-align:right}.anti-pattern{border-left:3px solid var(--orange);padding:12px 18px;background:#132a40;margin-top:26px}.anti-pattern strong,.anti-pattern span{display:block}.anti-pattern span{color:#aebed0;font-size:.86rem}.token-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:50px;align-items:center}.code-card{background:#0b1724;color:#d8e6f3;border-radius:4px;overflow:hidden;box-shadow:var(--shadow)}.code-title{display:flex;justify-content:space-between;padding:13px 18px;background:#13263a;color:#8facbf;font-size:.78rem}.code-title button{border:0;background:transparent;color:#58d9e2;cursor:pointer}.code-card pre{margin:0;padding:30px;font-size:.9rem;white-space:pre-wrap}.security-rules article{display:flex;gap:20px;padding:17px 0;border-bottom:1px solid var(--line)}.security-rules article>span{font-size:.75rem;font-weight:900;color:var(--blue)}.security-rules h3{margin:0 0 4px}.security-rules p{margin:0;color:var(--muted)}.status-flow{margin-top:45px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:14px;padding:19px;flex-wrap:wrap;font-size:.86rem;font-weight:750}.status-flow b{color:var(--cyan)}.audit-section{max-width:none!important;background:#0a1d31;color:#fff;padding-left:max(24px,calc((100vw - 1180px)/2))!important;padding-right:max(24px,calc((100vw - 1180px)/2))!important}.light .eyebrow{color:#58d9e2}.light>p{color:#a7b9cc}.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px}.event-card{background:#061423;border:1px solid #1d3a54;padding:28px}.event-card pre{color:#c5d4df;overflow:auto;line-height:1.75}.event-card i{color:#63d7de;font-style:normal}.audit-controls h3{margin:0 0 10px}.audit-controls h3:nth-of-type(2){margin-top:28px}.chips span{background:#17334c;color:#b8d2e6;border:1px solid #254866}.audit-controls li{border-color:#203b53;color:#c2cfdb}.never-log{margin-top:25px;padding:16px;border:1px solid #874827;background:#2c211d;color:#e9c3ae}.developer-checklist{display:grid;grid-template-columns:.7fr 1.3fr;gap:70px}.developer-checklist h2{font-size:3rem;line-height:1;margin:0}.checklist{display:grid;grid-template-columns:1fr 1fr;gap:12px}.checklist label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);padding:14px;font-size:.87rem;color:var(--ink);cursor:pointer}.checklist input{width:auto;margin:3px 0 0;accent-color:var(--blue)}footer{padding:28px max(24px,calc((100vw - 1180px)/2));background:var(--paper);display:flex;justify-content:space-between;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line)}@media(max-width:900px){nav,.version{display:none}.intro,.identity-grid,.form-layout,.token-grid,.audit-grid,.developer-checklist{grid-template-columns:1fr}.intro{min-height:auto;padding-top:70px}.journey{grid-template-columns:repeat(3,1fr)}.section-heading{align-items:flex-start;flex-direction:column}.type-card{opacity:1}.developer-checklist{gap:35px}}@media(max-width:580px){main>section{padding:68px 20px}.intro h1{font-size:3.2rem}.journey{grid-template-columns:1fr 1fr}.two-col,.checklist{grid-template-columns:1fr}.field-notes li{display:block}.field-notes li span{display:block;text-align:left;margin-top:4px}.status-flow{align-items:flex-start;flex-direction:column}.status-flow b{transform:rotate(90deg)}footer{display:block}footer span{display:block;margin:4px 0}}
-
-
-:root {
-  color-scheme: light;
-  --ink: #111827;
-  --muted: #667085;
-  --blue: #2563eb;
-  --cyan: #2563eb;
-  --navy: #111827;
-  --line: #e5e7eb;
-  --paper: #f8fafc;
-  --white: #ffffff;
-  --green: #15803d;
-  --orange: #c2410c;
-  --surface: #ffffff;
-  --surface-raised: #ffffff;
-  --surface-soft: #f8fafc;
-  --surface-code: #111827;
-  --header-glass: rgba(255, 255, 255, 0.92);
-  --field: #ffffff;
-  --focus-ring: rgba(37, 99, 235, 0.28);
-  --shadow: none;
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-  --ink: #f3f4f6;
-  --muted: #9ca3af;
-  --blue: #60a5fa;
-  --cyan: #60a5fa;
-  --navy: #090e16;
-  --line: #293241;
-  --paper: #111827;
-  --white: #0b1018;
-  --green: #4ade80;
-  --orange: #fb923c;
-  --surface: #0b1018;
-  --surface-raised: #111827;
-  --surface-soft: #0f1722;
-  --surface-code: #070b11;
-  --header-glass: rgba(11, 16, 24, 0.92);
-  --field: #0b1018;
-  --focus-ring: rgba(96, 165, 250, 0.34);
-}
-
-html, body { background: var(--surface); }
-body { color: var(--ink); }
-body, .topbar, main > section, .type-card, .decision-panel, .mock-form,
-input, textarea, select, .checklist label, footer {
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
-}
-
-.topbar { height: 64px; background: var(--header-glass); border-color: var(--line); gap: 28px; }
-.brand-mark { width: 30px; height: 30px; border-radius: 6px; background: var(--ink); font-size: 17px; }
-[data-theme="dark"] .brand-mark { color: #0b1018; background: #f3f4f6; }
-.brand strong, nav a:hover { color: var(--ink); }
-nav { gap: 20px; }
-nav a { font-size: 0.82rem; font-weight: 600; }
-.header-actions { display: flex; align-items: center; gap: 12px; }
-.version { color: var(--muted); }
-
-.theme-toggle {
-  height: 34px; min-width: 78px; display: inline-flex; align-items: center; justify-content: center;
-  gap: 6px; padding: 0 11px; border: 1px solid var(--line); border-radius: 7px;
-  background: transparent; color: var(--ink); font: inherit; font-size: 0.75rem;
-  font-weight: 650; cursor: pointer;
-}
-.theme-toggle:hover { background: var(--surface-soft); }
-.theme-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-.theme-toggle .sun { color: #d97706; }
-.theme-toggle .moon { display: none; color: #93c5fd; }
-[data-theme="dark"] .theme-toggle .sun { display: none; }
-[data-theme="dark"] .theme-toggle .moon { display: inline; }
-
-.console-cta {
-  display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px;
-  border-radius: 7px; background: var(--ink); color: var(--surface); text-decoration: none;
-  font-size: 0.8rem; font-weight: 700; white-space: nowrap;
-}
-.console-cta:hover { opacity: 0.88; }
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
-.hero-actions .console-cta { height: 48px; padding: 0 24px; font-size: 0.95rem; }
-.hero-actions .ghost {
-  display: inline-flex; align-items: center; height: 48px; padding: 0 24px; border-radius: 7px;
-  border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 0.95rem; font-weight: 700;
-}
-.hero-actions .ghost:hover { background: var(--surface-soft); }
-.signed-out-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
-[hidden] { display: none !important; }
-
-main > section { padding-top: 76px; padding-bottom: 76px; }
-.intro { min-height: 470px; grid-template-columns: 1.45fr 0.75fr; gap: 64px; background: none; }
-.intro h1 {
-  max-width: 720px; font-size: clamp(3rem, 6vw, 5.4rem); line-height: 0.98;
-  letter-spacing: -0.055em; margin-bottom: 24px;
-}
-.intro h1 span { color: var(--muted); }
-.lede { max-width: 680px; font-size: 1.08rem; }
-.eyebrow { color: var(--muted); letter-spacing: 0.12em; }
-
-.rule-card {
-  padding: 28px; border: 1px solid var(--line); border-radius: 8px;
-  background: var(--surface-raised); color: var(--ink); box-shadow: none;
-}
-.rule-card::after { display: none; }
-.rule-icon { font-size: 0.75rem; color: var(--muted); font-weight: 750; }
-.rule-card .eyebrow { color: var(--muted); }
-.rule-card h2 { font-size: 1.35rem; }
-.rule-card p:last-child { color: var(--muted); }
-
-.journey-section, .form-section, .audit-section {
-  background: var(--surface-soft); color: var(--ink);
-  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-}
-.form-section .eyebrow, .light .eyebrow { color: var(--muted); }
-.form-section .section-heading > p, .light > p { color: var(--muted); }
-.section-heading { margin-bottom: 34px; }
-.section-heading h2 { font-size: clamp(1.85rem, 3vw, 2.65rem); letter-spacing: -0.035em; }
-.journey { border-color: var(--line); }
-.journey li { padding: 20px 12px; }
-.journey li::before { width: 7px; height: 7px; top: -4px; }
-
-.segmented { background: transparent; border-radius: 7px; }
-.segmented button { border-radius: 5px; font-size: 0.82rem; }
-.segmented button.active { background: var(--ink); color: var(--surface); }
-.identity-grid { gap: 16px; }
-.type-card, .decision-panel {
-  padding: 26px; background: var(--surface-raised); border-radius: 8px;
-}
-.type-card { opacity: 0.66; }
-.type-card.active { border-top: 1px solid var(--ink); box-shadow: none; transform: none; opacity: 1; }
-.tag { border-radius: 4px; }
-.tag.internal, fieldset span { background: #eff6ff; color: #1d4ed8; }
-.tag.external { background: #fff7ed; color: #c2410c; }
-[data-theme="dark"] .tag.internal, [data-theme="dark"] fieldset span { background: #172554; color: #93c5fd; }
-[data-theme="dark"] .tag.external { background: #431407; color: #fdba74; }
-.caution { border-radius: 6px; background: #fff7ed; color: #9a3412; }
-[data-theme="dark"] .caution { background: #2a160c; color: #fdba74; }
-
-.form-layout { gap: 42px; }
-.mock-form {
-  padding: 26px; background: var(--surface-raised); color: var(--ink);
-  border: 1px solid var(--line); border-radius: 8px; box-shadow: none;
-}
-label, legend { color: var(--muted); }
-input, textarea, select { background: var(--field); color: var(--ink); border-radius: 6px; }
-fieldset { border-color: var(--line); border-radius: 6px; }
-.submit-demo { border-radius: 6px; background: var(--ink); color: var(--surface); }
-.field-notes li { border-color: var(--line); }
-.field-notes li span { color: var(--muted); }
-.anti-pattern { background: transparent; border-left-color: var(--orange); }
-.anti-pattern span { color: var(--muted); }
-
-.code-card, .event-card { border-radius: 8px; box-shadow: none; background: var(--surface-code); }
-.code-title { background: transparent; border-bottom: 1px solid #263141; }
-.status-flow { border-radius: 8px; }
-.audit-grid { gap: 42px; }
-.event-card { border-color: var(--line); }
-.audit-controls li { border-color: var(--line); color: var(--muted); }
-.chips span { background: transparent; color: var(--muted); border-color: var(--line); border-radius: 4px; }
-.never-log { background: transparent; color: var(--muted); border-color: var(--line); border-radius: 6px; }
-.checklist label { background: var(--surface-raised); color: var(--ink); border-radius: 6px; }
-
-@media (max-width: 900px) {
-  .topbar { gap: 14px; }
-  .header-actions { margin-left: auto; }
-  .intro { grid-template-columns: 1fr; min-height: auto; gap: 34px; padding-top: 64px; }
-  .type-card { opacity: 1; }
-}
-
-@media (max-width: 580px) {
-  main > section { padding-top: 56px; padding-bottom: 56px; }
-  .intro h1 { font-size: 3rem; }
-  .theme-toggle { min-width: 38px; width: 38px; padding: 0; }
-  .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .header-actions .version { display: none; }
-  .header-actions { gap: 8px; }
-  .topbar { padding: 0 16px; }
-  .brand { min-width: 0; gap: 8px; font-size: .9rem; }
-  .brand > span:last-child { overflow: hidden; text-overflow: ellipsis; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body, .topbar, main > section, .type-card, .decision-panel, .mock-form,
-  input, textarea, select, .checklist label, footer { transition: none; }
-}
-
+:root{color-scheme:light;--ink:#111827;--muted:#667085;--blue:#2563eb;--cyan:#2563eb;--navy:#111827;--line:#e5e7eb;--paper:#f8fafc;--white:#ffffff;--green:#15803d;--orange:#c2410c;--surface:#ffffff;--surface-raised:#ffffff;--surface-soft:#f8fafc;--surface-code:#111827;--header-glass:rgba(255,255,255,0.92);--field:#ffffff;--focus-ring:rgba(37,99,235,0.28);--shadow:none}[data-theme="dark"]{color-scheme:dark;--ink:#f3f4f6;--muted:#9ca3af;--blue:#60a5fa;--cyan:#60a5fa;--navy:#090e16;--line:#293241;--paper:#111827;--white:#0b1018;--green:#4ade80;--orange:#fb923c;--surface:#0b1018;--surface-raised:#111827;--surface-soft:#0f1722;--surface-code:#070b11;--header-glass:rgba(11,16,24,0.92);--field:#0b1018;--focus-ring:rgba(96,165,250,0.34)}html,body{background:var(--surface)}body{color:var(--ink)}body,.topbar,main > section,.type-card,.decision-panel,.mock-form,input,textarea,select,.checklist label,footer{transition:color 160ms ease,background-color 160ms ease,border-color 160ms ease}.topbar{height:64px;background:var(--header-glass);border-color:var(--line);gap:28px}.brand-mark{width:30px;height:30px;border-radius:6px;background:var(--ink);font-size:17px}[data-theme="dark"] .brand-mark{color:#0b1018;background:#f3f4f6}.brand strong,nav a:hover{color:var(--ink)}nav{gap:20px}nav a{font-size:0.82rem;font-weight:600}.header-actions{display:flex;align-items:center;gap:12px}.version{color:var(--muted)}.theme-toggle{height:34px;min-width:78px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 11px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:0.75rem;font-weight:650;cursor:pointer}.theme-toggle:hover{background:var(--surface-soft)}.theme-toggle:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}.theme-toggle .sun{color:#d97706}.theme-toggle .moon{display:none;color:#93c5fd}[data-theme="dark"] .theme-toggle .sun{display:none}[data-theme="dark"] .theme-toggle .moon{display:inline}.console-cta{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:7px;background:var(--ink);color:var(--surface);text-decoration:none;font-size:0.8rem;font-weight:700;white-space:nowrap}.console-cta:hover{opacity:0.88}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.hero-actions .console-cta{height:48px;padding:0 24px;font-size:0.95rem}.hero-actions .ghost{display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:7px;border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:0.95rem;font-weight:700}.hero-actions .ghost:hover{background:var(--surface-soft)}.signed-out-note{margin:0;color:var(--muted);font-size:0.92rem}[hidden]{display:none !important}main > section{padding-top:76px;padding-bottom:76px}.intro{min-height:470px;grid-template-columns:1.45fr 0.75fr;gap:64px;background:none}.intro h1{max-width:720px;font-size:clamp(3rem,6vw,5.4rem);line-height:0.98;letter-spacing:-0.055em;margin-bottom:24px}.intro h1 span{color:var(--muted)}.lede{max-width:680px;font-size:1.08rem}.eyebrow{color:var(--muted);letter-spacing:0.12em}.rule-card{padding:28px;border:1px solid var(--line);border-radius:8px;background:var(--surface-raised);color:var(--ink);box-shadow:none}.rule-card::after{display:none}.rule-icon{font-size:0.75rem;color:var(--muted);font-weight:750}.rule-card .eyebrow{color:var(--muted)}.rule-card h2{font-size:1.35rem}.rule-card p:last-child{color:var(--muted)}.journey-section,.form-section,.audit-section{background:var(--surface-soft);color:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.form-section .eyebrow,.light .eyebrow{color:var(--muted)}.form-section .section-heading > p,.light > p{color:var(--muted)}.section-heading{margin-bottom:34px}.section-heading h2{font-size:clamp(1.85rem,3vw,2.65rem);letter-spacing:-0.035em}.journey{border-color:var(--line)}.journey li{padding:20px 12px}.journey li::before{width:7px;height:7px;top:-4px}.segmented{background:transparent;border-radius:7px}.segmented button{border-radius:5px;font-size:0.82rem}.segmented button.active{background:var(--ink);color:var(--surface)}.identity-grid{gap:16px}.type-card,.decision-panel{padding:26px;background:var(--surface-raised);border-radius:8px}.type-card{opacity:0.66}.type-card.active{border-top:1px solid var(--ink);box-shadow:none;transform:none;opacity:1}.tag{border-radius:4px}.tag.internal,fieldset span{background:#eff6ff;color:#1d4ed8}.tag.external{background:#fff7ed;color:#c2410c}[data-theme="dark"] .tag.internal,[data-theme="dark"] fieldset span{background:#172554;color:#93c5fd}[data-theme="dark"] .tag.external{background:#431407;color:#fdba74}.caution{border-radius:6px;background:#fff7ed;color:#9a3412}[data-theme="dark"] .caution{background:#2a160c;color:#fdba74}.form-layout{gap:42px}.mock-form{padding:26px;background:var(--surface-raised);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:none}label,legend{color:var(--muted)}input,textarea,select{background:var(--field);color:var(--ink);border-radius:6px}fieldset{border-color:var(--line);border-radius:6px}.submit-demo{border-radius:6px;background:var(--ink);color:var(--surface)}.field-notes li{border-color:var(--line)}.field-notes li span{color:var(--muted)}.anti-pattern{background:transparent;border-left-color:var(--orange)}.anti-pattern span{color:var(--muted)}.code-card,.event-card{border-radius:8px;box-shadow:none;background:var(--surface-code)}.code-title{background:transparent;border-bottom:1px solid #263141}.status-flow{border-radius:8px}.audit-grid{gap:42px}.event-card{border-color:var(--line)}.audit-controls li{border-color:var(--line);color:var(--muted)}.chips span{background:transparent;color:var(--muted);border-color:var(--line);border-radius:4px}.never-log{background:transparent;color:var(--muted);border-color:var(--line);border-radius:6px}.checklist label{background:var(--surface-raised);color:var(--ink);border-radius:6px}@media (max-width: 900px){.topbar{gap:14px}.header-actions{margin-left:auto}.intro{grid-template-columns:1fr;min-height:auto;gap:34px;padding-top:64px}.type-card{opacity:1}}@media (max-width: 580px){main > section{padding-top:56px;padding-bottom:56px}.intro h1{font-size:3rem}.theme-toggle{min-width:38px;width:38px;padding:0}.theme-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.header-actions .version{display:none}.header-actions{gap:8px}.topbar{padding:0 16px}.brand{min-width:0;gap:8px;font-size:.9rem}.brand > span:last-child{overflow:hidden;text-overflow:ellipsis}}@media (prefers-reduced-motion: reduce){body,.topbar,main > section,.type-card,.decision-panel,.mock-form,input,textarea,select,.checklist label,footer{transition:none}}
   </style>
 </head>
 <body>
@@ -229,7 +43,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
         <p class="lede">Order phone numbers and SIP trunks, move numbers to Iristel, keep 911 addresses current, activate mobile subscribers and manage eSIMs — straight from your own apps and tools. Built for business customers, partners, agents and Iristel’s own teams.</p>
         <div class="hero-actions">
           <a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?from=marketplace">Sign up →</a>
-          <a class="ghost" href="#packages">Browse the bundles</a>
+          <a class="ghost" href="#bundles">Browse the bundles</a>
         </div>
       </div>
       <aside class="rule-card" aria-label="Who it is for">
@@ -255,98 +69,133 @@ fieldset { border-color: var(--line); border-radius: 6px; }
       </ol>
     </section>
 
-    <section id="packages">
+    <section id="bundles">
       <style>
-        #packages .bx-filter{display:inline-flex;flex-wrap:wrap;gap:4px;margin:0 0 28px}
-        #packages .bx-count{margin-left:7px;font-size:.72rem;font-weight:700}
-        #packages .bx-group + .bx-group{margin-top:34px}
-        #packages .bx-aud{margin:0 0 12px;font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-        #packages .bx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-        #packages .bx-grid:has(details[open]){align-items:start}
-        @media (max-width:760px){#packages .bx-grid{grid-template-columns:1fr}}
-        #packages .bx-card{display:flex;flex-direction:column;min-width:0;padding:20px 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-        #packages .bx-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-        #packages .bx-cat{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-        #packages .bx-cat svg{width:16px;height:16px;flex:none;color:var(--ink)}
-        #packages .pkg-pill{display:inline-block;flex:none;padding:1px 9px;border:1px solid currentColor;border-radius:999px;background:color-mix(in srgb,currentColor 9%,transparent);font-size:.7rem;font-weight:800;letter-spacing:.03em;white-space:nowrap}
-        #packages .bx-card h4{margin:14px 0 4px;font-size:1.2rem;line-height:1.25;letter-spacing:-.015em;color:var(--ink)}
-        #packages .bx-lead{margin:0 0 8px;font-weight:500;color:var(--ink)}
-        #packages .bx-sum{margin:0 0 16px;font-size:.92rem;color:var(--muted)}
-        #packages .bx-apis{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:0;list-style:none}
-        #packages .bx-apis li{padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);font-size:.76rem;font-weight:600;color:var(--ink)}
-        #packages details{margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
-        #packages summary{display:flex;align-items:center;gap:10px;width:fit-content;cursor:pointer;list-style:none;font-size:.88rem;font-weight:700;color:var(--ink)}
-        #packages summary::-webkit-details-marker{display:none}
-        #packages summary::before{content:"";width:6px;height:6px;margin-left:2px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
-        #packages details[open] summary::before{transform:rotate(45deg)}
-        #packages summary:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px;border-radius:4px}
-        #packages .bx-steps{margin:16px 0 0;padding:0;list-style:none}
-        #packages .bx-steps li{position:relative;display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;padding-bottom:16px}
-        #packages .bx-steps li:last-child{padding-bottom:0}
-        #packages .bx-steps li::before{content:"";position:absolute;left:12.5px;top:30px;bottom:4px;width:1px;background:var(--line)}
-        #packages .bx-steps li:last-child::before{display:none}
-        #packages .bx-n{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);border-radius:50%;background:var(--surface-soft);font-size:.75rem;font-weight:800;color:var(--ink)}
-        #packages .bx-steps p{margin:2px 0 4px;font-size:.92rem;line-height:1.45;color:var(--ink)}
-        #packages .bx-steps code{font:.74rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere}
-        #packages .bx-steps .pkg-pill{margin-left:8px;padding:0 7px;font-size:.62rem;vertical-align:1px}
-        @media (max-width:580px){#packages .bx-card{padding:18px}}
+#bundles .bx-filter{display:inline-flex;flex-wrap:wrap;gap:4px;margin:0 0 28px}
+#bundles .bx-count{margin-left:7px;font-size:.72rem;font-weight:700}
+#bundles .bx-group + .bx-group{margin-top:34px}
+#bundles .bx-aud{margin:0 0 12px;font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+#bundles .bx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#bundles .bx-grid:has(details[open]){align-items:start}
+@media (max-width:760px){#bundles .bx-grid{grid-template-columns:1fr}}
+#bundles .bx-card{display:flex;flex-direction:column;min-width:0;padding:20px 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+#bundles .bx-cat{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#bundles .bx-cat svg{width:16px;height:16px;flex:none;color:var(--ink)}
+#bundles .bx-card h4{margin:14px 0 4px;font-size:1.2rem;line-height:1.25;letter-spacing:-.015em;color:var(--ink)}
+#bundles .bx-lead{margin:0 0 8px;font-weight:500;color:var(--ink)}
+#bundles .bx-sum{margin:0 0 12px;font-size:.92rem;color:var(--muted)}
+#bundles .bx-cost{margin:0 0 14px;font-size:.85rem;color:var(--muted)}
+#bundles .bx-cost strong{color:var(--ink)}
+#bundles .bx-apis{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:0;list-style:none}
+#bundles .bx-apis li{padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);font-size:.76rem;font-weight:600;color:var(--ink)}
+#bundles details{margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+#bundles summary{display:flex;align-items:center;gap:10px;width:fit-content;cursor:pointer;list-style:none;font-size:.88rem;font-weight:700;color:var(--ink)}
+#bundles summary::-webkit-details-marker{display:none}
+#bundles summary::before{content:"";width:6px;height:6px;margin-left:2px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
+#bundles details[open] summary::before{transform:rotate(45deg)}
+#bundles summary:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px;border-radius:4px}
+#bundles .bx-steps{margin:16px 0 0;padding:0;list-style:none}
+#bundles .bx-steps li{position:relative;display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;padding-bottom:16px}
+#bundles .bx-steps li:last-child{padding-bottom:0}
+#bundles .bx-steps li::before{content:"";position:absolute;left:12.5px;top:30px;bottom:4px;width:1px;background:var(--line)}
+#bundles .bx-steps li:last-child::before{display:none}
+#bundles .bx-n{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);border-radius:50%;background:var(--surface-soft);font-size:.75rem;font-weight:800;color:var(--ink)}
+#bundles .bx-steps p{margin:2px 0 4px;font-size:.92rem;line-height:1.45;color:var(--ink)}
+#bundles .bx-steps code{font:.74rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere}
+#bundles .bx-rt{display:inline-block;margin-left:8px;padding:0 7px;border:1px solid var(--line);border-radius:999px;font-size:.62rem;font-weight:800;white-space:nowrap;vertical-align:1px;color:var(--ink)}
+#bundles .bx-costs h3{margin:40px 0 8px;font-size:1.1rem}
+@media (max-width:580px){#bundles .bx-card{padding:18px}}
+.mp-rt{width:100%;border-collapse:collapse;font-size:.9rem}
+.mp-rt th,.mp-rt td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;color:var(--ink)}
+.mp-rt th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.mp-rt td:nth-child(2){font-weight:700;white-space:nowrap}
+.mp-rt td:nth-child(3){color:var(--muted)}
+@media (max-width:560px){.mp-rt thead{display:none}.mp-rt tr,.mp-rt td{display:block}.mp-rt tr{padding:10px 0;border-bottom:1px solid var(--line)}.mp-rt td{padding:1px 0;border:0;white-space:normal!important}}
+.mp-note{margin:12px 0 0;font-size:.8rem;color:var(--muted)}
       </style>
       <div class="section-heading">
         <div><p class="eyebrow">Bundles</p><h2>Which APIs for which job</h2></div>
-        <p>Each bundle is a recipe: the APIs you call, in order, and the package it needs.</p>
+        <p>Each bundle is a recipe: the APIs you call, in order, and what one run costs.</p>
       </div>
-      <div id="packages-grid"><p>Loading bundles…</p></div>
+      <div id="bundles-grid"><p>Loading bundles…</p></div>
+      <div class="bx-costs" id="bundle-costs"></div>
     </section>
 
     <section class="form-section" id="pricing">
       <style>
-        #pricing .tier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-        @media (max-width:900px){#pricing .tier-grid{grid-template-columns:1fr}}
-        #pricing .tier-card{border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface);padding:18px;display:flex;flex-direction:column}
-        #pricing .tier-card h3{margin:0;font-size:1.05rem;color:var(--tc,var(--ink))}
-        #pricing .tier-card .tier-price{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
-        #pricing .tier-card .tier-price strong{font-size:2rem;line-height:1.1;letter-spacing:-.03em;color:var(--ink);margin-right:4px}
-        #pricing .tier-card .tier-unit{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:2px 0 14px}
-        #pricing .tier-card .tier-plus{font-size:.85rem;font-weight:750;color:var(--ink);margin:0 0 4px}
-        #pricing .tier-card .tier-desc{font-size:.9rem;color:var(--muted);margin:0 0 10px}
-        #pricing .tier-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
-        #pricing .tier-card .tier-foot{margin:auto 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
-        #pricing .bt-wrap{overflow-x:auto;margin-top:26px}
-        #pricing .bt-wrap h3{font-size:1rem;margin:0 0 8px;color:var(--ink)}
-        #pricing table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
-        #pricing th,#pricing td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;color:var(--ink)}
-        #pricing th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-        #pricing td.mix{color:var(--muted)}
-        #pricing .bt-need{font-weight:800}
-        #pricing .bt-list{display:none;list-style:none;margin:0;padding:0}
-        #pricing .bt-list li{border-bottom:1px solid var(--line);padding:10px 0;color:var(--ink)}
-        #pricing .bt-list small{display:block;color:var(--muted);margin-top:2px}
-        @media (max-width:560px){#pricing table{display:none}#pricing .bt-list{display:block}}
-        #pricing .pricing-foot{margin:22px 0 0;color:var(--muted);font-size:.95rem}
+#pricing .pr-head{margin:0 0 28px}
+#pricing .pr-head h2{margin:0 0 14px;font-size:clamp(1.6rem,2.6vw,2.2rem);line-height:1.15;letter-spacing:-.03em}
+#pricing .pr-head>p{max-width:780px;margin:0;color:var(--muted)}
+#pricing .pr-tags{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+#pricing .pr-tags span{padding:3px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.78rem;font-weight:700;color:var(--ink)}
+#pricing .pr-tags .pr-prop{border-color:var(--orange);color:var(--orange)}
+#pricing .pr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:900px){#pricing .pr-grid{grid-template-columns:1fr}}
+#pricing .pr-card{display:flex;flex-direction:column;padding:20px;border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface)}
+#pricing .pr-card h3{margin:0;font-size:1.05rem;color:var(--ink)}
+#pricing .pr-price{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+#pricing .pr-price strong{margin-right:4px;font-size:2.2rem;line-height:1.1;letter-spacing:-.03em;color:var(--ink)}
+#pricing .pr-unit{margin:2px 0 14px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#pricing .pr-card>p:not([class]){margin:0 0 10px;font-size:.9rem;color:var(--muted)}
+#pricing .pr-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
+#pricing .pr-foot{margin:auto 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+#pricing .pr-svc{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:14px 0 0;padding:14px 20px;border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:12px;background:var(--surface);color:var(--ink)}
+#pricing .pr-svc span{flex:1 1 320px;font-size:.88rem;color:var(--muted)}
+#pricing h3.pr-h{margin:40px 0 8px;font-size:1.1rem;color:var(--ink)}
+#pricing .pr-ent{margin:28px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+#pricing details{padding:14px 0;border-bottom:1px solid var(--line)}
+#pricing summary{cursor:pointer;font-weight:750;color:var(--ink)}
+#pricing details p{margin:8px 0 0;color:var(--muted)}
       </style>
-      <div class="section-heading">
-        <div><p class="eyebrow">Packages &amp; pricing</p><h2>Pick your package</h2></div>
-        <p id="pricing-note">Each package includes the one before it. Standard and Premium are one monthly fee with no per-call charges, invoiced on the 1st and charged to your card on the 5th.</p>
+      <div class="pr-head">
+        <p class="eyebrow">Pricing</p>
+        <h2>Build directly on Iristel’s network. Start free. Pay only for valuable automation and telecom services.</h2>
+        <p>Access our API families and explore a free developer sandbox with 1,000 calls per month. Basic reads and status operations are free. Eligible Standard automation is 1¢ CAD per successful operation; qualified Advanced workflows are 2.5¢ CAD. Telecom products and services are priced separately and shown before you order.</p>
+        <div class="pr-tags" id="pr-tags"><span class="pr-prop">Proposed rates, subject to approval · taxes extra</span><span>Effective date: to be announced</span></div>
       </div>
-      <div class="tier-grid" id="tier-grid"><p>Loading packages…</p></div>
-      <div class="bt-wrap" id="bundle-tiers"></div>
-      <p class="pricing-foot">You choose a package when you request access, and our team reviews every request.</p>
+      <div class="pr-grid" id="pr-grid">
+<article class="pr-card" style="--tc:var(--green)"><h3>Free</h3><p class="pr-price"><strong>$0</strong></p><p class="pr-unit">No charge</p><p>Basic reads and status: view, list, get, search and status requests, including routine tracking and polling. Commission reports. Single 911 listing updates.</p><ul><li>No subscription or platform fee</li><li>Developer sandbox: 1,000 calls a month</li><li>Port status</li><li>List SIM cards</li><li>Search available numbers</li><li>Update a 911 listing</li></ul><p class="pr-foot">No card needed. Sandbox calls are never billed.</p></article>
+<article class="pr-card" style="--tc:var(--blue)"><h3>Standard</h3><p class="pr-price"><strong>1¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Standalone administrative or configuration changes: account, plan and service updates, voicemail and forwarding, SIM reservations, PON corrections.</p><ul><li>Update voicemail</li><li>Change a due date</li><li>Reserve a SIM</li><li>Basic LRN lookup</li></ul><p class="pr-foot">Billed only when the call succeeds. Needs a card on file.</p></article>
+<article class="pr-card" style="--tc:var(--orange)"><h3>Advanced</h3><p class="pr-price"><strong>2.5¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Bulk or orchestration requests, priced per completed request rather than per item inside it.</p><ul><li>Bulk LRN lookup (50 numbers)</li><li>LRN with porting history</li><li>Bulk 911 upload</li></ul><p class="pr-foot">One request is one event, however many items it carries. Needs a card on file.</p></article>
+      </div>
+      <p class="pr-svc" id="pr-svc"><strong>Service order</strong><b>No API fee</b><span>Requests that order telecom service: phone numbers, port-ins, SIP trunks, SIM and eSIM activation. The service is billed under the published tariff; the API call itself adds nothing.</span></p>
+      <h3 class="pr-h">Telecom services</h3>
+      <div><table class="mp-rt"><thead><tr><th>Service</th><th>Proposed rate</th><th>Billing / qualification</th></tr></thead><tbody id="pr-tel">
+<tr><td>Local phone number</td><td>$1.00 / number / month</td><td>Recurring on active assigned numbers.</td></tr>
+<tr><td>Local numbers, 1,000+</td><td>$0.75 / number / month</td><td>Eligible active number inventory.</td></tr>
+<tr><td>Toll-free number</td><td>$1.50 / number / month</td><td>Recurring on active assigned numbers.</td></tr>
+<tr><td>Wireline or wireless port-in</td><td>$0</td><td>The port request is free; separately ordered service is billed.</td></tr>
+<tr><td>911 / E911 listing</td><td>$1.00 / number / month</td><td>No setup charge.</td></tr>
+<tr><td>SIP trunk setup</td><td>$0</td><td>No setup fee.</td></tr>
+<tr><td>SIP outbound</td><td>From $0.0100 / minute</td><td>Eligible routes.</td></tr>
+<tr><td>SIP inbound</td><td>From $0.0085 / minute</td><td>Eligible routes and numbers.</td></tr>
+<tr><td>SIM / eSIM activation</td><td>$0 with an eligible line</td><td>The mobile plan applies.</td></tr>
+<tr><td>Active mobile line</td><td>Iristel plan rate</td><td>Per the approved plan.</td></tr>
+<tr><td>Commission reporting</td><td>$0</td><td>Free reports and lookups.</td></tr>
+<tr><td>Partner / enterprise</td><td>Contracted pricing</td><td>Credit terms and contracted rates override public rates.</td></tr>
+      </tbody></table></div>
+      <p class="mp-note" id="pr-note">Proposed rates, subject to Product, Finance and Legal/Regulatory approval. Taxes extra.</p>
+      <p class="pr-ent"><strong>Partner and enterprise pricing:</strong> contracted rates and credit terms; contact your Iristel representative.</p>
+      <h3 class="pr-h">Pricing questions</h3>
+      <details><summary>Is there a free sandbox?</summary><p>Yes. Every account gets 1,000 non-production developer sandbox calls a month. They reset on the 1st and are never billed; past the allowance, sandbox calls are refused, not charged.</p></details>
+      <details><summary>When do I need a card?</summary><p>Only for Standard and Advanced live calls. Free reads and status, service orders and the sandbox need no card. Add one in the API console before your first billable call; the same key keeps working.</p></details>
+      <details><summary>What’s billed?</summary><p>Successful live Standard (1¢) and Advanced (2.5¢) events, invoiced in CAD on the 1st of the next month and charged to your card on the 5th, taxes extra. Failed calls, free reads, sandbox calls and service orders carry no API fee. Telecom services you order are billed under the tariff, at the rates shown before you order, never twice.</p></details>
     </section>
 
     <section id="identity">
       <style>
-        #identity .segmented{display:flex;flex-wrap:wrap;gap:4px}
-        #identity .at-grid{display:grid;grid-template-columns:1.6fr .9fr;gap:20px}
-        #identity .type-card{opacity:1}
-        #identity .type-card ul{padding-left:18px;margin:8px 0 0}
-        #identity .type-card li{margin:5px 0}
-        #identity .at-bundles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-        #identity .at-bundles span{background:#e9f2fc;color:var(--blue);font-size:.76rem;font-weight:750;padding:6px 9px}
-        [data-theme="dark"] #identity .at-bundles span{background:#172554;color:#93c5fd}
-        #identity .decision-panel ol{padding-left:20px;margin:10px 0 0}
-        #identity .decision-panel ol li{margin:8px 0;padding:6px 0 8px 4px}
-        #identity .decision-panel ol li:before{content:none}
-        @media(max-width:900px){#identity .at-grid{grid-template-columns:1fr}}
+#identity .segmented{display:flex;flex-wrap:wrap;gap:4px}
+#identity .at-grid{display:grid;grid-template-columns:1.6fr .9fr;gap:20px}
+#identity .type-card{opacity:1}
+#identity .type-card ul{padding-left:18px;margin:8px 0 0}
+#identity .type-card li{margin:5px 0}
+#identity .at-bundles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#identity .at-bundles span{background:#e9f2fc;color:var(--blue);font-size:.76rem;font-weight:750;padding:6px 9px}
+[data-theme="dark"] #identity .at-bundles span{background:#172554;color:#93c5fd}
+#identity .decision-panel ol{padding-left:20px;margin:10px 0 0}
+#identity .decision-panel ol li{margin:8px 0;padding:6px 0 8px 4px}
+#identity .decision-panel ol li:before{content:none}
+@media(max-width:900px){#identity .at-grid{grid-template-columns:1fr}}
       </style>
       <div class="section-heading">
         <div><p class="eyebrow">Who you are</p><h2>Choose your path</h2></div>
@@ -361,7 +210,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
             <li>Tell us who you are and what you want to build.</li>
             <li>We check your business details and registration.</li>
             <li>You get an email when your access is approved.</li>
-            <li>Use your approved APIs in the console (every call is live), then connect your app.</li>
+            <li>Use your approved APIs in the console, live or in the free sandbox, then connect your app.</li>
           </ol>
           <p class="caution">Business customers, partners and agents give a business registration number, checked automatically. Iristel employees give their department instead.</p>
         </aside>
@@ -383,16 +232,16 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           <article><span>01</span><div><h3>Try it in the console</h3><p>Log in to the partner portal and every approved API is ready to try with simple forms — no code needed.</p></div></article>
           <article><span>02</span><div><h3>Get your API key</h3><p>Approved accounts get a personal key from the console to use in their own apps and scripts.</p></div></article>
           <article><span>03</span><div><h3>Access follows your approval</h3><p>Your key only works for the APIs you’re approved for, and stops working if access is removed.</p></div></article>
-          <article><span>04</span><div><h3>Start free, add a package when you need more</h3><p>The Free package needs no card. For Standard or Premium, add a card in the console before your first call — the same key then runs everything in your package for one monthly fee. Every call is live.</p></div></article>
+          <article><span>04</span><div><h3>Start free, pay only for what you use</h3><p>Basic reads, service orders and the developer sandbox need no card. Add one in the console before your first Standard or Advanced live call; the same key keeps working.</p></div></article>
         </div>
       </div>
     </section>
 
     <section id="trust" class="audit-section">
       <style>
-        #trust details{border-bottom:1px solid var(--line);padding:14px 0}
-        #trust summary{cursor:pointer;font-weight:750;color:var(--ink)}
-        #trust details p{color:var(--muted);margin:8px 0 0}
+#trust details{border-bottom:1px solid var(--line);padding:14px 0}
+#trust summary{cursor:pointer;font-weight:750;color:var(--ink)}
+#trust details p{color:var(--muted);margin:8px 0 0}
       </style>
       <div class="section-heading light">
         <div><p class="eyebrow">Your data and security</p><h2>Questions, answered</h2></div>
@@ -419,9 +268,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
           <details><summary>What if I need an API that isn’t listed?</summary><p>After you sign up, choose “Other” on your access request and describe what you need.</p></details>
-          <details><summary>Can I try it before paying?</summary><p>Yes. The Free package needs no card: once you’re approved you can run health checks, reference-data lookups and status reads straight away. Pick Standard or Premium when you need more, and add a card in the console before your first call.</p></details>
-          <details><summary>What does it cost?</summary><p>There are three packages — Free, Standard and Premium (see Packages &amp; pricing above) — and each includes the one before it. Standard and Premium are one monthly fee with no per-call charges, invoiced on the 1st of each month and charged to your card on the 5th. A call outside your package is never billed: it’s blocked with a message saying which package it needs.</p></details>
-          <details><summary>Can I change my package later?</summary><p>Yes. Ask for an upgrade from the API Marketplace page in the portal. Our team switches your package and the same key keeps working.</p></details>
+          <details><summary>What does it cost?</summary><p>Basic reads and the developer sandbox are free, with no subscription or platform fee. See Pricing above for the proposed per-event rates and the pricing questions.</p></details>
         </div>
       </div>
     </section>
@@ -451,68 +298,21 @@ themeToggle.addEventListener("click", () => {
 // lib/catalogs/bundles.js) so "Choose your path" still renders when the
 // catalog can't be loaded.
 const FALLBACK_ACCOUNT_TYPES = [
-  {
-    "id": "business",
-    "label": "Business customer",
-    "short": "Your business uses Iristel services for itself.",
-    "description": "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
-    "build": [
-      "Order SIP trunks and phone numbers",
-      "Keep your numbers when you move to Iristel",
-      "Keep your 911 addresses up to date"
-    ],
-    "audiences": [
-      "enterprise"
-    ],
-    "products": []
-  },
-  {
-    "id": "partner",
-    "label": "Iristel partner",
-    "short": "You resell Iristel services to your own customers.",
-    "description": "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners who sell Iristel services and bill their own customers.",
-    "build": [
-      "Activate subscribers end to end",
-      "Order numbers at scale",
-      "Port your customers onto the network"
-    ],
-    "audiences": [
-      "resellers",
-      "carriers"
-    ],
-    "products": []
-  },
-  {
-    "id": "agent",
-    "label": "Agent",
-    "short": "You sign customers up for Iristel and earn commission.",
-    "description": "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
-    "build": [
-      "Sign customers up from your own tools",
-      "Assign SIMs and eSIMs",
-      "Track your commissions"
-    ],
-    "audiences": [
-      "agents"
-    ],
-    "products": []
-  },
-  {
-    "id": "internal",
-    "label": "Internal employee",
-    "short": "You work at Iristel and need API access for your team.",
-    "description": "Iristel staff building internal tools, reports or integrations. Use your @iristel.com email and tell us your department — no business registration needed, and internal usage isn't billed.",
-    "build": [
-      "Automate provisioning and porting tasks",
-      "Build reports on numbers and subscribers",
-      "Integrate Iristel systems with your team's tools"
-    ],
-    "audiences": [],
-    "products": []
-  }
+  { id: "business", label: "Business customer", short: "Your business uses Iristel services for itself.",
+    description: "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
+    build: ["Order SIP trunks and phone numbers", "Keep your numbers when you move to Iristel", "Keep your 911 addresses up to date"] },
+  { id: "partner", label: "Iristel partner", short: "You resell Iristel services to your own customers.",
+    description: "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners who sell Iristel services and bill their own customers.",
+    build: ["Activate subscribers end to end", "Order numbers at scale", "Port your customers onto the network"] },
+  { id: "agent", label: "Agent", short: "You sign customers up for Iristel and earn commission.",
+    description: "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
+    build: ["Sign customers up from your own tools", "Assign SIMs and eSIMs", "Track your commissions"] },
+  { id: "internal", label: "Internal employee", short: "You work at Iristel and need API access for your team.",
+    description: "Iristel staff building internal tools, reports or integrations. Use your @iristel.com email and tell us your department — no business registration needed, and internal usage isn't billed.",
+    build: ["Automate provisioning and porting tasks", "Build reports on numbers and subscribers", "Integrate Iristel systems with your team's tools"] },
 ];
 
-// ---- "Choose your path": the five account types from the catalog --------
+// ---- "Choose your path": the account types from the catalog
 function renderAccountTypes(reg) {
   const types = reg.accountTypes || [];
   const bundles = reg.bundles || [];
@@ -520,7 +320,7 @@ function renderAccountTypes(reg) {
   const buttons = document.getElementById("at-buttons");
   const card = document.getElementById("at-card");
   if (!types.length) { card.innerHTML = "<p>Account types unavailable.</p>"; return; }
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = escHtml;
   const show = (id) => {
     const t = types.find((x) => x.id === id) || types[0];
     buttons.querySelectorAll("button").forEach((b) => {
@@ -547,61 +347,42 @@ const ACCOUNT_TYPE_CTA = (t) =>
   t.id === "internal"
     ? `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/">Log in with your Iristel account →</a></p>` +
       `<p style="font-size:.85rem;opacity:.75">Iristel employees already have a portal login — open API Marketplace from the menu to request access.</p>`
-    : `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?type=${encodeURIComponent(t.id)}&from=marketplace">Sign up as ${t.label} →</a></p>`;
+    : `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?type=${encodeURIComponent(t.id)}&from=marketplace">Sign up as ${escHtml(t.label)} →</a></p>`;
 
-// ---- Packages & pricing (data-driven from the catalog) ---------------------
-// reg.packages lists Free, Standard and Premium in order (older catalogs call
-// them tiers); each includes the one before it and costs priceCents a month.
-// Every catalog endpoint carries the package it belongs to (its tier), every
-// bundle the package it needs.
-const TIER_COLOR = { free: "var(--green)", standard: "var(--blue)", premium: "var(--orange)" };
-let TIER_OF = {}, TIER_NAME = {};
+// ---- Pricing, from the catalog: per-event rate classes, the sandbox and the
+// telecom rates, PROPOSED until approved. The static #pricing markup is the
+// same render, kept for when the catalog is down.
 const centsLabel = (c) => (c < 100 ? c + "¢" : "$" + (c / 100).toFixed(2));
-function renderTiers(reg) {
-  const pkgs = (reg.packages || reg.tiers || []).map((p, i) => ({ ...p, rank: p.rank ?? i }));
-  const byId = Object.fromEntries(pkgs.map((p) => [p.id, p]));
-  // An endpoint or bundle without a package counts as the top one, as on the gateway.
-  const rank = (id) => (byId[id] ? byId[id].rank : pkgs.length - 1);
-  const tiers = (reg.products || []).flatMap((p) => (p.endpoints || []).map((e) => e.tier));
-  document.getElementById("tier-grid").innerHTML = pkgs.length ? pkgs.map((t) => {
-    const prev = byId[t.includes];
-    const ops = tiers.filter((x) => rank(x) <= t.rank).length;
-    // whatsIn opens with "Everything in Free, plus …" for the packages that
-    // build on another one; that part becomes the card's lead-in line.
-    const desc = prev ? String(t.whatsIn || "").replace(/^Everything in [^,]+,\s*plus\s*/i, "") : String(t.whatsIn || "");
-    return `<article class="tier-card" style="--tc:${TIER_COLOR[t.id] || "var(--blue)"}">` +
-      `<h3>${escHtml(t.name)}</h3>` +
-      `<p class="tier-price"><strong>${t.priceCents ? centsLabel(t.priceCents) : "$0"}</strong>${t.priceCents ? "CAD" : ""}</p>` +
-      `<p class="tier-unit">${escHtml(t.billingUnit || "")}${ops ? " · " + ops + " operations" : ""}</p>` +
-      (prev ? `<p class="tier-plus">Everything in ${escHtml(prev.name)}, plus…</p>` : "") +
-      `<p class="tier-desc">${escHtml(desc.charAt(0).toUpperCase() + desc.slice(1))}</p>` +
-      `<ul>${(t.examples || []).map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>` +
-      `<p class="tier-foot">${t.priceCents ? "Add a card in the console before your first call. No per-call charges." : "Never billed."}</p>` +
-      `</article>`;
-  }).join("") : "<p>Packages unavailable.</p>";
-
-  // Which package each bundle needs, and how its steps spread over the packages.
-  const bundles = reg.bundles || [];
-  if (!bundles.length || !pkgs.length) return;
-  const audience = (id) => ((reg.audiences || []).find((a) => a.id === id) || {}).label || "";
-  const need = (b) => b.package || (b.steps || []).map((s) => TIER_OF[s.product + " " + s.endpoint])
-    .reduce((m, t) => (rank(t) > rank(m) ? t : m), pkgs[0].id);
-  const mix = (b) => pkgs.map((t) => [t, (b.steps || []).filter((s) => TIER_OF[s.product + " " + s.endpoint] === t.id).length])
-    .filter(([, n]) => n).map(([t, n]) => `${n} ${escHtml(t.name)}`).join(" · ");
-  const needTag = (b) => `<span class="bt-need" style="color:${TIER_COLOR[need(b)] || "inherit"}">${escHtml((byId[need(b)] || { name: need(b) }).name)}</span>`;
-  document.getElementById("bundle-tiers").innerHTML =
-    `<h3>Which package each bundle needs</h3>` +
-    `<ul class="bt-list">` + bundles.map((b) =>
-      `<li><strong>${escHtml(b.name)}</strong> — needs ${needTag(b)}<small>Steps: ${mix(b)}</small></li>`).join("") + `</ul>` +
-    `<table><thead><tr><th>Bundle</th><th>For</th><th>Steps by package</th><th>Package needed</th></tr></thead><tbody>` +
-    bundles.map((b) => `<tr><td><strong>${escHtml(b.name)}</strong></td><td class="mix">${escHtml(audience(b.audience))}</td>` +
-      `<td class="mix">${mix(b)}</td><td>${needTag(b)}</td></tr>`).join("") + `</tbody></table>`;
+const CLASS_COLOR = { free: "var(--green)", standard: "var(--blue)", advanced: "var(--orange)" };
+const CLASS_FOOT = {
+  free: "No card needed. Sandbox calls are never billed.",
+  standard: "Billed only when the call succeeds. Needs a card on file.",
+  advanced: "One request is one event, however many items it carries. Needs a card on file.",
+};
+function renderPricing(p) {
+  const cls = (p && p.classes) || [];
+  if (!cls.length) return;
+  const $ = (id) => document.getElementById(id);
+  $("pr-tags").innerHTML = `<span class="pr-prop">${p.status === "proposed" ? "Proposed rates, subject to approval" : "Rates in CAD"} · taxes extra</span>` +
+    `<span>Effective date: ${p.effective ? escHtml(p.effective) : "to be announced"}</span>`;
+  const free = ["No subscription or platform fee"].concat(p.sandboxCalls ? [`Developer sandbox: ${Number(p.sandboxCalls).toLocaleString("en-CA")} calls a month`] : []);
+  $("pr-grid").innerHTML = cls.filter((c) => c.id !== "service").map((c) =>
+    `<article class="pr-card" style="--tc:${CLASS_COLOR[c.id] || "var(--blue)"}"><h3>${escHtml(c.name)}</h3>` +
+    `<p class="pr-price"><strong>${c.priceCents ? escHtml(centsLabel(c.priceCents)) : "$0"}</strong>${c.priceCents ? "CAD" : ""}</p>` +
+    `<p class="pr-unit">${escHtml(c.billingUnit || "")}</p><p>${escHtml(c.whatsIn || "")}</p>` +
+    `<ul>${(c.id === "free" ? free : []).concat(c.examples || []).map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>` +
+    (CLASS_FOOT[c.id] ? `<p class="pr-foot">${CLASS_FOOT[c.id]}</p>` : "") + `</article>`).join("");
+  const svc = cls.find((c) => c.id === "service");
+  $("pr-svc").hidden = !svc;
+  if (svc) $("pr-svc").innerHTML = `<strong>${escHtml(svc.name)}</strong><b>${escHtml(svc.billingUnit || "")}</b><span>${escHtml(svc.whatsIn || "")}</span>`;
+  if ((p.telecomRates || []).length) $("pr-tel").innerHTML = p.telecomRates.map((r) =>
+    `<tr><td>${escHtml(r.service)}</td><td>${escHtml(r.rate)}</td><td>${escHtml(r.note || "")}</td></tr>`).join("");
+  if (p.note) $("pr-note").textContent = p.note;
 }
 
-// ---- Bundles (data-driven from the catalog) --------------------------------
-// One card per bundle, grouped by who it's for, with a filter on top. The
-// steps (the APIs called, in order) fold away under "See the N steps"; a step
-// that needs a paid package says which.
+// ---- Bundles, from the catalog: one card per bundle, grouped by audience,
+// steps folded away; a step that isn't free shows its rate. apiCents = the API
+// cost of one run, serviceSteps = steps that order telecom service.
 const CATEGORY_ICON = {
   voice: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
   numbers: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
@@ -610,26 +391,33 @@ const CATEGORY_ICON = {
 };
 const categoryIcon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
   (CATEGORY_ICON[id] || '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/>') + `</svg>`;
-const pkgPill = (id) => (id ? `<span class="pkg-pill" style="color:${TIER_COLOR[id] || "var(--ink)"}">${escHtml(TIER_NAME[id] || id)}</span>` : "");
+const runCost = (b) => (b.apiCents == null ? "" : b.apiCents ? escHtml(centsLabel(b.apiCents)) : "Free");
 function renderBundles(reg) {
-  const grid = document.getElementById("packages-grid");
+  const grid = document.getElementById("bundles-grid");
   const bundles = reg.bundles || [];
   const audiences = (reg.audiences || []).filter((a) => bundles.some((b) => b.audience === a.id));
   const catLabel = (id) => ((reg.categories || []).find((c) => c.id === id) || {}).label || "";
   const productName = (id) => ((reg.products || []).find((p) => p.id === id) || { name: id }).name;
+  const rateName = Object.fromEntries(((reg.pricing || {}).classes || []).map((c) => [c.id, c.name]));
+  const ep = {};   // "product METHOD /path" -> catalog endpoint (rateClass, priceCents)
+  (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { ep[p.id + " " + e.method + " " + e.path] = e; }));
+  const stepRate = (s) => {
+    const e = ep[s.product + " " + s.endpoint];
+    const t = !e ? "" : e.rateClass === "service" ? rateName.service || "Service order" : e.priceCents ? (rateName[e.rateClass] || "") + " " + centsLabel(e.priceCents) : "";
+    return t ? `<span class="bx-rt">${escHtml(t.trim())}</span>` : "";
+  };
   const card = (b) => {
     const steps = b.steps || [];
     return `<article class="bx-card">` +
-      `<div class="bx-head"><span class="bx-cat">${categoryIcon(b.category)}${escHtml(catLabel(b.category))}</span>${pkgPill(b.package)}</div>` +
+      `<span class="bx-cat">${categoryIcon(b.category)}${escHtml(catLabel(b.category))}</span>` +
       `<h4>${escHtml(b.name)}</h4><p class="bx-lead">${escHtml(b.useCase || "")}</p>` +
       (b.summary ? `<p class="bx-sum">${escHtml(b.summary)}</p>` : "") +
+      (runCost(b) ? `<p class="bx-cost">API cost per run: <strong>${runCost(b)}</strong>${b.serviceSteps ? " + service charges" : ""}</p>` : "") +
       `<ul class="bx-apis" aria-label="APIs used">${[...new Set(steps.map((s) => s.product))]
         .map((id) => `<li>${escHtml(productName(id))}</li>`).join("")}</ul>` +
-      (steps.length ? `<details><summary>See the ${steps.length} steps</summary><ol class="bx-steps">` + steps.map((s, i) => {
-        const t = TIER_OF[s.product + " " + s.endpoint];
-        return `<li><span class="bx-n" aria-hidden="true">${i + 1}</span><div><p>${escHtml(s.note || s.endpoint)}</p>` +
-          `<code>${escHtml(s.endpoint)}</code>${t && t !== "free" ? pkgPill(t) : ""}</div></li>`;
-      }).join("") + `</ol></details>` : "") +
+      (steps.length ? `<details><summary>See the ${steps.length} steps</summary><ol class="bx-steps">` + steps.map((s, i) =>
+        `<li><span class="bx-n" aria-hidden="true">${i + 1}</span><div><p>${escHtml(s.note || s.endpoint)}</p>` +
+        `<code>${escHtml(s.endpoint)}</code>${stepRate(s)}</div></li>`).join("") + `</ol></details>` : "") +
       `</article>`;
   };
   let active = "";
@@ -651,9 +439,16 @@ function renderBundles(reg) {
     }));
   };
   draw();
+
+  // What one run of each bundle costs in API fees.
+  const priced = bundles.filter((b) => runCost(b));
+  if (priced.length) document.getElementById("bundle-costs").innerHTML =
+    `<h3>What one run costs</h3><table class="mp-rt"><thead><tr><th>Bundle</th><th>API cost per run</th><th>Service orders included</th></tr></thead><tbody>` +
+    priced.map((b) => `<tr><td>${escHtml(b.name)}</td><td>${runCost(b)}</td><td>${b.serviceSteps ? escHtml(b.serviceSteps) + " service order" + (b.serviceSteps > 1 ? "s" : "") : "None"}</td></tr>`).join("") +
+    `</tbody></table><p class="mp-note">Proposed rates, subject to approval · taxes extra. Service orders add no API fee: the services they order are billed under the tariff.</p>`;
 }
 
-// ---- Catalog --------------------------------------------------------------
+// ---- Catalog
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // When this page is copied into Webflow, relative fetches would hit the
 // Webflow domain (404) — call the gateway absolutely unless we ARE the gateway.
@@ -663,17 +458,13 @@ const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname
   let reg;
   try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
   catch {
-    document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
+    document.getElementById("bundles-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
     renderAccountTypes({ accountTypes: FALLBACK_ACCOUNT_TYPES });
     return;
   }
-
-  (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { if (e.tier) TIER_OF[p.id + " " + e.method + " " + e.path] = e.tier; }));
-  (reg.packages || reg.tiers || []).forEach((t) => { TIER_NAME[t.id] = t.name; });
   renderAccountTypes(reg);
   renderBundles(reg);
-  renderTiers(reg);
-
+  renderPricing(reg.pricing);
 })();
 
 document.getElementById("copy-code").addEventListener("click", async (event) => {

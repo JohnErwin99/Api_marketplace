@@ -153,7 +153,7 @@ emailInput.addEventListener("input", () => {
 });
 })();
 
-// ---- Packages section + access-request form (data-driven from the catalog)
+// ---- Bundles section + access-request form (data-driven from the catalog)
 const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // When this page is copied into Webflow, relative fetches would hit the
 // Webflow domain (404) — call the gateway absolutely unless we ARE the gateway.
@@ -167,13 +167,7 @@ window.__showRequestStatus = function (a) {
 const box = document.getElementById("req-status");
 const form = document.getElementById("access-form");
 if (!box || !a) return;
-// "Submit another request" opens the form on the package already asked for
-// (or held), rather than resetting it to Free.
-const reopen = () => {
-  const pick = a.package && !a.isInternal && form.querySelector(`input[name="package"][value="${escHtml(a.package)}"]`);
-  if (pick) { pick.checked = true; form.dispatchEvent(new Event("change", { bubbles: true })); }
-  form.hidden = false; form.scrollIntoView({ behavior: "smooth" });
-};
+const reopen = () => { form.hidden = false; form.scrollIntoView({ behavior: "smooth" }); };
 const when = a.requestedAt ? new Date(a.requestedAt).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" }) : "";
 if (a.status === "pending") {
   box.innerHTML = `<strong>Your request is under review${a.id ? " (" + escHtml(a.id) + ")" : ""}</strong>` +
@@ -182,10 +176,8 @@ if (a.status === "pending") {
   form.hidden = true;
   box.querySelector("#req-again").onclick = reopen;
 } else if (a.status === "approved") {
-  const pkg = !a.isInternal && a.package && ((((window.__mpCatalog || {}).packages) || []).find((p) => p.id === a.package)
-    || { name: a.package.charAt(0).toUpperCase() + a.package.slice(1) });
-  box.innerHTML = `<strong>You have API access</strong>${pkg ? `You're on the ${escHtml(pkg.name)} package. ` : a.isInternal ? "Internal usage isn't billed or limited by package. " : ""}Open the API console to get your key and start calling. ` +
-    `<a href="/console">Open the API console →</a> · <button type="button" id="req-again">Request more APIs or another package</button>`;
+  box.innerHTML = `<strong>You have API access</strong>${a.isInternal ? "Internal usage isn't billed. " : ""}Open the API console to get your key and start calling. ` +
+    `<a href="/console">Open the API console →</a> · <button type="button" id="req-again">Request more APIs</button>`;
   form.hidden = true;
   box.querySelector("#req-again").onclick = reopen;
 } else return;
@@ -200,10 +192,13 @@ fetch(GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email)
 })();
 
 (async () => {
+// The bundles grid (older copies of this page, like the live Webflow embed
+// until it is pasted again, still call it packages-grid).
+const grid = document.getElementById("bundles-grid") || document.getElementById("packages-grid");
 let reg;
 try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
 catch {
-  document.getElementById("packages-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
+  grid.innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
   renderAccountTypes({ accountTypes: FALLBACK_ACCOUNT_TYPES });
   return;
 }
@@ -211,25 +206,20 @@ catch {
 // Bundles grid
 window.__mpCatalog = reg;   // the submit handler reads bundles from here
 renderAccountTypes(reg);
-// Packages (Free, Standard, Premium; older catalogs call them tiers): each
-// includes the one before it and costs priceCents a month. Every endpoint
-// carries the package it is in (its tier), every bundle the package it needs.
-// An endpoint without one counts as the top package, as on the gateway.
-const PKGS = (reg.packages || reg.tiers || []).map((p, i) => ({ ...p, rank: p.rank ?? i }));
-const PKG = Object.fromEntries(PKGS.map((p) => [p.id, p]));
-const PKG_COLOR = { free: "var(--green)", standard: "var(--blue)", premium: "var(--orange)" };
-const rankOf = (id) => (PKG[id] ? PKG[id].rank : PKGS.length - 1);
-const highest = (ids) => ids.reduce((m, t) => (rankOf(t) > rankOf(m) ? t : m));
-const lowest = (ids) => ids.reduce((m, t) => (rankOf(t) < rankOf(m) ? t : m));
-const pkgName = (id) => (PKG[id] || { name: id }).name;
-const tiersOf = (id) => (((reg.products || []).find((p) => p.id === id) || {}).endpoints || []).map((e) => e.tier);
-const centsLabel = (c) => (c < 100 ? (Number.isInteger(c) ? c : c.toFixed(2)) + "¢" : "$" + (c / 100).toFixed(2));
-const pkgPrice = (p) => (p.priceCents ? `${centsLabel(p.priceCents)} CAD ${String(p.billingUnit || "per month").toLowerCase()}` : p.billingUnit || "No charge");
-// One line per package: the first clause of whatsIn ("Everything in Free,
-// plus …"), without the examples in brackets.
-const pkgNote = (p) => String(p.whatsIn || "").replace(/\s*\([^)]*\)/g, "").split(/[:.]/)[0].trim() + "." + (p.priceCents ? "" : " No card needed.");
+// Pricing (proposed, per event): every endpoint carries its rateClass and
+// priceCents, every bundle its apiCents (API cost of one run) and
+// serviceSteps (steps that order telecom service, billed under the tariff).
+const P = reg.pricing || {};
+const CLS = Object.fromEntries((P.classes || []).map((c) => [c.id, c]));
+const cents = (c) => (c < 100 ? c + "¢" : "$" + (c / 100).toFixed(2));
+// The rate classes an API's operations fall in, in rate-card order.
+const classesOf = (id) => {
+  const have = new Set((((reg.products || []).find((p) => p.id === id) || {}).endpoints || []).map((e) => e.rateClass));
+  return Object.keys(CLS).filter((c) => have.has(c));
+};
+const runCost = (b) => (b.apiCents == null ? "" : `API cost per run: <strong>${b.apiCents ? escHtml(cents(b.apiCents)) : "Free"}</strong>${b.serviceSteps ? " + service charges" : ""}`);
+const PROPOSED = `${P.status === "proposed" ? "Proposed rates, subject to approval" : "Rates in CAD"} · taxes extra`;
 
-const grid = document.getElementById("packages-grid");
 const bundles = reg.bundles || [], audiences = reg.audiences || [];
 // Self-contained cards: every step visible with its explanation, no console
 // link — visitors without marketplace access can still see how each bundle
@@ -238,7 +228,7 @@ const bundles = reg.bundles || [], audiences = reg.audiences || [];
 const categories = reg.categories || [];
 const catLabel = (id) => (categories.find((c) => c.id === id) || {}).label || "";
 let activeCat = "";
-const drawPackages = () => {
+const drawBundles = () => {
   const filter = categories.length
     ? `<div class="pk-filter" role="group" aria-label="Filter bundles">` +
       [{ id: "", label: "All" }, ...categories].map((c) =>
@@ -251,53 +241,42 @@ const drawPackages = () => {
     return `<div class="pk-aud">${escHtml(a.label)}</div><div class="pk-grid">` + list.map((b) =>
       `<div class="pk-card">${b.category ? `<span class="pk-cat">${escHtml(catLabel(b.category))}</span>` : ""}` +
       `<h3>📦 ${escHtml(b.name)}</h3><p class="use">${escHtml(b.useCase)}</p>` +
-      (PKG[b.package] ? `<p class="pk-need">Needs the <strong style="color:${PKG_COLOR[b.package] || "inherit"}">${escHtml(pkgName(b.package))}</strong> package</p>` : "") +
+      (runCost(b) ? `<p class="pk-cost">${runCost(b)}</p>` : "") +
       `<p class="pk-sum">${escHtml(b.summary || "")}</p>` +
       `<ol class="pk-steps">${(b.steps || []).map((s) =>
         `<li><code>${escHtml(s.endpoint)}</code><span>${escHtml(s.note || "")}</span></li>`).join("")}</ol></div>`
     ).join("") + `</div>`;
   }).join("") || "<p>No bundles published yet.</p>");
-  grid.querySelectorAll("[data-cat]").forEach((btn) => btn.addEventListener("click", () => { activeCat = btn.dataset.cat; drawPackages(); }));
+  grid.querySelectorAll("[data-cat]").forEach((btn) => btn.addEventListener("click", () => { activeCat = btn.dataset.cat; drawBundles(); }));
 };
-drawPackages();
+drawBundles();
 
-// The package the partner asks for. Older copies of this markup (the
-// Webflow embed) still carry the "Sandbox / Production" select: swap it for
-// the package choice.
+// Older copies of this markup (the live Webflow embed until it is pasted
+// again) still carry a retired plan picker (radios) or the "Sandbox /
+// Production" select: drop them, so the request sends neither.
 const form = document.getElementById("access-form");
-let pkgBox = document.getElementById("package-choices");
+const oldPlan = form.querySelector('input[type="radio"]');
+if (oldPlan && oldPlan.closest("fieldset")) oldPlan.closest("fieldset").remove();
 const oldEnv = form.querySelector('select[name="environment"]');
-if (!pkgBox && oldEnv && PKGS.length) {
-  // The old markup has no styles for it: the same rules as public/index.html.
-  if (!document.getElementById("mp-pkg-css"))
-    document.head.insertAdjacentHTML("beforeend", '<style id="mp-pkg-css">' + ".req-picker .pkg-tag{display:inline-block;margin:0 0 0 6px;padding:1px 7px;border-radius:999px;border:1px solid currentColor;background:transparent;font-size:.7rem;font-weight:800;white-space:nowrap}.price-summary .pkg-warn{margin:6px 0 0;color:var(--orange)}.price-summary button{font:inherit;font-weight:700;margin-top:8px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}.pkg-choice{display:grid;gap:8px;margin:0}.pkg-choice label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font-weight:400;cursor:pointer}.pkg-choice label:has(input:checked){border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.pkg-choice input{grid-row:span 2;margin:2px 0 0;padding:0;accent-color:var(--ink)}.pkg-choice strong{font-size:.9rem}.pkg-choice .pkg-price{justify-self:end;font-weight:700;white-space:nowrap}.pkg-choice .pkg-note{grid-column:2 / -1;color:var(--muted);font-size:.74rem;line-height:1.4}" + "</style>");
-  pkgBox = document.createElement("fieldset");
-  pkgBox.id = "package-choices"; pkgBox.className = "pkg-choice"; pkgBox.dataset.for = "business";
-  oldEnv.closest("label").replaceWith(pkgBox);
-}
-if (pkgBox && PKGS.length) {
-  const cur = (pkgBox.querySelector("input:checked") || {}).value || PKGS[0].id;
-  pkgBox.innerHTML = "<legend>Package</legend>" + PKGS.map((p) =>
-    `<label title="${escHtml(p.whatsIn || "")}"><input type="radio" name="package" value="${escHtml(p.id)}"${p.id === cur ? " checked" : ""} style="width:auto" />` +
-    `<strong style="color:${PKG_COLOR[p.id] || "inherit"}">${escHtml(p.name)}</strong><small class="pkg-price">${escHtml(pkgPrice(p))}</small>` +
-    `<small class="pkg-note">${escHtml(pkgNote(p))}</small></label>`).join("");
-}
-const chosenPkg = () => (form.querySelector('input[name="package"]:checked') || {}).value || "free";
+if (oldEnv) (oldEnv.closest("label") || oldEnv).remove();
 
 // Requests can be BUNDLE-based (ready-made bundles), individual APIs, or
 // Other free text — any mix. Everything is reviewed by the team.
 const okClass = new Set(["public", "customer-confidential"]);
 const choices = document.getElementById("product-choices");
-// Tag: the package a bundle needs; for an API, the packages its operations span.
-const pkgTag = (ids, title) => {
-  const ts = ids.filter(Boolean);
-  if (!ts.length || !PKGS.length) return "";
-  const lo = lowest(ts), hi = highest(ts);
-  return `<span class="pkg-tag" style="color:${PKG_COLOR[hi] || "inherit"}" title="${escHtml(title(lo, hi))}">` +
-    `${escHtml(lo === hi ? pkgName(hi) : pkgName(lo) + "–" + pkgName(hi))}</span>`;
+// Tags: a bundle's API cost per run; for an API, the price range of its
+// operations (free reads and service orders cost no API fee).
+const rateTag = (text, title) => `<span class="price-tag" title="${escHtml(title)}">${escHtml(text)}</span>`;
+const bundleTag = (b) => (b.apiCents == null ? "" : rateTag(`API ${b.apiCents ? cents(b.apiCents) : "free"}/run`,
+  `API cost per run: ${b.apiCents ? cents(b.apiCents) : "free"}${b.serviceSteps ? " + service charges" : ""} (${PROPOSED})`));
+const apiTag = (id) => {
+  const cs = classesOf(id);
+  if (!cs.length) return "";
+  const prices = cs.map((c) => CLS[c].priceCents || 0), lo = Math.min(...prices), hi = Math.max(...prices);
+  const text = !hi ? (cs.every((c) => c === "service") ? CLS.service.billingUnit : "Free")
+    : (lo === hi ? "" : (lo ? cents(lo) : "Free") + "–") + cents(hi);
+  return rateTag(text, cs.map((c) => CLS[c].name + (CLS[c].priceCents ? " " + cents(CLS[c].priceCents) : "")).join(" · ") + ` (${PROPOSED})`);
 };
-const bundleTag = (b) => pkgTag([b.package], (lo, hi) => `Needs the ${pkgName(hi)} package`);
-const apiTag = (id) => pkgTag(tiersOf(id), (lo, hi) => lo === hi ? `Every operation is in ${pkgName(hi)}` : `Some operations are in ${pkgName(lo)}; all are in ${pkgName(hi)}`);
 choices.innerHTML = "<legend>Requested access</legend>" +
   `<p style="font-weight:400;font-size:.78rem;opacity:.75;margin:2px 0 8px">Every request is reviewed by our team. Pick the bundles that match your use case, choose individual APIs, or Other and tell us what you need.</p>` +
   `<div style="font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin:6px 0 2px">Bundles</div>` +
@@ -359,7 +338,7 @@ const applyType = () => {
 typeSel.addEventListener("change", applyType);
 
 // Business customers, partners and agents give a registration number (checked live) and
-// document; internal employees give their department instead (and have no package).
+// document; internal employees give their department instead (and aren't billed).
 const applyTypeFields = () => {
   const t = typeSel.value;
   const needsReg = t === "business" || t === "partner" || t === "agent";
@@ -398,45 +377,24 @@ const checkReg = async () => {
 regInput.addEventListener("input", () => { clearTimeout(regTimer); regTimer = setTimeout(checkReg, 700); });
 countrySel.addEventListener("change", () => { regInput.placeholder = REG_HINT[countrySel.value] || ""; checkReg(); });
 
-// Running summary under the picker: the chosen package's price, and a warning
-// for each picked bundle or API that needs a higher package. A bundle's APIs
-// are judged by the bundle (its steps); APIs picked on their own by their
-// highest operation.
+// Running summary under the picker: which rate classes the picked APIs
+// involve, the sandbox allowance, and whether a card will be needed.
 const summary = document.getElementById("price-summary");
-const apiName = (id) => ((reg.products || []).find((p) => p.id === id) || { name: id }).name;
 const drawSummary = () => {
   const ids = [...choices.querySelectorAll("[data-api]:checked")].map((cb) => cb.dataset.api);
   const picked = [...choices.querySelectorAll("[data-bundle]:checked")].map((cb) => bundles.find((x) => x.id === cb.dataset.bundle)).filter(Boolean);
   const count = ids.length ? `<strong>${ids.length} API${ids.length > 1 ? "s" : ""}</strong>${picked.length ? ` from ${picked.length} bundle${picked.length > 1 ? "s" : ""}` : ""} · ` : "";
-  if (typeSel.value === "internal") { summary.innerHTML = count + "Internal Iristel usage isn't billed or limited by package."; return; }
-  const chosen = chosenPkg(), p = PKG[chosen];
-  const price = !p ? "" : `<strong>${escHtml(p.name)}</strong> package: ` + (p.priceCents
-    ? `<strong>${escHtml(pkgPrice(p))}</strong>, invoiced on the 1st and charged on the 5th · no per-call charges`
-    : "no charge, no card needed");
-  const warn = [];
-  let needs = chosen;
-  picked.forEach((b) => {
-    if (!PKG[b.package] || rankOf(b.package) <= rankOf(chosen)) return;
-    warn.push(`📦 ${escHtml(b.name)} needs ${escHtml(pkgName(b.package))}.`);
-    needs = highest([needs, b.package]);
-  });
-  const inBundles = new Set(picked.flatMap((b) => membersOf(b.id)));
-  ids.filter((id) => !inBundles.has(id)).forEach((id) => {
-    const tiers = tiersOf(id);
-    if (!tiers.length || !PKGS.length || rankOf(highest(tiers)) <= rankOf(chosen)) return;
-    const hi = highest(tiers), n = tiers.filter((t) => rankOf(t) <= rankOf(chosen)).length;
-    warn.push(`${escHtml(apiName(id))}: ${n ? n + " of " + tiers.length : "none of its " + tiers.length} operations are in ${escHtml(pkgName(chosen))}; all are in ${escHtml(pkgName(hi))}.`);
-    needs = highest([needs, hi]);
-  });
-  summary.innerHTML = count + (price || "Pick a package") + (ids.length || picked.length ? "" : " · pick bundles or APIs above") +
-    warn.map((w) => `<p class="pkg-warn">⚠ ${w}</p>`).join("") +
-    (needs !== chosen && PKG[needs] ? `<button type="button" data-pick-pkg="${escHtml(needs)}">Switch to ${escHtml(pkgName(needs))}</button>` : "");
+  if (typeSel.value === "internal") { summary.innerHTML = count + "Internal Iristel usage isn't billed."; return; }
+  if (!ids.length || !P.classes) { summary.innerHTML = count + "Pick the bundles or APIs you need."; return; }
+  const has = new Set(ids.flatMap(classesOf));
+  const paid = ["standard", "advanced"].filter((c) => has.has(c)).map((c) => `${CLS[c].name} (${cents(CLS[c].priceCents)})`);
+  const parts = [has.has("free") && "free reads", paid.length && paid.join(" and ") + " operations", has.has("service") && "service orders"].filter(Boolean);
+  const list = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0] || "";
+  summary.innerHTML = count + (list ? `Includes ${escHtml(list)}; ` : "") +
+    (P.sandboxCalls ? `sandbox ${escHtml(Number(P.sandboxCalls).toLocaleString("en-CA"))} calls/month; ` : "") +
+    (paid.length ? "card needed only for Standard and Advanced live calls." : "no card needed.") +
+    `<p class="ps-note">${escHtml(PROPOSED)}</p>`;
 };
-summary.addEventListener("click", (ev) => {
-  const b = ev.target.closest("[data-pick-pkg]");
-  const radio = b && form.querySelector(`input[name="package"][value="${b.dataset.pickPkg}"]`);
-  if (radio) { radio.checked = true; drawSummary(); }
-});
 form.addEventListener("change", () => setTimeout(drawSummary, 0));
 drawSummary();
 
@@ -455,8 +413,6 @@ const out = document.getElementById("form-result");
 const data = Object.fromEntries(new FormData(form).entries());
 delete data.registrationFile;
 data.existingCustomer = !!form.querySelector('input[name="existingCustomer"]').checked;
-data.package = data.package || "free";   // Free, Standard or Premium (radio)
-delete data.environment;                 // old markup's Sandbox / Production select
 
 // Bundles selected (+ Other free text). Products derived from the bundles.
 const reg2 = window.__mpCatalog || {};

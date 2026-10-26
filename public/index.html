@@ -204,19 +204,10 @@ fieldset { border-color: var(--line); border-radius: 6px; }
 .req-fields{display:grid;gap:16px;min-width:0}
 .req-picker{position:sticky;top:84px;max-height:calc(100vh - 120px);overflow:auto;display:grid;gap:10px;min-width:0}
 .req-picker fieldset{margin:0}
-.req-picker .pkg-tag{display:inline-block;margin:0 0 0 6px;padding:1px 7px;border-radius:999px;border:1px solid currentColor;background:transparent;font-size:.7rem;font-weight:800;white-space:nowrap}
+.req-picker .price-tag{display:inline-block;margin:0 0 0 6px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:.7rem;font-weight:800;white-space:nowrap}
 .price-summary{position:sticky;bottom:0;background:var(--surface-soft,#f4f8fc);border:1px solid var(--line);padding:10px 12px;font-size:.78rem;color:var(--muted)}
 .price-summary strong{color:var(--ink)}
-.price-summary .pkg-warn{margin:6px 0 0;color:var(--orange)}
-.price-summary button{font:inherit;font-weight:700;margin-top:8px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
-/* Package choice: one radio card per package, filled from the catalog. */
-.pkg-choice{display:grid;gap:8px;margin:0}
-.pkg-choice label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font-weight:400;cursor:pointer}
-.pkg-choice label:has(input:checked){border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.pkg-choice input{grid-row:span 2;margin:2px 0 0;padding:0;accent-color:var(--ink)}
-.pkg-choice strong{font-size:.9rem}
-.pkg-choice .pkg-price{justify-self:end;font-weight:700;white-space:nowrap}
-.pkg-choice .pkg-note{grid-column:2 / -1;color:var(--muted);font-size:.74rem;line-height:1.4}
+.price-summary .ps-note{margin:6px 0 0;font-weight:700;color:var(--orange)}
 .reg-status{display:block;margin-top:6px;font-weight:600;font-size:.74rem}
 .reg-status.ok{color:#11733d}.reg-status.review{color:#9a6400}.reg-status.bad{color:#b42318}
 .form-layout .field-notes ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 22px}
@@ -280,32 +271,35 @@ fieldset { border-color: var(--line); border-radius: 6px; }
       </ol>
     </section>
 
+    <!-- Bundles. The section id stays "packages": the portal stylesheet
+         (design-system/fragments/marketplace.css) styles the cards under it. -->
     <section id="packages">
       <style>
-        #packages .pk-aud{font:700 12px var(--head,inherit);text-transform:uppercase;letter-spacing:.9px;opacity:.65;margin:22px 0 10px}
-        #packages .pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-        #packages .pk-card{border:1px solid var(--line,#3333);border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;display:block;transition:transform .15s ease}
-        #packages .pk-card:hover{transform:translateY(-2px)}
-        #packages .pk-card h3{margin:0 0 4px;font-size:15px}
-        #packages .pk-card .use{font-size:12.5px;opacity:.75;margin:0 0 8px}
-        #packages .pk-card ul{margin:0;padding-left:16px;font-size:12px;opacity:.85}
-        #packages .pk-card{cursor:default}
-        #packages .pk-sum{font-size:12.5px;opacity:.8;margin:0 0 10px}
-        #packages .pk-steps{margin:0;padding-left:18px;font-size:12px}
-        #packages .pk-steps li{margin:6px 0}
-        #packages .pk-steps code{display:block;opacity:.95}
-        #packages .pk-steps span{display:block;opacity:.7}
-        #packages .pk-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
-        #packages .pk-filter button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
-        #packages .pk-filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface,#fff);border-color:var(--ink)}
-        #packages .pk-need{font-size:.78rem;color:var(--muted);margin:0 0 8px}
-        #packages .pk-cat{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+        #bundles-grid .pk-aud{font:700 12px var(--head,inherit);text-transform:uppercase;letter-spacing:.9px;opacity:.65;margin:22px 0 10px}
+        #bundles-grid .pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+        #bundles-grid .pk-card{border:1px solid var(--line,#3333);border-radius:12px;padding:16px 18px;text-decoration:none;color:inherit;display:block;transition:transform .15s ease}
+        #bundles-grid .pk-card:hover{transform:translateY(-2px)}
+        #bundles-grid .pk-card h3{margin:0 0 4px;font-size:15px}
+        #bundles-grid .pk-card .use{font-size:12.5px;opacity:.75;margin:0 0 8px}
+        #bundles-grid .pk-card ul{margin:0;padding-left:16px;font-size:12px;opacity:.85}
+        #bundles-grid .pk-card{cursor:default}
+        #bundles-grid .pk-sum{font-size:12.5px;opacity:.8;margin:0 0 10px}
+        #bundles-grid .pk-steps{margin:0;padding-left:18px;font-size:12px}
+        #bundles-grid .pk-steps li{margin:6px 0}
+        #bundles-grid .pk-steps code{display:block;opacity:.95}
+        #bundles-grid .pk-steps span{display:block;opacity:.7}
+        #bundles-grid .pk-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+        #bundles-grid .pk-filter button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+        #bundles-grid .pk-filter button[aria-pressed="true"]{background:var(--ink);color:var(--surface,#fff);border-color:var(--ink)}
+        #bundles-grid .pk-cost{font-size:.78rem;color:var(--muted);margin:0 0 8px}
+        #bundles-grid .pk-cost strong{color:var(--ink)}
+        #bundles-grid .pk-cat{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
       </style>
       <div class="section-heading">
         <div><p class="eyebrow">Bundles</p><h2>Which APIs for which job</h2></div>
         <p>Curated recipes per business model — each links straight into the guided console.</p>
       </div>
-      <div id="packages-grid"><p>Loading bundles…</p></div>
+      <div id="bundles-grid"><p>Loading bundles…</p></div>
     </section>
 
     <section id="identity">
@@ -336,7 +330,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
             <li>Tell us who you are and what you want to build.</li>
             <li>We check your business details and registration.</li>
             <li>You get an email when your access is approved.</li>
-            <li>Use your approved APIs in the console (every call is live), then connect your app.</li>
+            <li>Use your approved APIs in the console, live or in the free sandbox, then connect your app.</li>
           </ol>
           <p class="caution">Business customers, partners and agents give a business registration number, checked automatically. Iristel employees give their department instead.</p>
         </aside>
@@ -378,11 +372,6 @@ fieldset { border-color: var(--line); border-radius: 6px; }
                 <span class="reg-status" id="reg-status" aria-live="polite"></span></label>
             </div>
             <label data-for="business">Business registration document<input name="registrationFile" type="file" required accept=".pdf,.png,.jpg,.jpeg" /></label>
-            <fieldset class="pkg-choice" id="package-choices" data-for="business"><legend>Package</legend>
-              <label><input type="radio" name="package" value="free" checked style="width:auto" /><strong>Free</strong><small class="pkg-price">No charge</small><small class="pkg-note">Health checks, reference data and status reads. No card needed.</small></label>
-              <label><input type="radio" name="package" value="standard" style="width:auto" /><strong>Standard</strong><small class="pkg-price">Monthly fee</small><small class="pkg-note">Everything in Free, plus everyday reads and changes.</small></label>
-              <label><input type="radio" name="package" value="premium" style="width:auto" /><strong>Premium</strong><small class="pkg-price">Monthly fee</small><small class="pkg-note">Everything in Standard, plus the calls that create or change real service.</small></label>
-            </fieldset>
             <label style="display:flex;gap:8px;align-items:center;font-weight:400">
               <input type="checkbox" name="existingCustomer" style="width:auto" /> I already have an Iristel Partner Portal login
             </label>
@@ -391,7 +380,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           </div>
           <aside class="req-picker" aria-label="Bundles and APIs">
             <fieldset id="product-choices"><legend>Requested bundles</legend><span>Loading catalog…</span></fieldset>
-            <div class="price-summary" id="price-summary">Pick a package and the bundles or APIs you need.</div>
+            <div class="price-summary" id="price-summary">Pick the bundles or APIs you need.</div>
           </aside>
         </form>
         <div class="field-notes">
@@ -401,7 +390,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
             <li><strong>Contacts</strong><span>Who we talk to about the business and the technical side</span></li>
             <li><strong>Registration</strong><span>Business number (checked automatically) and document — or your department, for Iristel staff</span></li>
             <li><strong>What you’re building</strong><span>A few lines on how you’ll use the APIs</span></li>
-            <li><strong>Which APIs</strong><span>Pick a bundle, individual APIs, or tell us under Other — and your package</span></li>
+            <li><strong>Which APIs</strong><span>Pick a bundle, individual APIs, or tell us under Other</span></li>
           </ul>
           <div class="anti-pattern"><strong>Never send passwords</strong><span>We will never ask for passwords, API keys or other secrets in this form.</span></div>
         </div>
@@ -423,7 +412,7 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           <article><span>01</span><div><h3>Try it in the console</h3><p>Log in to the partner portal and every approved API is ready to try with simple forms — no code needed.</p></div></article>
           <article><span>02</span><div><h3>Get your API key</h3><p>Approved accounts get a personal key from the console to use in their own apps and scripts.</p></div></article>
           <article><span>03</span><div><h3>Access follows your approval</h3><p>Your key only works for the APIs you’re approved for, and stops working if access is removed.</p></div></article>
-          <article><span>04</span><div><h3>Start free, add a package when you need more</h3><p>The Free package needs no card. For Standard or Premium, add a card in the console before your first call — the same key then runs everything in your package for one monthly fee. Every call is live.</p></div></article>
+          <article><span>04</span><div><h3>Start free, pay only for what you use</h3><p>Basic reads, service orders and the developer sandbox need no card. Add one in the console before your first Standard or Advanced live call; the same key keeps working.</p></div></article>
         </div>
       </div>
     </section>
@@ -459,9 +448,9 @@ fieldset { border-color: var(--line); border-radius: 6px; }
           <details><summary>How long does approval take?</summary><p>Our team reviews every request and emails you as soon as it’s approved.</p></details>
           <details><summary>Do I need to write code?</summary><p>No. The console lets you try every approved API with simple forms. Your developers can copy the ready-made examples when you want to connect your own app.</p></details>
           <details><summary>What if I need an API that isn’t listed?</summary><p>Choose “Other” on the request form and describe what you need.</p></details>
-          <details><summary>Can I try it before paying?</summary><p>Yes. Choose the Free package on the request form — it needs no card. Once you’re approved you can run health checks, reference-data lookups and status reads straight away, and move to Standard or Premium when you need more.</p></details>
-          <details><summary>What does it cost?</summary><p>There are three packages — Free, Standard and Premium — and each includes the one before it. The request form above shows what each one costs. Standard and Premium are one monthly fee with no per-call charges. You get an invoice on the 1st of each month (sales tax added for Canadian accounts) and your card on file is charged on the 5th. A call outside your package is never billed: it’s blocked with a message saying which package it needs. Internal Iristel usage isn’t billed.</p></details>
-          <details><summary>Can I change my package later?</summary><p>Yes. Send another request from this page with the package you want. Our team switches your package and the same key keeps working.</p></details>
+          <details><summary>Is there a free sandbox?</summary><p>Yes. Every account gets 1,000 non-production developer sandbox calls a month. They reset on the 1st and are never billed; past the allowance, sandbox calls are refused, not charged.</p></details>
+          <details><summary>What does it cost?</summary><p>There’s no subscription or platform fee. Basic reads and status are free; Standard changes are 1¢ CAD and Advanced bulk or orchestration requests 2.5¢ CAD per successful event. Service orders (numbers, ports, SIP trunks, SIM and eSIM activation) add no API fee: the service is billed under the tariff, at the rates shown before you order. These are proposed rates, subject to approval; taxes extra. Internal Iristel usage isn’t billed.</p></details>
+          <details><summary>When do I need a card?</summary><p>Only for Standard and Advanced live calls. Add one in the API console before your first billable call; the same key keeps working. Usage is invoiced on the 1st of each month (sales tax added for Canadian accounts) and charged to your card on the 5th.</p></details>
         </div>
       </div>
     </section>

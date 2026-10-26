@@ -81,14 +81,13 @@
   th{text-align:left;font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
   td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
   tr:last-child td{border-bottom:0}
-  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   td code{font:11.5px var(--mono);color:var(--accent-soft)}
-  .pill{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:999px;border:1px solid}
+  .pill{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
   .pill.yes{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
-  .pill.no{color:var(--muted);border-color:var(--line-strong)}
+  .pill.no{color:var(--muted);border-color:var(--line-strong);background:transparent}
   .pill.pending{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
   .pill.err{color:var(--err);border-color:color-mix(in srgb,var(--err) 45%,transparent);background:color-mix(in srgb,var(--err) 10%,transparent)}
-  .plan-note{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap}
   .tablehead{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
   .tablehead h2{margin:0}
   .csv{margin-left:auto;font:600 12px var(--sans);color:var(--accent-soft);text-decoration:none;border:1px solid var(--line-strong);border-radius:8px;padding:5px 11px}
@@ -97,9 +96,8 @@
   .ctl.approve{border:0;background:var(--ok);color:#fff}
   .ctl.revoke{background:none;border:1px solid color-mix(in srgb,var(--err) 55%,transparent);color:var(--err)}
   .ctl:disabled{opacity:.55;cursor:progress}
-  .ctl-row{display:flex;gap:6px;align-items:center}
-  .pkg-sel{font:600 12px var(--sans);padding:5px 8px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink);cursor:pointer}
-  .pkg-sel:disabled{opacity:.55;cursor:progress}
+  .bw{display:flex;gap:6px;align-items:center}
+  .bw input{width:130px;font:12px var(--mono);padding:5px 8px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink)}
   .ctl-err{display:block;color:var(--err);font-size:11px;margin-top:4px;max-width:160px}
   .scroll{overflow-x:auto}
   .note{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 16px}
@@ -186,7 +184,7 @@
     </div>
 
     <div class="card" style="margin-bottom:16px">
-      <div class="tablehead"><h2>Access requests</h2><a class="csv" id="csv-requests" href="#">Export CSV</a></div>
+      <div class="tablehead" id="requests"><h2>Access requests</h2><a class="csv" id="csv-requests" href="#">Export CSV</a></div>
       <div class="scroll"><table id="t-requests"></table></div>
     </div>
 
@@ -246,9 +244,7 @@
   // Also used inside attribute values (data-*, title), so quotes are escaped.
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = n => Number(n || 0).toLocaleString('en-CA');
-  const centsShort = c => (c < 100 ? c + '¢' : '$' + (c / 100).toFixed(2));
-  // Packages staff can put a partner on (lib/catalogs/pricing.js), lowest first.
-  const PACKAGE_NAMES = { free: 'Free', standard: 'Standard', premium: 'Premium' };
+  const cad = c => '$' + (Number(c || 0) / 100).toFixed(2);
   const tip = $('#tip');
 
   // ---- theme -------------------------------------------------------------
@@ -304,6 +300,12 @@
       $('#gate').hidden = true; $('#board').hidden = false;
       last = data;
       render(data);
+      // The nav's "access requests waiting" row links here; the board is
+      // hidden until the first load, so the browser couldn't scroll to it.
+      if (location.hash === '#requests' && !load.scrolled) {
+        load.scrolled = true;
+        $('#requests').scrollIntoView({ block: 'start' });
+      }
     } catch (err) {
       $('#gate').hidden = false; $('#board').hidden = true;
       $('#gate-msg').textContent = 'Could not load the dashboard: ' + err.message;
@@ -454,44 +456,47 @@
         extra: p.errors ? p.errors + ' failed' : 'all succeeded'
       })), c2, 'calls');
 
-    // Package: what the partner chose on the request form (or staff set
-    // since), and whether it can run — Standard and Premium need a card on
-    // file before the first call.
-    const PLAN_MODE = { free: ['no', 'no card needed'], production: ['yes', 'card on file'],
-      card_required: ['pending', 'needs a card'], past_due: ['err', 'past due'] };
-    const planCell = (p) => {
-      if (!p) return '<span style="color:var(--muted)">—</span>';
-      const [cls, note] = PLAN_MODE[p.mode] || ['no', p.mode || ''];
-      return '<span class="pill ' + cls + '">' + esc(p.packageName || PACKAGE_NAMES[p.package] || p.package) + '</span>' +
-        '<div class="plan-note">' + esc(note) + (p.priceCents ? ' · ' + centsShort(p.priceCents) + ' a month' : '') + '</div>';
-    };
-    // Access table — the Control column flips the CRM approved switch and
-    // sets the package.
+    // This month, per partner: card on file (Standard and Advanced live calls
+    // need one), sandbox calls, billed events and the amount so far.
+    const none = '<span style="color:var(--muted)">—</span>';
+    const card = p => !p ? none : p.pastDue ? '<span class="pill err">past due</span>'
+      : '<span class="pill ' + (p.cardOnFile ? 'yes">on file' : 'no">none') + '</span>';
+    // BroadWorks: the one enterprise this account's users reach through the
+    // BroadWorks API (empty unlinks). Shown when the account holds or asked
+    // for that product, or is already linked.
+    const bw = g => (g.products.concat(g.requested || []).includes('broadworks') || g.broadworksEnterprise)
+      ? '<form class="bw" data-account="' + esc(g.accountId) + '"><input name="bw" value="' + esc(g.broadworksEnterprise || '') +
+        '" placeholder="not linked" aria-label="BroadWorks enterprise for ' + esc(g.organization) + '">' +
+        '<button type="submit" class="ctl revoke" style="color:var(--ink)">Save</button></form><span class="ctl-err"></span>'
+      : none;
+    // Access table — the Control column flips the CRM approved switch.
     const crmOk = d.sources.crm.available;
     $('#t-grants').innerHTML = d.grants.length
-      ? '<thead><tr><th>Control</th><th>Organization</th><th>Type</th><th>Primary contact</th><th>Access</th><th>Bundle</th><th>APIs in bundle</th><th>APIs granted</th><th>Package</th><th>Reg #</th><th>Application</th></tr></thead><tbody>' +
+      ? '<thead><tr><th>Control</th><th>Organization</th><th>Type</th><th>Primary contact</th><th>Access</th><th>Bundle</th><th>APIs in bundle</th><th>APIs granted</th>' +
+        '<th>Card</th><th class="num">Sandbox</th><th>Events</th><th class="num">This month</th><th>BroadWorks enterprise</th><th>Reg #</th><th>Application</th></tr></thead><tbody>' +
         d.grants.map(g => '<tr>' +
           '<td>' + (crmOk
-            ? '<div class="ctl-row"><button type="button" class="ctl ' + (g.approved ? 'revoke' : 'approve') +
+            ? '<button type="button" class="ctl ' + (g.approved ? 'revoke' : 'approve') +
               '" data-account="' + esc(g.accountId) + '" data-next="' + (!g.approved) + '">' +
-              (g.approved ? 'Revoke' : 'Approve') + '</button>' +
-              '<select class="pkg-sel" data-account="' + esc(g.accountId) + '" data-org="' + esc(g.organization) + '" aria-label="Package for ' + esc(g.organization) + '">' +
-              Object.keys(PACKAGE_NAMES).map(id => '<option value="' + id + '"' + ((g.plan && g.plan.package) === id ? ' selected' : '') + '>' +
-                PACKAGE_NAMES[id] + '</option>').join('') + '</select></div><span class="ctl-err"></span>'
+              (g.approved ? 'Revoke' : 'Approve') + '</button><span class="ctl-err"></span>'
             : '<span style="color:var(--muted);font-size:11px">CRM offline</span>') + '</td>' +
-          '<td>' + esc(g.organization) + '</td><td>' + (g.accountType ? esc(g.accountType) : '<span style="color:var(--muted)">—</span>') + '</td><td>' + esc(g.email) + '</td>' +
+          '<td>' + esc(g.organization) + '</td><td>' + (g.accountType ? esc(g.accountType) : none) + '</td><td>' + esc(g.email) + '</td>' +
           '<td><span class="pill ' + (g.approved ? 'yes' : 'no') + '">' + (g.approved ? 'Approved' : 'No access') + '</span></td>' +
-          '<td>' + ((g.bundles || []).length ? g.bundles.map(b => esc(b.name)).join('<br>') : '<span style="color:var(--muted)">—</span>') + '</td>' +
-          '<td>' + ((g.bundles || []).length ? g.bundles.map(b => b.apis.map(a => '<code>' + esc(a) + '</code>').join(' ') || '<span style="color:var(--muted)">—</span>').join('<br>') : '<span style="color:var(--muted)">—</span>') + '</td>' +
-          '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : '<span style="color:var(--muted)">—</span>') + '</td>' +
-          '<td>' + planCell(g.plan) + '</td>' +
-          '<td>' + (g.businessRegNumber ? esc(g.businessRegNumber) : g.department ? esc(g.department) + ' <span style="color:var(--muted)">(dept.)</span>' : '<span style="color:var(--muted)">—</span>') +
+          '<td>' + ((g.bundles || []).length ? g.bundles.map(b => esc(b.name)).join('<br>') : none) + '</td>' +
+          '<td>' + ((g.bundles || []).length ? g.bundles.map(b => b.apis.map(a => '<code>' + esc(a) + '</code>').join(' ') || none).join('<br>') : none) + '</td>' +
+          '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : none) + '</td>' +
+          '<td>' + card(g.plan) + '</td>' +
+          '<td class="num" title="Sandbox calls this month">' + (g.plan ? esc(fmt(g.plan.sandboxCalls)) : none) + '</td>' +
+          '<td style="white-space:nowrap">' + (g.plan ? esc(fmt(g.plan.standardEvents)) + ' Std · ' + esc(fmt(g.plan.advancedEvents)) + ' Adv' : none) + '</td>' +
+          '<td class="num">' + (g.plan ? esc(cad(g.plan.cents)) : none) + '</td>' +
+          '<td>' + bw(g) + '</td>' +
+          '<td>' + (g.businessRegNumber ? esc(g.businessRegNumber) : g.department ? esc(g.department) + ' <span style="color:var(--muted)">(dept.)</span>' : none) +
             (g.regCheck ? ' <span class="pill ' + (/^verified/.test(g.regCheck) ? 'yes' : /^invalid/.test(g.regCheck) ? 'no' : 'pending') + '" title="' + esc(g.regCheck) + '">' +
               esc(g.regCheck.split(' · ')[0]) + '</span>' : '') + '</td>' +
           '<td>' + esc(g.application) + '</td></tr>').join('') + '</tbody>'
       : '<tbody><tr><td class="empty">No accounts have been through the marketplace flow yet.</td></tr></tbody>';
 
-    $('#t-grants').querySelectorAll('.ctl').forEach(btn => {
+    $('#t-grants').querySelectorAll('[data-next]').forEach(btn => {
       btn.onclick = async () => {
         const approve = btn.dataset.next === 'true';
         if (!approve && !confirm('Revoke marketplace access for this account? Their console closes on their next visit.')) return;
@@ -511,27 +516,30 @@
         }
       };
     });
-    // Package select: same route, { accountId, package }. Applies on the
-    // partner's next call; a paid package needs their card before it runs.
-    $('#t-grants').querySelectorAll('.pkg-sel').forEach(sel => {
-      const was = sel.value;
-      sel.onchange = async () => {
-        const pkg = sel.value;
-        if (!confirm('Move ' + sel.dataset.org + ' to the ' + PACKAGE_NAMES[pkg] + ' package? It applies on their next call' +
-          (pkg === 'free' ? '.' : ' and is billed monthly once they have a card on file.'))) { sel.value = was; return; }
-        const e = sel.closest('td').querySelector('.ctl-err');
+    // BroadWorks link: same route, { accountId, broadworksEnterprise }.
+    $('#t-grants').querySelectorAll('form.bw').forEach(f => {
+      f.onsubmit = async (ev) => {
+        ev.preventDefault();
+        const inp = f.elements.bw, v = inp.value.trim(), btn = f.querySelector('button');
+        const e = f.closest('td').querySelector('.ctl-err');
+        if (!v && inp.defaultValue && !confirm('Unlink this account from BroadWorks enterprise ' + inp.defaultValue + '?')) return;
         if (e) e.textContent = '';
-        sel.disabled = true;
+        btn.disabled = true;
         try {
           const r = await fetch(GATEWAY + '/marketplace/admin/access', {
             method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accountId: sel.dataset.account, package: pkg })
+            body: JSON.stringify({ accountId: f.dataset.account, broadworksEnterprise: v })
           });
           const body = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
-          await load();                       // package pill moves with it
+          await load();                       // shows the saved link
+          if (body.warning) {                 // e.g. the enterprise is linked to another account too
+            const nf = [...$('#t-grants').querySelectorAll('form.bw')].find(x => x.dataset.account === f.dataset.account);
+            const ne = nf && nf.closest('td').querySelector('.ctl-err');
+            if (ne) ne.textContent = body.warning;
+          }
         } catch (err) {
-          sel.disabled = false; sel.value = was;
+          btn.disabled = false;
           if (e) e.textContent = err.message;
         }
       };
@@ -539,14 +547,13 @@
 
     // Requests table
     $('#t-requests').innerHTML = d.requests.length
-      ? '<thead><tr><th>Received</th><th>Organization</th><th>Type</th><th>Email</th><th>Application</th><th>Bundles</th><th>APIs</th><th>Package</th><th>Status</th></tr></thead><tbody>' +
+      ? '<thead><tr><th>Received</th><th>Organization</th><th>Type</th><th>Email</th><th>Application</th><th>Bundles</th><th>APIs</th><th>Status</th></tr></thead><tbody>' +
         d.requests.map(r => '<tr><td>' + esc(String(r.receivedAt).slice(0, 16).replace('T', ' ')) + '</td>' +
           '<td>' + esc(r.organization) + '</td><td>' + (r.accountType ? esc(r.accountType) : '<span style="color:var(--muted)">—</span>') + '</td><td>' + esc(r.email) + '</td><td>' + esc(r.applicationName) + '</td>' +
           '<td>' + ((r.bundles || []).length || r.other
             ? (r.bundles || []).map(b => esc(b.name)).join('<br>') + (r.other ? (r.bundles && r.bundles.length ? '<br>' : '') + 'Other: <span style="color:var(--muted)">' + esc(r.other) + '</span>' : '')
             : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td>' + (r.products || []).map(p => '<code>' + esc(p) + '</code>').join(' ') + '</td>' +
-          '<td>' + (r.package ? esc(PACKAGE_NAMES[r.package] || r.package) : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td><span class="pill ' + (r.status === 'pending-review' ? 'pending' : 'yes') + '">' + esc(r.status) + '</span>' +
           ((r.reasons || []).length ? '<div style="color:var(--muted);font-size:11.5px;margin-top:3px">' + esc(r.reasons.join('; ')) + '</div>' : '') +
           '</td></tr>').join('') + '</tbody>'
@@ -639,7 +646,6 @@
   loadAudit();
 
   // ---- billing ------------------------------------------------------------
-  const cad = c => '$' + (Number(c || 0) / 100).toFixed(2);
   const billMonth = $('#bill-month');
   billMonth.value = new Date().toISOString().slice(0, 7);
   const STATUS_PILL = { paid: 'yes', declined: 'pending', unknown: 'pending', pending: 'pending', no_card: 'no', no_account: 'no' };
@@ -647,18 +653,17 @@
     const r = await fetch(GATEWAY + '/marketplace/admin/billing?month=' + encodeURIComponent(billMonth.value), { headers: auth });
     if (!r.ok) { $('#billing-card').hidden = true; return; }
     const d = await r.json();
-    $('#bill-note').textContent = 'Billed for ' + d.month + ': ' + cad(d.totalCents) + ' CAD before tax — the monthly fee of every paid package that was active with a card on file. There are no per-call charges. ' +
+    $('#bill-note').textContent = 'Billed for ' + d.month + ': ' + cad(d.totalCents) + ' CAD before tax — successful live Standard and Advanced events at the proposed per-event rates. Free reads, service orders and sandbox calls are never billed. ' +
       'Invoices go out automatically on the 1st and are charged on the 5th (both buttons do it now). Only emailed invoices are charged, tax included. ' +
       'Running charges again retries declined ones but never repeats a paid or unknown one — for unknown, check the payment in MIND, then Retry or Mark paid.';
-    // Months from before packages billed per call: keep that column for them.
-    const perCall = d.rows.some(x => x.billableCalls);
+    // Months billed per call (before rate classes): keep that column for them.
+    const perCall = d.rows.some(x => x.billableCalls > (x.standardEvents || 0) + (x.advancedEvents || 0));
     $('#t-billing').innerHTML = d.rows.length
-      ? '<thead><tr><th>Partner</th><th>MIND account</th><th>Package</th><th class="num">Calls</th>' + (perCall ? '<th class="num">Billed calls</th>' : '') +
+      ? '<thead><tr><th>Partner</th><th>MIND account</th><th class="num">Calls</th><th class="num">Standard events</th><th class="num">Advanced events</th><th class="num">Sandbox calls</th>' + (perCall ? '<th class="num">Billed calls</th>' : '') +
         '<th class="num">Amount</th><th>Invoice</th><th>Card</th><th>Charge</th></tr></thead><tbody>' +
         d.rows.map(x => '<tr><td>' + esc(x.email) + (x.pastDue ? ' <span class="pill pending">past due</span>' : '') + '</td>' +
           '<td>' + (x.mindAccount ? '<code>' + esc(x.mindAccount) + '</code>' : '<span style="color:var(--muted)">not linked</span>') + '</td>' +
-          '<td>' + (x.package ? esc(PACKAGE_NAMES[x.package] || x.package) : '<span style="color:var(--muted)">none</span>') + '</td>' +
-          '<td class="num">' + fmt(x.calls) + '</td>' + (perCall ? '<td class="num">' + fmt(x.billableCalls) + '</td>' : '') + '<td class="num">' + cad(x.cents) + '</td>' +
+          '<td class="num">' + fmt(x.calls) + '</td><td class="num">' + esc(fmt(x.standardEvents)) + '</td><td class="num">' + esc(fmt(x.advancedEvents)) + '</td><td class="num">' + esc(fmt(x.sandboxCalls)) + '</td>' + (perCall ? '<td class="num">' + fmt(x.billableCalls) + '</td>' : '') + '<td class="num">' + cad(x.cents) + '</td>' +
           '<td>' + (x.invoice
             ? '<code>' + esc(x.invoice.number) + '</code> ' + cad(x.invoice.cents) + (x.invoice.sent ? '' : ' <span class="pill pending">not sent</span>') +
               (x.invoice.taxReview ? ' <span class="pill pending" title="No province on file: GST only">check tax</span>' : '') +
@@ -669,7 +674,7 @@
             (['declined', 'unknown'].includes(x.charge.status) ? ' <button type="button" class="ctl approve" data-bill="retry" data-email="' + esc(x.email) + '">Retry</button>' : '') +
             (x.charge.status === 'unknown' ? ' <button type="button" class="ctl" data-bill="mark-paid" data-email="' + esc(x.email) + '">Mark paid</button>' : '')
             : '<span style="color:var(--muted)">—</span>') + '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No usage or paid packages recorded for this month.</td></tr></tbody>';
+      : '<tbody><tr><td class="empty">No usage recorded for this month.</td></tr></tbody>';
   }
   // Invoices are served as HTML behind the staff session: fetch, then open.
   async function openHtml(url){

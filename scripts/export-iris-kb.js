@@ -22,8 +22,7 @@ const path = require('path');
 const { PRODUCTS } = require('../lib/catalogs');
 const UI_HINTS = require('../lib/catalogs/ui-hints');
 const { BUNDLES } = require('../lib/catalogs/bundles');
-const { tierFor, PACKAGES, PRICING_NOTE, higherPackage } = require('../lib/catalogs/pricing');
-const PACKAGE_NAME = Object.fromEntries(PACKAGES.map((t) => [t.id, t.name]));
+const { rateFor, CLASSES, PRICING_NOTE, SANDBOX_CALLS, RATE_CARD, cents } = require('../lib/catalogs/pricing');
 
 const OUT = path.resolve(process.argv.slice(2).find((a) => !a.startsWith('--'))
   || path.join(__dirname, '..', '..', 'iris-ai', 'console-agent', 'kb', 'products.md'));
@@ -31,6 +30,11 @@ const BASE_URL = 'https://api-marketplace-1im9.onrender.com';
 // Mirrors lib/entitlements.js (ESPRESSO). Not required from there because
 // that module opens the usage database.
 const ESPRESSO = new Set(['lnp-enterprise', 'did-orders', 'lrn']);
+// Espresso products whose sandbox needs its own REST login (not set yet:
+// sandbox calls answer 503 sandbox_unavailable until it is).
+const ESPRESSO_REST = new Set(['did-orders', 'lrn']);
+const rateLabel = (r) => (!r ? 'not priced yet' : r.id === 'service' ? 'service order, no API fee'
+  : r.priceCents ? `${r.name}, ${cents(r.priceCents)} per successful call` : 'Free');
 
 // Gateway path for a catalog endpoint: Espresso and WLNP catalogs already
 // carry the full /api/... path; IristelX-backed products (provisioning, 911,
@@ -39,11 +43,15 @@ const gatewayPrefix = (p, e) => (e.path.startsWith('/api/') ? '' : '/api/ix/' + 
 
 // eps: the endpoints the KB lists (staff-only ones left out).
 function modeRules(p, eps) {
-  const count = (id) => eps.filter((e) => tierFor(p.id, `${e.method} ${e.path}`) === id).length;
-  const split = PACKAGES.map((t) => `${count(t.id)} ${t.name}`).join(', ');
+  const count = (id) => eps.filter((e) => (rateFor(p.id, `${e.method} ${e.path}`) || {}).id === id).length;
+  const split = CLASSES.map((c) => `${count(c.id)} ${c.name}`).join(', ');
+  const sandbox = ESPRESSO_REST.has(p.id)
+    ? 'Sandbox: runs on Espresso\'s test system once Iristel switches that on; until then sandbox calls answer 503 sandbox_unavailable.'
+    : ESPRESSO.has(p.id) ? 'Sandbox: runs on Espresso\'s test system (no real ports), changes included.'
+      : 'Sandbox: read-only (this API has no test system), so a change in the sandbox answers 409 no_test_system.';
   return [
-    `Packages: ${split} operation(s). Each operation's package is shown below; a caller's package must include it (Premium includes Standard, which includes Free), otherwise the call answers 403 upgrade_required.`,
-    `Every partner call is **live**${ESPRESSO.has(p.id) ? ' (Espresso production system)' : ''}: there is no sandbox. No per-call charges.`,
+    `Rates: ${split} operation(s); each operation's rate is shown below. Live calls${ESPRESSO.has(p.id) ? ' use Espresso\'s production system' : ''}.`,
+    sandbox,
   ];
 }
 
@@ -77,8 +85,7 @@ function productSection(p) {
     const h = hints[`${e.method} ${e.path}`] || {};
     const label = h.title || e.summary || '';
     const flags = [];
-    const tier = tierFor(p.id, `${e.method} ${e.path}`);
-    if (tier) flags.push(`${PACKAGE_NAME[tier]} package`);
+    flags.push(rateLabel(rateFor(p.id, `${e.method} ${e.path}`)));
     if (e.upload) flags.push('file upload');
     else if (e.fields && e.fields.some((f) => /[.\[]/.test(f.name))) flags.push('raw JSON body');
     lines.push(`- \`${e.method} ${prefix}${e.path}\`${label ? ` — ${label}` : ''}${flags.length ? ` _(${flags.join('; ')})_` : ''}`);
@@ -87,19 +94,22 @@ function productSection(p) {
   return lines.join('\n');
 }
 
-const price = (t) => (t.priceCents ? `${t.priceCents}¢ CAD a month` : 'free');
-function packagesSection() {
-  const lines = ['## Packages and pricing', '', `${PRICING_NOTE} Every operation belongs to the lowest package that includes it, shown on each endpoint above and on its card in the console.`, ''];
-  for (const t of PACKAGES) {
-    lines.push(`- **${t.name}** (${price(t)}): ${t.whatsIn} Examples: ${t.examples.join(', ')}.`);
+function pricingSection() {
+  const lines = ['## Pricing (proposed rates)', '', `${PRICING_NOTE} ${RATE_CARD.note}`, ''];
+  for (const c of CLASSES) {
+    lines.push(`- **${c.name}** (${c.priceCents ? `${cents(c.priceCents)} CAD per successful event` : c.billingUnit}): ${c.whatsIn} Examples: ${c.examples.join(', ')}.`);
   }
   lines.push('',
     'How it works:',
-    '- The partner picks a package on the access request (API Marketplace page); Iristel staff approve it. To change package, the partner asks from the API Marketplace page (a new request) and staff apply it.',
-    '- Free needs no card. Standard and Premium need a card under **Billing & usage** in the console before the first call; until then every call answers 402.',
-    '- A call outside the partner\'s package answers **403 upgrade_required**, with the package that includes it (requiredPackage).',
-    '- The monthly fee is invoiced on the 1st for the month before and charged to the card on the 5th, with sales tax. There are no per-call charges, and calls are still counted under Billing & usage.',
-    '- There is no sandbox and there are no free test calls: every partner call is live. Iristel staff and internal employees are never billed.',
+    '- There are no packages, subscriptions or platform fees. Every approved API can be called; the rate depends on the operation.',
+    '- Only successful (2xx) live calls are billed. Failed calls, rejected calls, sandbox calls and a repeated Idempotency-Key (within 24 hours) are not billed.',
+    '- Free reads and service orders need no card. Standard and Advanced live calls need a card under **Billing & usage** in the console; without one they answer 402 card_required (try the sandbox instead).',
+    `- Sandbox: ${SANDBOX_CALLS.toLocaleString('en-CA')} calls per account per calendar month, never billed; turn on "Sandbox" in the console or send the header X-Marketplace-Mode: sandbox. Past the allowance: 429 sandbox_limit until the 1st.`,
+    '- A payment that failed (past due) pauses everything except free reads until the card is updated.',
+    '- Charges are invoiced on the 1st for the month before (Standard and Advanced events by class, each line rounded to the cent, plus sales tax) and charged to the card on the 5th.',
+    '- Service orders (numbers, ports, trunks, SIM/eSIM activation) are billed under Iristel\'s published tariff, separately from the API.',
+    '- Iristel staff and internal employees are never billed.',
+    '- These rates are proposed and need approval; the effective date is to be announced.',
     '');
   return lines.join('\n');
 }
@@ -107,8 +117,9 @@ function packagesSection() {
 function bundlesSection() {
   const lines = ['## Bundles (guided multi-step use cases)', ''];
   for (const b of BUNDLES) {
-    const pkg = b.steps.reduce((acc, s) => higherPackage(acc, tierFor(s.product, s.endpoint) || 'premium'), 'free');
-    lines.push(`- \`${b.id}\` — **${b.name}** (needs ${PACKAGE_NAME[pkg]}): ${b.summary}`);
+    const apiCents = b.steps.reduce((t, s) => t + ((rateFor(s.product, s.endpoint) || {}).priceCents || 0), 0);
+    const svc = b.steps.filter((s) => (rateFor(s.product, s.endpoint) || {}).id === 'service').length;
+    lines.push(`- \`${b.id}\` — **${b.name}** (API cost per run: ${apiCents ? cents(apiCents) : 'free'}${svc ? `, plus service charges for ${svc} service order step(s)` : ''}): ${b.summary}`);
   }
   lines.push('');
   return lines.join('\n');
@@ -140,10 +151,10 @@ const md = [
   '',
   `Every product is called through the gateway at \`${BASE_URL}\`. A caller only reaches the products their account is approved for (others return 403). Endpoint paths below are the full gateway paths; \`:name\` segments are path parameters.`,
   '',
-  'Pricing is by package (Free, Standard, Premium; see "Packages and pricing" below). There is no sandbox: every partner call is live, and there are no per-call charges.',
+  'Pricing is per successful event, by rate class (Free, Standard 1¢, Advanced 2.5¢, service orders with no API fee; see "Pricing" below), with a free monthly sandbox. The rates are proposed and subject to approval.',
   '',
   ...PRODUCTS.map(productSection),
-  packagesSection(),
+  pricingSection(),
   bundlesSection(),
 ].join('\n');
 

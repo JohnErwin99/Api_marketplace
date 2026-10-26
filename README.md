@@ -1,10 +1,11 @@
 # Iristel API Marketplace — gateway
 
 The Express service behind the Iristel API Marketplace. It republishes Iristel's
-APIs (IristelX, 911, provisioning, wireless and enterprise number porting, and
-Espresso's DID ordering and LRN lookups) as one JSON REST API, checks every caller
-against their CRM approval and package, keeps every upstream credential on the
-server, and runs the console, the marketplace pages' scripts and monthly billing.
+APIs (IristelX, 911, provisioning, wireless and enterprise number porting,
+Espresso's DID ordering and LRN lookups, and BroadWorks hosted voice) as one JSON
+REST API, checks every caller against their CRM approval, prices each call from the
+rate card, keeps every upstream credential on the server, and runs the console, the
+marketplace pages' scripts and monthly billing.
 
 The original Espresso DID **V3 SOAP** product (`/api/ping`, `/api/catalog`,
 `/api/routing-profiles*`, `/api/orders*`) was retired on 2026-10-23; DID ordering is
@@ -66,43 +67,44 @@ disables the key within a minute.
 forwarded. The portal login and sign-up pages call `/portal/*` for the same
 reason.
 
-### Packages
+### Pricing (proposed rates)
 
-Partners are on one package (`lib/catalogs/pricing.js`), chosen on the access
-request and confirmed by staff, stored in CRM `cr57d_apimarketplacepackage`
-(649950000 Free, 649950001 Standard, 649950002 Premium; empty = Free; created by
-`node scripts/d365-marketplace-package.js`). Each package includes the one before:
+From the pricing proposal of 25 Oct 2026 (`lib/catalogs/pricing.js`). The rates
+need Product, Finance and Legal/Regulatory sign-off; every page and the console say
+"proposed". No subscription, no packages, no platform fee. Each catalog operation
+has a rate class in the versioned rate card `lib/catalogs/rate-card.json`:
 
-| Package | Price | Includes |
+| Class | Price | What |
 |---|---|---|
-| Free | no charge | Free operations: health checks, reference data, status reads |
-| Standard | 1¢ CAD / month | Free + Standard operations |
-| Premium | 1¢ CAD / month | everything (Standard + Premium) |
+| `free` | $0 | view, list, get, search, status and poll; commission reports; single 911 listing updates |
+| `standard` | 1¢ CAD per successful event | standalone admin or configuration changes |
+| `advanced` | 2.5¢ CAD per successful event | bulk or orchestration requests (one event per request) |
+| `service` | no API fee | orders telecom service (numbers, ports, trunks, SIM/eSIM activation, BroadWorks seats); billed under the tariff, never twice |
 
-Every operation's tier is in `lib/catalogs/tiers.json` (free, standard or premium),
-imported from `../api-tier-map.xlsx` with `python3 scripts/import-tier-map.py` (the
-workbook's old "Service transaction" tier is Premium; operations added later are
-kept). The server warns at startup about any endpoint without a tier, and
-`/catalog.json` publishes `packages`, each endpoint's `tier` and each bundle's
-`package`. The gateway (`lib/entitlements.js`):
+The rate card is built from the catalog by `node scripts/build-rate-card.js`: GET is
+free, a change is standard, and its `OVERRIDES` list sets the rest. Re-run it after
+any catalog change (`--check` fails when it is stale; `--rows rows.json` writes the
+review rows). An operation missing from it is never charged and is reported at
+startup. `/catalog.json` publishes `pricing` (classes, sandbox allowance, the
+proposed telecom service rates), each endpoint's `rateClass` / `priceCents` and each
+bundle's `apiCents` per run.
 
-| Partner state | Mode | What works |
+The gateway (`lib/entitlements.js`), for a partner call:
+
+| Mode | How | What works |
 |---|---|---|
-| Free package | `free` | Free operations, live. No card, never billed. |
-| Standard or Premium, no card yet | — | Nothing: 402 until a card is added. |
-| Standard or Premium, card on file | `production` | The package's operations, live. The monthly fee is billed. |
-| Past due | — | Nothing: 402 until the outstanding charge is paid. |
+| `live` (default) | — | Free reads and service orders: no card needed. Standard and Advanced: a card on file, else `402 card_required`. Only 2xx calls are billed; a repeated `Idempotency-Key` within 24 h is billed once. |
+| `sandbox` | header `X-Marketplace-Mode: sandbox` | 1,000 calls per account per calendar month, never billed; then `429 sandbox_limit`. Enterprise LNP runs on Espresso's test system; DID Orders and LRN need their own sandbox REST client (`503 sandbox_unavailable` until set); products with no test system are read-only (`409 no_test_system`). |
+| past due | — | Free reads only; the rest `402 payment_required`. |
 
-An operation outside the package answers `403 upgrade_required` (with
-`requiredPackage`). There is no sandbox and there are no per-call charges. Every
-response carries `X-Marketplace-Mode` and `X-Marketplace-Package`. Only Iristel staff
-and internal accounts (Internal employee with an @iristel.com email) are exempt: every
-package, no card, never billed. Agents are billed like any partner.
+Every answer carries `X-Marketplace-Mode`, `X-Marketplace-Price` (`<class> <cents>`)
+and, in the sandbox, `X-Sandbox-Calls-Remaining`. Only Iristel staff and internal
+accounts (Internal employee with an @iristel.com email) are exempt: no card, never
+billed. Agents are billed like any partner.
 
-The access-request form writes the package while the account isn't approved yet; an
-approved partner's package is changed by staff (`/admin`, or
-`POST /marketplace/admin/access` with `{ accountId, package }`), never by sending the
-form again.
+The Oct 23–26 package model (CRM `cr57d_apimarketplacepackage`, `package_months`)
+is no longer written or read, except that a month already recorded in
+`package_months` still bills its 1¢ fee.
 
 **Espresso login (LNP, DID Orders, LRN).** No partner login is needed: the gateway
 uses `EDID_USER` / `EDID_PASS` (and the Espresso REST client for DID Orders and LRN).
@@ -133,7 +135,9 @@ curl -s https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
 | `ESPRESSO_COMPANY_ID` / `ESPRESSO_SANDBOX_COMPANY_ID` | Optional: Iristel's Espresso company id (UUID) on production / on the sandbox. Default: that system's only active company. Never shared between the two systems. |
 | `ESPRESSO_ROUTING_PROFILE_ID` / `ESPRESSO_SANDBOX_ROUTING_PROFILE_ID` | Optional: the DID routing profile used when an order names none, per system. Default: that system's only active DID profile. |
 | `ESPRESSO_OCN` | Optional OCN set on DID orders and used to filter available numbers (default `154E`). |
-| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` / `_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. Partners always call `api.espressodid.com`; staff and internal callers can pick `api-sandbox.espressodid.com` with `X-EDID-Env: test`. A system without a login answers `503 not_enabled` (not metered). The products show live once production is configured. |
+| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` | The Espresso sandbox's own OAuth client: the production client is refused there (checked 2026-10-26). Without it the REST sandbox (DID Orders, LRN) answers `503` (partners: `sandbox_unavailable`; staff with `X-EDID-Env: test`: `not_enabled`). |
+| `ESPRESSO_SANDBOX_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. |
+| `BROADWORKS_OCI_URL` / `BROADWORKS_USER` / `BROADWORKS_PASS` | BroadWorks OCI-P over SOAP (`https://<xsp>/webservice/services/ProvisioningService`) and the gateway's admin login (`lib/broadworks.js`). Until all three are set, BroadWorks is published as "soon" and calls answer `503 not_enabled`. |
 | `D365_*` | Dynamics 365 (approvals are read from here) |
 | `ADMIN_EMAILS` | Optional staff list override |
 | `GATEWAY_API_KEY` | Optional internal override key |
@@ -146,15 +150,12 @@ curl -s https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
 
 ### Usage billing
 
-- Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`),
-  with its mode, at price 0: calls are counted for the dashboards, never billed one by
-  one.
-- **The package's monthly fee is the charge.** Each month a Standard or Premium package
-  was active with a card on file is recorded in `package_months` (by every paid call,
-  and hourly by the billing scheduler for partners with a card, so a month with no
-  calls still counts; a month keeps the higher package). The invoice for that month
-  has one line, "<Package> package — <Month>", plus tax. Months billed before packages
-  (October 2026 and earlier) can still carry per-call lines.
+- Every `/api/*` call is recorded server-side (`lib/entitlements.js` → `lib/db.js`)
+  with its mode, rate class and price. Billable rows are successful live Standard
+  (1¢) and Advanced (2.5¢) events; the price is stored as is (2.5).
+- **The invoice** (issued on the 1st, charged on the 5th) has one line per rate class,
+  "Standard API events — <Month>" × N and "Advanced API events — <Month>" × N, each
+  rounded to the cent, plus tax.
 - **Everyone is billed except Iristel staff and internal employees** (account type
   Internal employee with an @iristel.com email). Business customers, partners and
   agents all add a card. An agent created outside the portal sign-up may have no
@@ -174,14 +175,20 @@ curl -s https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
   - **Unknown** (no clear answer from MIND — the card may have been charged): staff
     check MIND, then use **Retry** or **Mark paid** on that row in `/admin` → Billing.
 
-Espresso environment: see [Packages](#packages).
+Espresso environment: see [Pricing](#pricing-proposed-rates).
 
 ## Endpoints
 
 Every product's operations are in `lib/catalogs` and in `GET /catalog.json`. Enterprise
 LNP (Espresso v4 SOAP) is `/api/lnp/...` (`lib/routes/lnp.js`), wireless LNP
 `/api/wlnp/...` (`lib/routes/wlnp.js`), and the IristelX-backed products
-`/api/ix/<product>/...` (`lib/routes/ix.js`).
+`/api/ix/<product>/...` (`lib/routes/ix.js`), and BroadWorks `/api/broadworks/...`
+(`lib/routes/broadworks.js`).
+
+Staff-only (`lib/admin.js`): `GET /marketplace/admin/summary`, `POST /marketplace/admin/access`
+(`{ accountId, approved?, broadworksEnterprise? }`), and `GET /marketplace/admin/pending`
+(`{ count, items }`: access requests still waiting for review, for the red badge on
+the portal nav's Dashboards menu; cached 60 s, cleared on an approval).
 
 ### Espresso REST products (DID Orders, LRN Lookup)
 
@@ -217,6 +224,31 @@ Approvals that still list the retired `dids` product are read as `did-orders`
 (`lib/onboarding.js`), so partners move over without a CRM change. After switching on, regenerate the Iris KB
 (`node scripts/export-iris-kb.js`, which reads each product's status from the deployed
 `/catalog.json`) and upload it.
+
+### BroadWorks (Hosted Voice)
+
+Cisco BroadWorks OCI-P over SOAP (`lib/broadworks.js`, spec: Application Server
+Provisioning Interface R23). The gateway holds one admin session (`LoginRequest22V3`,
+`JSESSIONID` kept, commands serialized, one re-login on an invalid session; a refused
+login backs off 60 s). It is published as "soon" until `BROADWORKS_OCI_URL`,
+`BROADWORKS_USER` and `BROADWORKS_PASS` are set. 36 operations: enterprise and number
+summary, groups and their numbers (assign, unassign, activate), users (list, get, add,
+modify, delete, services, registrations), call forwarding (always, busy, no answer), Do
+Not Disturb, voicemail, trunk groups (list, get, capacity and bursting), devices (list,
+get, reset), hunt groups and auto attendants; see `/catalog.json`.
+
+**Scoping.** Every partner reaches only the BroadWorks enterprise staff linked to their
+CRM account (`broadworks_links`, set on `/admin` or with `POST /marketplace/admin/access`
+`{ accountId, broadworksEnterprise }`). The enterprise is never taken from the request;
+groups and users are checked to belong to it (cached 5 min), and another enterprise's
+records answer like missing ones (404). No link: `403 broadworks_not_linked`. Staff and
+internal callers name the enterprise with `?enterprise=`.
+
+**Before going live**, run one real call each of `UserAddRequest22`,
+`UserModifyRequest22`, `GroupTrunkGroupModifyInstanceRequest20sp1`,
+`UserVoiceMessagingUserModifyVoiceManagementRequest` and
+`UserCallForwardingNoAnswerModifyRequest` on a test enterprise: the element order of
+each request was written from the R22/R23 schema, which the spec PDF doesn't include.
 
 ## Examples
 
@@ -284,6 +316,6 @@ Every error is JSON with an HTTP status. Espresso's numeric app codes (1–8,
   can't change which product it is checked against.
 - **CORS**: any origin when `ALLOWED_ORIGINS` is unset (dev); otherwise that list plus the partner portal origins.
 - `GET /` gives the endpoint catalog as JSON; the console can render forms from it.
-- **Packages in the console.** Each endpoint card shows its package; operations above
-  the partner's package are locked with an upgrade note, and the API answers
-  `403 upgrade_required` for them anyway.
+- **Rates in the console.** Each endpoint card shows its rate class and price; a
+  service order asks for confirmation first; a "Sandbox" switch sends
+  `X-Marketplace-Mode: sandbox` and shows the calls left this month.

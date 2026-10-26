@@ -29,8 +29,8 @@ const PORTAL_ORIGINS = [
   'https://www.iristel.com',
 ];
 const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? PORTAL_ORIGINS : [])])];
-// The console reads the caller's mode and package from these.
-const exposedHeaders = ['X-Marketplace-Mode', 'X-Marketplace-Package'];
+// The console reads the caller's mode, the call's rate and the sandbox calls left from these.
+const exposedHeaders = ['X-Marketplace-Mode', 'X-Marketplace-Price', 'X-Sandbox-Calls-Remaining'];
 app.use(cors(allowed.length ? { origin: allowed, exposedHeaders } : { exposedHeaders }));
 // 8 MB: the access-request form sends the business-registration document
 // as base64 JSON (~5 MB file cap plus encoding overhead).
@@ -189,14 +189,15 @@ for (const p of PRODUCTS) {
   }
 }
 
-// Package tier per endpoint (lib/catalogs/tiers.json): the lowest package
-// that includes it. Every operation should have one; a missing tier is
-// reported here, the same way stale bundle steps are.
-const { tierFor, PACKAGES, PRICING_NOTE, higherPackage } = require('./lib/catalogs/pricing');
+// Rate class per endpoint (lib/catalogs/rate-card.json): free, standard,
+// advanced or service. An operation missing from the rate card is never
+// charged; pricing.init() below reports it.
+const { rateFor, publicRateCard } = require('./lib/catalogs/pricing');
 for (const p of PRODUCTS) {
   for (const e of p.endpoints || []) {
-    e.tier = tierFor(p.id, `${e.method} ${e.path}`);
-    if (!e.tier) console.warn(`tiers: ${p.id} ${e.method} ${e.path} has no tier — add it to lib/catalogs/tiers.json`);
+    const r = rateFor(p.id, `${e.method} ${e.path}`);
+    e.rateClass = r ? r.id : null;
+    e.priceCents = r ? r.priceCents : 0;
   }
 }
 
@@ -221,8 +222,10 @@ for (const b of BUNDLES) {
     }
     return true;
   });
-  // The package a bundle needs: the highest tier among its steps.
-  b.package = b.steps.reduce((pkg, s) => higherPackage(pkg, tierFor(s.product, s.endpoint) || 'premium'), 'free');
+  // What one run of the bundle costs in API events (service orders and reads
+  // are free of API fees; the services themselves are billed separately).
+  b.apiCents = b.steps.reduce((sum, s) => sum + ((rateFor(s.product, s.endpoint) || {}).priceCents || 0), 0);
+  b.serviceSteps = b.steps.filter((s) => (rateFor(s.product, s.endpoint) || {}).id === 'service').length;
 }
 
 // Onboarding: access-request intake + authorization lookup for the portal.
@@ -250,12 +253,11 @@ function catalogPayload() {
     categories: CATEGORIES,
     accountTypes: ACCOUNT_TYPES,
     bundles: BUNDLES,
-    // Packages (Free, Standard, Premium; monthly price in CAD cents). Each
-    // endpoint's `tier` and each bundle's `package` is the lowest package
-    // that includes it. `tiers` is the same list, for older page copies.
-    packages: PACKAGES,
-    tiers: PACKAGES,
-    pricingNote: PRICING_NOTE,
+    // Per-event pricing (proposed): rate classes, sandbox allowance, telecom
+    // service rates. Each endpoint carries its `rateClass` and `priceCents`;
+    // each bundle its `apiCents` per run.
+    pricing: publicRateCard(),
+    pricingNote: publicRateCard().pricingNote,
   };
 }
 
@@ -272,7 +274,7 @@ app.get('/', (req, res) => {
 // IristelX-backed products (provisioning, 911, accounts, SIM, commissions,
 // mobile): proxied so the upstream keys never leave the server.
 app.use('/api/ix', require('./lib/routes/ix')(PRODUCTS));
-// Per-call prices (lib/catalogs/pricing.js), usage billing / card on file,
+// Per-event prices (lib/catalogs/pricing.js), usage billing / card on file,
 // and monthly invoices.
 require('./lib/catalogs/pricing').init(PRODUCTS);
 require('./lib/billing').register(app);
@@ -280,17 +282,15 @@ require('./lib/billing').register(app);
 require('./lib/iris').register(app);
 require('./lib/invoices').register(app, PRODUCTS);
 
-// Monthly billing, checked hourly (every step is idempotent): each paid
-// package active this month is recorded for its invoice; last month's
+// Monthly billing, checked hourly (every step is idempotent): last month's
 // invoices go out from the 1st, and are charged from the 5th. Set
 // BILLING_SCHEDULER=off to run the invoices and charges by hand from the
-// dashboard instead (paid-package calls still record their month).
+// dashboard instead.
 if (process.env.BILLING_SCHEDULER !== 'off') {
   const invoices = require('./lib/invoices');
-  const { chargeInvoices, notePackageMonths } = require('./lib/billing');
+  const { chargeInvoices } = require('./lib/billing');
   const billingTick = async () => {
     try {
-      await notePackageMonths();
       const mon = invoices.prevMonth();
       const sent = (await invoices.runInvoices(mon)).filter((r) => r.status === 'sent');
       if (sent.length) console.log(`[billing] ${mon}: emailed ${sent.length} invoice(s)`);
@@ -316,6 +316,10 @@ app.use('/api/wlnp', require('./lib/routes/wlnp')());
 // configured.
 app.use('/api/did-orders', require('./lib/routes/did-orders')(h));
 app.use('/api/lrn', require('./lib/routes/lrn')(h));
+// Cisco BroadWorks over OCI-P (lib/broadworks.js); 503 not_enabled until
+// BROADWORKS_OCI_URL / _USER / _PASS are set. Each partner reaches only the
+// enterprise staff linked to their CRM account.
+app.use('/api/broadworks', require('./lib/routes/broadworks')(h));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'not_found', message: `No route ${req.method} ${req.path}` }));

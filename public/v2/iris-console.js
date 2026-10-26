@@ -656,14 +656,21 @@
     return sdkPromise;
   }
 
+  // Said when the console has no rate card to give (an older console).
+  const RATE_CARD = 'reads free; Standard 1¢; Advanced 2.5¢ per successful event; service orders no API fee (proposed rates, subject to approval)';
+
   async function dynamicVariables() {
     const me = ctx || await safe(() => bridge && bridge.me());
+    // The console's own view is the freshest: its mode bar follows every call.
+    const live = await safe(() => bridge && bridge.me());
     const cc = await safe(() => bridge && bridge.context());
     const products = me && Array.isArray(me.products) ? me.products : [];
     const agents = me && Array.isArray(me.agents) ? me.agents : [];
-    // The caller's package by name ("Free", "Standard", "Premium").
-    const pkg = me && me.package && typeof me.package === 'object' ? me.package.name
-      : (cc && cc.package != null ? cc.package : '');
+    // Account mode: live | card_required | past_due | exempt.
+    const mode = (live && live.mode) || (cc && cc.mode) || (me && me.mode) || '';
+    // This month's sandbox calls left (1,000 a month, never billed).
+    const sb = (live && live.sandbox) || (cc && cc.sandbox) || (me && me.sandbox) || null;
+    const left = sb && Number.isFinite(Number(sb.left)) ? String(Math.max(0, Math.floor(Number(sb.left)))) : '';
     // The gateway looks the name up from trusted records (CRM / agent /
     // employees). greeting_name carries its own leading space so the agent's
     // first message "Hi{{greeting_name}} — …" reads cleanly when it is empty.
@@ -673,10 +680,10 @@
       greeting_name: firstName ? ' ' + firstName : '',
       product_names: products.map((p) => p && p.name).filter(Boolean).join(', '),
       agent_count: String(agents.length),
-      mode: String((me && me.mode) || (cc && cc.mode) || ''),
-      package: String(pkg || ''),
-      // Retired with the sandbox; still sent (empty) while the agent prompt names it.
-      sandbox_calls_left: '',
+      mode: String(mode),
+      sandbox_calls_left: left,
+      rate_card: String((live && typeof live.rateCard === 'string' && live.rateCard) || RATE_CARD).slice(0, 300),
+      package: '', // retired; still sent because the live agent prompt names {{package}} until it is swapped (a missing variable breaks the session)
       lang: LANG,
     };
   }
