@@ -150,11 +150,11 @@
       <div class="pr-head">
         <p class="eyebrow">Pricing</p>
         <h2>Build directly on Iristel’s network. Start free. Pay only for valuable automation and telecom services.</h2>
-        <p>Access our API families and explore a free developer sandbox with 1,000 calls per month. Basic reads and status operations are free. Eligible Standard automation is 1¢ CAD per successful operation; qualified Advanced workflows are 2.5¢ CAD. Telecom products and services are priced separately and shown before you order.</p>
+        <p>Access our API families and explore a free developer sandbox with 1,000 calls a month per account. Basic reads and status operations are free. Eligible Standard automation is 1¢ CAD per successful operation; qualified Advanced workflows are 2.5¢ CAD. Telecom products and services are priced separately and shown before you order.</p>
         <div class="pr-tags" id="pr-tags"><span class="pr-prop">Proposed rates, subject to approval · taxes extra</span><span>Effective date: to be announced</span></div>
       </div>
       <div class="pr-grid" id="pr-grid">
-<article class="pr-card" style="--tc:var(--green)"><h3>Free</h3><p class="pr-price"><strong>$0</strong></p><p class="pr-unit">No charge</p><p>Basic reads and status: view, list, get, search and status requests, including routine tracking and polling. Commission reports. Single 911 listing updates.</p><ul><li>No subscription or platform fee</li><li>Developer sandbox: 1,000 calls a month</li><li>Port status</li><li>List SIM cards</li><li>Search available numbers</li><li>Update a 911 listing</li></ul><p class="pr-foot">No card needed. Sandbox calls are never billed.</p></article>
+<article class="pr-card" style="--tc:var(--green)"><h3>Free</h3><p class="pr-price"><strong>$0</strong></p><p class="pr-unit">No charge</p><p>Basic reads and status: view, list, get, search and status requests, including routine tracking and polling. Commission reports. Single 911 listing updates.</p><ul><li>No subscription or platform fee</li><li>Developer sandbox: 1,000 calls a month per account</li><li>Port status</li><li>List SIM cards</li><li>Search available numbers</li><li>Update a 911 listing</li></ul><p class="pr-foot">No card needed. Sandbox calls are never billed.</p></article>
 <article class="pr-card" style="--tc:var(--blue)"><h3>Standard</h3><p class="pr-price"><strong>1¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Standalone administrative or configuration changes: account, plan and service updates, voicemail and forwarding, SIM reservations, PON corrections.</p><ul><li>Update voicemail</li><li>Change a due date</li><li>Reserve a SIM</li><li>Basic LRN lookup</li></ul><p class="pr-foot">Billed only when the call succeeds. Needs a card on file.</p></article>
 <article class="pr-card" style="--tc:var(--orange)"><h3>Advanced</h3><p class="pr-price"><strong>2.5¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Bulk or orchestration requests, priced per completed request rather than per item inside it.</p><ul><li>Bulk LRN lookup (50 numbers)</li><li>LRN with porting history</li><li>Bulk 911 upload</li></ul><p class="pr-foot">One request is one event, however many items it carries. Needs a card on file.</p></article>
       </div>
@@ -177,7 +177,7 @@
       <p class="mp-note" id="pr-note">Proposed rates, subject to Product, Finance and Legal/Regulatory approval. Taxes extra.</p>
       <p class="pr-ent"><strong>Partner and enterprise pricing:</strong> contracted rates and credit terms; contact your Iristel representative.</p>
       <h3 class="pr-h">Pricing questions</h3>
-      <details><summary>Is there a free sandbox?</summary><p>Yes. Every account gets 1,000 non-production developer sandbox calls a month. They reset on the 1st and are never billed; past the allowance, sandbox calls are refused, not charged.</p></details>
+      <details><summary>Is there a free sandbox?</summary><p>Yes. Every account gets 1,000 developer sandbox calls a month, shared by everyone on the account. They’re non-production only: sandbox calls get sample data, or Espresso’s test system for enterprise porting, and never reach a live system. They reset on the 1st and are never billed; past the allowance they’re refused, not charged, and we can extend it on request.</p></details>
       <details><summary>When do I need a card?</summary><p>Only for Standard and Advanced live calls. Free reads and status, service orders and the sandbox need no card. Add one in the API console before your first billable call; the same key keeps working.</p></details>
       <details><summary>What’s billed?</summary><p>Successful live Standard (1¢) and Advanced (2.5¢) events, invoiced in CAD on the 1st of the next month and charged to your card on the 5th, taxes extra. Failed calls, free reads, sandbox calls and service orders carry no API fee. Telecom services you order are billed under the tariff, at the rates shown before you order, never twice.</p></details>
     </section>
@@ -365,7 +365,7 @@ function renderPricing(p) {
   const $ = (id) => document.getElementById(id);
   $("pr-tags").innerHTML = `<span class="pr-prop">${p.status === "proposed" ? "Proposed rates, subject to approval" : "Rates in CAD"} · taxes extra</span>` +
     `<span>Effective date: ${p.effective ? escHtml(p.effective) : "to be announced"}</span>`;
-  const free = ["No subscription or platform fee"].concat(p.sandboxCalls ? [`Developer sandbox: ${Number(p.sandboxCalls).toLocaleString("en-CA")} calls a month`] : []);
+  const free = ["No subscription or platform fee"].concat(p.sandboxCalls ? [`Developer sandbox: ${Number(p.sandboxCalls).toLocaleString("en-CA")} calls a month per account`] : []);
   $("pr-grid").innerHTML = cls.filter((c) => c.id !== "service").map((c) =>
     `<article class="pr-card" style="--tc:${CLASS_COLOR[c.id] || "var(--blue)"}"><h3>${escHtml(c.name)}</h3>` +
     `<p class="pr-price"><strong>${c.priceCents ? escHtml(centsLabel(c.priceCents)) : "$0"}</strong>${c.priceCents ? "CAD" : ""}</p>` +

@@ -30,7 +30,7 @@ const PORTAL_ORIGINS = [
 ];
 const allowed = [...new Set([...envOrigins, ...(envOrigins.length ? PORTAL_ORIGINS : [])])];
 // The console reads the caller's mode, the call's rate and the sandbox calls left from these.
-const exposedHeaders = ['X-Marketplace-Mode', 'X-Marketplace-Price', 'X-Sandbox-Calls-Remaining'];
+const exposedHeaders = ['X-Marketplace-Mode', 'X-Marketplace-Price', 'X-Sandbox-Calls-Remaining', 'X-Marketplace-Sample'];
 app.use(cors(allowed.length ? { origin: allowed, exposedHeaders } : { exposedHeaders }));
 // 8 MB: the access-request form sends the business-registration document
 // as base64 JSON (~5 MB file cap plus encoding overhead).

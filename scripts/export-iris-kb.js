@@ -45,10 +45,11 @@ const gatewayPrefix = (p, e) => (e.path.startsWith('/api/') ? '' : '/api/ix/' + 
 function modeRules(p, eps) {
   const count = (id) => eps.filter((e) => (rateFor(p.id, `${e.method} ${e.path}`) || {}).id === id).length;
   const split = CLASSES.map((c) => `${count(c.id)} ${c.name}`).join(', ');
-  const sandbox = ESPRESSO_REST.has(p.id)
-    ? 'Sandbox: runs on Espresso\'s test system once Iristel switches that on; until then sandbox calls answer 503 sandbox_unavailable.'
-    : ESPRESSO.has(p.id) ? 'Sandbox: runs on Espresso\'s test system (no real ports), changes included.'
-      : 'Sandbox: read-only (this API has no test system), so a change in the sandbox answers 409 no_test_system.';
+  const sandbox = p.id === 'lnp-enterprise'
+    ? 'Sandbox: runs on Espresso\'s test system (no real ports), changes included.'
+    : ESPRESSO_REST.has(p.id)
+      ? 'Sandbox: answers with sample data until Iristel switches on Espresso\'s test system for it; nothing reaches a live system.'
+      : 'Sandbox: answers with sample data (header X-Marketplace-Sample: true); nothing reaches a live system. Required fields are still checked.';
   return [
     `Rates: ${split} operation(s); each operation's rate is shown below. Live calls${ESPRESSO.has(p.id) ? ' use Espresso\'s production system' : ''}.`,
     sandbox,
@@ -71,7 +72,7 @@ function productSection(p) {
   lines.push(`- **Product id:** \`${p.id}\``);
   lines.push(`- **What it does:** ${blurb}`);
   if (p.status === 'preview') {
-    lines.push('- **Status: switching on soon.** The docs and forms are published, but every call answers `503 not_enabled` until Iristel switches it on. Explain how it works, but don\'t highlight Send for it.');
+    lines.push('- **Status: switching on soon.** The docs and forms are published, and live calls answer `503 not_enabled` until Iristel switches it on. In the sandbox it can be tried now: it answers with sample data. Highlight Send for it only when the sandbox is on.');
   }
   if (prefix) lines.push(`- **Gateway prefix:** \`${prefix}\` — IristelX-backed; the gateway adds the upstream key, so you only send your marketplace credentials.`);
   lines.push('- **Auth:** in the console, your portal login session (automatic); from your own backend, your marketplace key as `Authorization: Bearer mk_…` or `X-Marketplace-Key: mk_…`.');
@@ -104,7 +105,7 @@ function pricingSection() {
     '- There are no packages, subscriptions or platform fees. Every approved API can be called; the rate depends on the operation.',
     '- Only successful (2xx) live calls are billed. Failed calls, rejected calls, sandbox calls and a repeated Idempotency-Key (within 24 hours) are not billed.',
     '- Free reads and service orders need no card. Standard and Advanced live calls need a card under **Billing & usage** in the console; without one they answer 402 card_required (try the sandbox instead).',
-    `- Sandbox: ${SANDBOX_CALLS.toLocaleString('en-CA')} calls per account per calendar month, never billed; turn on "Sandbox" in the console or send the header X-Marketplace-Mode: sandbox. Past the allowance: 429 sandbox_limit until the 1st.`,
+    `- Sandbox: ${SANDBOX_CALLS.toLocaleString('en-CA')} calls per account per calendar month, shared by everyone on the account and never billed; Iristel can grant an extension. Turn on "Sandbox" in the console or send the header X-Marketplace-Mode: sandbox. Nothing in the sandbox reaches a live system: Enterprise LNP uses Espresso's test system, every other API answers with sample data. Past the allowance: 429 sandbox_limit until the 1st.`,
     '- A payment that failed (past due) pauses everything except free reads until the card is updated.',
     '- Charges are invoiced on the 1st for the month before (Standard and Advanced events by class, each line rounded to the cent, plus sales tax) and charged to the card on the 5th.',
     '- Service orders (numbers, ports, trunks, SIM/eSIM activation) are billed under Iristel\'s published tariff, separately from the API.',

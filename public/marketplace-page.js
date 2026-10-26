@@ -378,7 +378,8 @@ regInput.addEventListener("input", () => { clearTimeout(regTimer); regTimer = se
 countrySel.addEventListener("change", () => { regInput.placeholder = REG_HINT[countrySel.value] || ""; checkReg(); });
 
 // Running summary under the picker: which rate classes the picked APIs
-// involve, the sandbox allowance, and whether a card will be needed.
+// involve, the sandbox allowance (per CRM account, shared by its logins),
+// and whether a card will be needed.
 const summary = document.getElementById("price-summary");
 const drawSummary = () => {
   const ids = [...choices.querySelectorAll("[data-api]:checked")].map((cb) => cb.dataset.api);
@@ -391,7 +392,7 @@ const drawSummary = () => {
   const parts = [has.has("free") && "free reads", paid.length && paid.join(" and ") + " operations", has.has("service") && "service orders"].filter(Boolean);
   const list = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : parts[0] || "";
   summary.innerHTML = count + (list ? `Includes ${escHtml(list)}; ` : "") +
-    (P.sandboxCalls ? `sandbox ${escHtml(Number(P.sandboxCalls).toLocaleString("en-CA"))} calls/month; ` : "") +
+    (P.sandboxCalls ? `sandbox ${escHtml(Number(P.sandboxCalls).toLocaleString("en-CA"))} non-production calls/month per account, shared by your team; ` : "") +
     (paid.length ? "card needed only for Standard and Advanced live calls." : "no card needed.") +
     `<p class="ps-note">${escHtml(PROPOSED)}</p>`;
 };

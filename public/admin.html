@@ -99,6 +99,7 @@
   .bw{display:flex;gap:6px;align-items:center}
   .bw input{width:130px;font:12px var(--mono);padding:5px 8px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink)}
   .ctl-err{display:block;color:var(--err);font-size:11px;margin-top:4px;max-width:160px}
+  .sx{margin-top:6px;justify-content:flex-end}.sx input{width:78px}
   .scroll{overflow-x:auto}
   .note{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 16px}
   .empty{color:var(--muted);font-size:13px;padding:14px 2px}
@@ -461,6 +462,10 @@
     const none = '<span style="color:var(--muted)">—</span>';
     const card = p => !p ? none : p.pastDue ? '<span class="pill err">past due</span>'
       : '<span class="pill ' + (p.cardOnFile ? 'yes">on file' : 'no">none') + '</span>';
+    // Sandbox: the account's calls / limit (+ext: extended); Extend if approved.
+    const sbx = g => !g.plan ? none : esc(fmt(g.plan.sandboxCalls)) + (g.plan.sandboxLimit ? ' / ' + esc(fmt(g.plan.sandboxLimit)) : '') +
+      (g.plan.sandboxExtra > 0 ? ' <span class="pill pending" title="Includes an extension of ' + esc(fmt(g.plan.sandboxExtra)) + ' calls">+ext</span>' : '') +
+      (g.approved ? '<form class="bw sx" data-account="' + esc(g.accountId) + '"><input name="sx" type="number" min="1" max="100000" step="1" required placeholder="+calls" aria-label="Extra sandbox calls for ' + esc(g.organization) + '"><button type="submit" class="ctl revoke" style="color:var(--ink)">Grant</button></form><span class="ctl-err"></span>' : '');
     // BroadWorks: the one enterprise this account's users reach through the
     // BroadWorks API (empty unlinks). Shown when the account holds or asked
     // for that product, or is already linked.
@@ -486,7 +491,7 @@
           '<td>' + ((g.bundles || []).length ? g.bundles.map(b => b.apis.map(a => '<code>' + esc(a) + '</code>').join(' ') || none).join('<br>') : none) + '</td>' +
           '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : none) + '</td>' +
           '<td>' + card(g.plan) + '</td>' +
-          '<td class="num" title="Sandbox calls this month">' + (g.plan ? esc(fmt(g.plan.sandboxCalls)) : none) + '</td>' +
+          '<td class="num" title="Sandbox calls this month, shared by the account">' + sbx(g) + '</td>' +
           '<td style="white-space:nowrap">' + (g.plan ? esc(fmt(g.plan.standardEvents)) + ' Std · ' + esc(fmt(g.plan.advancedEvents)) + ' Adv' : none) + '</td>' +
           '<td class="num">' + (g.plan ? esc(cad(g.plan.cents)) : none) + '</td>' +
           '<td>' + bw(g) + '</td>' +
@@ -542,6 +547,27 @@
           btn.disabled = false;
           if (e) e.textContent = err.message;
         }
+      };
+    });
+
+    // Sandbox extension for this month, then reload.
+    $('#t-grants').querySelectorAll('form.sx').forEach(f => {
+      f.onsubmit = async (ev) => {
+        ev.preventDefault();
+        const n = Number(f.elements.sx.value), btn = f.querySelector('button'), e = f.nextElementSibling;
+        e.textContent = '';
+        if (!Number.isInteger(n) || n < 1 || n > 100000) { e.textContent = 'Enter 1 to 100,000 calls'; return; }
+        if (!confirm('Grant ' + fmt(n) + ' extra sandbox calls this month? A grant can\'t be taken back.')) return;
+        btn.disabled = true;
+        try {
+          const r = await fetch(GATEWAY + '/marketplace/admin/sandbox-extension', {
+            method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accountId: f.dataset.account, extraCalls: n })
+          });
+          const body = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
+          await load();
+        } catch (err) { btn.disabled = false; e.textContent = err.message; }
       };
     });
 

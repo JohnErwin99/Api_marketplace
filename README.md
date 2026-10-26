@@ -94,7 +94,7 @@ The gateway (`lib/entitlements.js`), for a partner call:
 | Mode | How | What works |
 |---|---|---|
 | `live` (default) | — | Free reads and service orders: no card needed. Standard and Advanced: a card on file, else `402 card_required`. Only 2xx calls are billed; a repeated `Idempotency-Key` within 24 h is billed once. |
-| `sandbox` | header `X-Marketplace-Mode: sandbox` | 1,000 calls per account per calendar month, never billed; then `429 sandbox_limit`. Enterprise LNP runs on Espresso's test system; DID Orders and LRN need their own sandbox REST client (`503 sandbox_unavailable` until set); products with no test system are read-only (`409 no_test_system`). |
+| `sandbox` | header `X-Marketplace-Mode: sandbox` | 1,000 calls per CRM account per calendar month (UTC), shared by every login on the account, plus any staff extension (`lib/sandbox.js`, `POST /marketplace/admin/sandbox-extension`); never billed; then `429 sandbox_limit`. Non-production only: Enterprise LNP runs on Espresso's test system (DID Orders and LRN too once `ESPRESSO_SANDBOX_CLIENT_*` is set); every other product, coming-soon ones included, is answered by the gateway with sample data (`lib/catalogs/samples.js`, header `X-Marketplace-Sample: true`) after the required fields are checked. |
 | past due | — | Free reads only; the rest `402 payment_required`. |
 
 Every answer carries `X-Marketplace-Mode`, `X-Marketplace-Price` (`<class> <cents>`)
@@ -135,7 +135,7 @@ curl -s https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
 | `ESPRESSO_COMPANY_ID` / `ESPRESSO_SANDBOX_COMPANY_ID` | Optional: Iristel's Espresso company id (UUID) on production / on the sandbox. Default: that system's only active company. Never shared between the two systems. |
 | `ESPRESSO_ROUTING_PROFILE_ID` / `ESPRESSO_SANDBOX_ROUTING_PROFILE_ID` | Optional: the DID routing profile used when an order names none, per system. Default: that system's only active DID profile. |
 | `ESPRESSO_OCN` | Optional OCN set on DID orders and used to filter available numbers (default `154E`). |
-| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` | The Espresso sandbox's own OAuth client: the production client is refused there (checked 2026-10-26). Without it the REST sandbox (DID Orders, LRN) answers `503` (partners: `sandbox_unavailable`; staff with `X-EDID-Env: test`: `not_enabled`). |
+| `ESPRESSO_SANDBOX_CLIENT_ID` / `_CLIENT_SECRET` | The Espresso sandbox's own OAuth client: the production client is refused there (checked 2026-10-26). Without it, partner sandbox calls to DID Orders and LRN get sample data, and staff calls with `X-EDID-Env: test` answer `503 not_enabled`. |
 | `ESPRESSO_SANDBOX_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. |
 | `BROADWORKS_OCI_URL` / `BROADWORKS_USER` / `BROADWORKS_PASS` | BroadWorks OCI-P over SOAP (`https://<xsp>/webservice/services/ProvisioningService`) and the gateway's admin login (`lib/broadworks.js`). Until all three are set, BroadWorks is published as "soon" and calls answer `503 not_enabled`. |
 | `D365_*` | Dynamics 365 (approvals are read from here) |

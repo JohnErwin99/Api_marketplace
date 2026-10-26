@@ -306,7 +306,7 @@
   .mb-sbx input:checked+.sw{background:currentColor}
   .mb-sbx input:checked+.sw::after{transform:translateX(14px);background:var(--panel)}
   .mb-sbx input:focus-visible+.sw{outline:2px solid var(--focus);outline-offset:2px}
-  .mb-count{font-size:12.5px;white-space:nowrap}
+  .mb-count{font-size:12.5px}
   /* Per-card cues that follow the mode bar without a re-render: the
      .mp-app carries .sbx (sandbox on) and .nocard (no card on file). */
   .needs-card{display:none;font:600 11px var(--mono);color:var(--err);border:1px solid currentColor;border-radius:999px;padding:2px 8px}
@@ -317,6 +317,9 @@
   .mp-app.sbx .btn .sbx-tag{display:inline}
   .resp-next{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 10px;font-size:13px;color:var(--text)}
   .resp-next a{color:var(--accent)}
+  /* A sandbox answer made of sample data (X-Marketplace-Sample: true). */
+  .resp-sample{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:10px 0 0;padding:8px 12px;border:1px dashed color-mix(in srgb,var(--warn) 55%,transparent);border-radius:var(--r-sm);background:var(--warn-bg);color:var(--ink);font-size:13px;animation:fadein .18s ease}
+  .resp-sample b{font:700 11.5px var(--head);letter-spacing:.7px;text-transform:uppercase;color:var(--warn);white-space:nowrap}
   /* Rate class of an operation (lib/catalogs/rate-card.json). */
   .rate{flex:none;display:inline-flex;align-items:center;font:600 10.5px/1.6 var(--head);text-transform:uppercase;letter-spacing:.6px;padding:1px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
   .rate.free{color:var(--ok)} .rate.standard{color:var(--accent)} .rate.advanced{color:var(--t3)} .rate.service,.rate.bundle{color:var(--muted)} .rate.service{border-style:dashed}
@@ -722,7 +725,8 @@ async function main(ROOT,HOST,GATEWAY){
   //   service   orders telecom service: no API fee; the service is billed
   //             under Iristel's tariff
   // Only successful (2xx) live calls are billable. The sandbox (header
-  // X-Marketplace-Mode: sandbox) gives 1,000 calls a month, never billed.
+  // X-Marketplace-Mode: sandbox) gives each CRM account 1,000 calls a month,
+  // shared by its logins (plus any staff extension), never billed.
   // The gateway has the last word; the console only explains.
   const priceText=c=>{c=Number(c||0);return c<100?(Math.round(c*10)/10)+'¢':'$'+(c/100).toFixed(2);};
   const FALLBACK_CLASSES=[
@@ -733,7 +737,10 @@ async function main(ROOT,HOST,GATEWAY){
   const rateOf=e=>(e&&classById(e.rateClass))||null;
   const priced=e=>{const r=rateOf(e);return !!(r&&r.priceCents);};
   const isService=e=>!!e&&e.rateClass==='service';
+  // This account's allowance (more than the base when extended), and the base
+  // every account gets (the docs quote that one).
   const sandboxLimit=()=>Number((ACCOUNT&&ACCOUNT.sandbox&&ACCOUNT.sandbox.limit)||(ME&&ME.sandbox&&ME.sandbox.limit)||(pricing&&pricing.sandboxCalls)||1000);
+  const sandboxBase=()=>Number((pricing&&pricing.sandboxCalls)||1000);
   const num=n=>Number(n).toLocaleString('en-CA');
   const proposed=()=>!!pricing&&pricing.status==='proposed';
   const PROPOSED='Proposed rates, subject to approval';
@@ -780,10 +787,19 @@ async function main(ROOT,HOST,GATEWAY){
   }
   // Staff and internal accounts are never billed.
   const exempt=()=>(ACCOUNT&&ACCOUNT.mode==='exempt')||!!(ME&&(ME.isStaff||ME.mode==='exempt'));
-  // Espresso products have a test system the sandbox uses; the others are
-  // read-only in the sandbox (409 no_test_system on a change).
+  // The sandbox never reaches a live system. Enterprise LNP runs on Espresso's
+  // test system; DID Orders and LRN do too once their sandbox login is set
+  // (sample data until then); every other API, coming-soon ones included, is
+  // answered by the gateway with sample data (X-Marketplace-Sample: true).
   const ESPRESSO_IDS=['lnp-enterprise','did-orders','lrn'];
-  const sandboxReadOnly=e=>!ESPRESSO_IDS.includes(e.pid)&&!/^(GET|HEAD|OPTIONS)$/.test(e.method);
+  const SANDBOX_HOW='In the sandbox, APIs without a test system answer with sample data and nothing reaches a live system; Enterprise LNP uses Espresso\'s test system.';
+  // What a sandbox call to this product does, as one sentence.
+  const sandboxWhat=pid=>pid==='lnp-enterprise'?'This API runs on Espresso\'s test system in the sandbox.'
+    :ESPRESSO_IDS.includes(pid)?'In the sandbox this API runs on Espresso\'s test system, or answers with sample data until that\'s connected.'
+    :'This API doesn\'t have a test system, so in the sandbox the gateway answers with sample data.';
+  // A change sent in the sandbox to an API without a test system: the card says
+  // it only gets a sample answer.
+  const sandboxSample=e=>!ESPRESSO_IDS.includes(e.pid)&&!/^(GET|HEAD|OPTIONS)$/.test(e.method);
 
   // ---- load registry ----------------------------------------------------
   let products,bundles=[],audiences=[],categories=[],pricing=null,pricingNote='';
@@ -852,9 +868,10 @@ async function main(ROOT,HOST,GATEWAY){
   // one; free reads and service orders don't) | past_due (only free reads
   // work live). Separately, each call is live or sandbox: the Sandbox switch
   // in the mode bar sends X-Marketplace-Mode: sandbox on every console call
-  // (1,000 a month, never billed). The switch is remembered per browser.
+  // (1,000 a month per CRM account, shared by everyone on it, plus any staff
+  // extension; never billed). The switch is remembered per browser.
   // After each call the gateway's X-Sandbox-Calls-Remaining refreshes the
-  // count (lib/entitlements.js).
+  // count (lib/entitlements.js). billing.sandbox: {limit, used, left, extra}.
   let ACCOUNT=null;
   const SANDBOX_KEY='iristel-api-sandbox';
   let SANDBOX=false;
@@ -903,7 +920,7 @@ async function main(ROOT,HOST,GATEWAY){
       h='<b>Staff</b><span>Not billed · '+(SANDBOX?'Sandbox on: Espresso APIs use Espresso\'s test system (DID Orders and LRN have none yet)':'Live: Espresso APIs use Espresso\'s production system')+'</span>';
     }else if(sandboxOn()){
       cls='sandbox';
-      h='<b>Sandbox</b><span>Test calls, never billed · Espresso APIs use its test system; other APIs are read-only</span>';
+      h='<b>Sandbox</b><span>Test calls, never billed · APIs without a test system answer with sample data and nothing reaches a live system; Enterprise LNP uses Espresso\'s test system</span>';
     }else if(mode==='past_due'){
       cls='block';
       h='<b>Payment due</b><span>Your last payment didn\'t go through. Free reads still work; other live calls are paused until you update your card.</span>'+cta('Update card →');
@@ -920,8 +937,11 @@ async function main(ROOT,HOST,GATEWAY){
     // count for partners only.
     sbx.hidden=false;
     toggle.checked=SANDBOX;
-    const s=sandboxState();
-    countEl.textContent=staff||!s||s.left==null?'':num(s.left)+' of '+num(s.limit||sandboxLimit())+' sandbox calls left this month';
+    // The account's allowance: every login on the CRM account shares it.
+    const s=sandboxState(), shown=!staff&&s&&s.left!=null;
+    countEl.textContent=shown?num(s.left)+' of '+num(s.limit||sandboxLimit())+' sandbox calls left this month'
+      +(s.extra>0?' (includes an extension)':'')+' · shared by everyone on your account':'';
+    if(shown)countEl.title='Resets on the 1st. Iristel can extend it on request.';else countEl.removeAttribute('title');
     el.hidden=false;
   }
   $('#sandbox-toggle').addEventListener('change',ev=>setSandbox(ev.target.checked));
@@ -931,8 +951,9 @@ async function main(ROOT,HOST,GATEWAY){
     if(!ACCOUNT||ACCOUNT.mode==='exempt')return;
     const left=r.headers.get('X-Sandbox-Calls-Remaining');
     if(left!==null&&left!==''&&Number.isFinite(Number(left))){
-      const lim=sandboxLimit(), n=Math.max(0,Number(left));
-      ACCOUNT.sandbox={limit:lim,used:Math.max(0,lim-n),left:n};
+      // An extension granted since the page loaded can leave more than the limit.
+      const n=Math.max(0,Number(left)), lim=Math.max(sandboxLimit(),n), prev=sandboxState()||{};
+      ACCOUNT.sandbox={limit:lim,used:Math.max(0,lim-n),left:n,extra:Number(prev.extra)||0};
     }
     const err=parsed&&typeof parsed==='object'?parsed.error:null;
     if(r.status===402&&err==='card_required'&&ACCOUNT.mode==='live'){ACCOUNT.mode='card_required';ACCOUNT.cardOnFile=false;}
@@ -1379,7 +1400,8 @@ async function main(ROOT,HOST,GATEWAY){
     }
     if(p.status==='preview'){
       d+='<div class="callout"><b>Switching on soon.</b> Everything below is how this API works, and you can fill in the forms, '
-        +'but calls answer <code>503 not_enabled</code> until Iristel switches it on.</div>';
+        +'but live calls answer <code>503 not_enabled</code> until Iristel switches it on.'
+        +(exempt()?'':' In the sandbox you can send them now and get sample data.')+'</div>';
     }
     d+=renderFlow(p.flow)+renderImages(p.images);
 
@@ -1399,7 +1421,9 @@ async function main(ROOT,HOST,GATEWAY){
       d+='<h3>Live system and sandbox</h3>'
         +'<p>No Espresso login is needed — the gateway signs in to Espresso for you. Live calls go to Espresso\'s '
         +'<strong>production</strong> system: orders, ports and changes you make there are real. Sandbox calls '
-        +'(<code>X-Marketplace-Mode: sandbox</code>) go to Espresso\'s separate test system instead.</p>';
+        +'(<code>X-Marketplace-Mode: sandbox</code>) never reach it: '
+        +(p.id==='lnp-enterprise'?'they go to Espresso\'s separate test system instead.'
+          :'they go to Espresso\'s separate test system, or get sample data until that\'s connected for this API.')+'</p>';
     }else if(p.id==='e911'){
       d+='<h3>Account code</h3>'
         +'<p>Every request also carries <code>?code=</code>, the account code the listing belongs to. In the partner '
@@ -1432,9 +1456,9 @@ async function main(ROOT,HOST,GATEWAY){
         +'</table>'
         +'<p><b>Billable event:</b> '+esc(BILLABLE_EVENT)+'.</p>'
         +'<p><b>Sandbox:</b> add <code>X-Marketplace-Mode: sandbox</code> to a call (or switch on <b>Sandbox</b> at the top of this console): '
-        +esc(num(sandboxLimit()))+' calls per account per calendar month, never billed. '
-        +(ESPRESSO_IDS.includes(p.id)?'This API runs on Espresso\'s test system in the sandbox.'
-          :'This API has no test system, so in the sandbox it is read-only: a change answers <code>409 no_test_system</code>.')+'</p>'
+        +esc(num(sandboxBase()))+' calls per account per calendar month, shared by everyone on the account and never billed; '
+        +'Iristel can extend it on request. '+esc(sandboxWhat(p.id))+' Nothing reaches a live system.'
+        +(p.id==='lnp-enterprise'?'':' Sample answers carry <code>X-Marketplace-Sample: true</code>.')+'</p>'
         +(counts.length?'<p class="hint">This API: '+esc(counts.join(' · '))+'.</p>':'');
     }
 
@@ -1565,7 +1589,8 @@ async function main(ROOT,HOST,GATEWAY){
     let t='<strong>Base URL:</strong> <code>'+esc(c.base)+'</code><br>Every path above is relative to it.';
     if(c.auth==='edid'){
       t+='<br><br>No Espresso login needed — the gateway signs in for you. Live calls go to Espresso\'s production '
-        +'system, so orders and changes are real; sandbox calls go to its test system.';
+        +'system, so orders and changes are real; sandbox calls go to its test system'
+        +(productId==='lnp-enterprise'?'.':', or get sample data until that\'s connected.');
     }else if(c.auth==='ix'){
       t+='<br><br>Calls go through the marketplace gateway, which adds the IristelX key on the server — '
         +'no IristelX key is needed from you.'
@@ -1717,10 +1742,13 @@ async function main(ROOT,HOST,GATEWAY){
         +'<tr class="total"><td>Estimated total, before tax</td><td class="num">'+num(tot('calls'))+'</td><td class="num">'+num(tot('billableCalls'))+'</td>'
         +'<td class="num">'+cad(d.estimatedCents)+'</td></tr></table>'
         +'<p class="hint">Billable event: '+esc(BILLABLE_EVENT)+'. Each rate\'s total is rounded to the cent.</p>';
+      // The account's allowance (every login on it shares it), with any extension.
       const sb=d.sandbox||{};
       if(sb.limit!=null)h+='<h3>Sandbox</h3><p>'+num(sb.used||0)+' used · <strong>'+num(sb.left!=null?sb.left:Math.max(0,sb.limit-(sb.used||0)))
-        +' of '+num(sb.limit)+' left</strong> this month. Sandbox calls are never billed; the allowance resets on the 1st. '
-        +'Switch on <b>Sandbox</b> at the top of the console to use it.</p>';
+        +' of '+num(sb.limit)+' left</strong> this month'+(sb.extra>0?' (includes an extension of '+num(sb.extra)+')':'')
+        +'. The allowance is shared by everyone on your account; sandbox calls are never billed and it resets on the 1st. '
+        +'Need more? Ask Iristel for an extension. Switch on <b>Sandbox</b> at the top of the console to use it.</p>'
+        +'<p class="hint">'+esc(SANDBOX_HOW)+'</p>';
     }
 
     h+='<h3>Calls by API</h3>';
@@ -1939,7 +1967,8 @@ async function main(ROOT,HOST,GATEWAY){
     $('#op-intro').innerHTML='<h2 style="margin:0 0 2px;font:800 20px var(--head)">'+esc(ui.title||p.name)+'</h2>'
       +'<p class="hint" style="margin:0;font-size:13px">'+esc(ui.blurb||p.summary||'')+'</p>'
       +(p.status==='preview'?'<div class="callout" style="margin:10px 0 0"><b>Switching on soon.</b> You can fill in these forms, '
-        +'but calls answer <code>503 not_enabled</code> until Iristel turns this API on. Nothing is charged.</div>':'');
+        +'but live calls answer <code>503 not_enabled</code> until Iristel turns this API on. Nothing is charged.'
+        +(exempt()?'':' In the sandbox you can send them now and get sample data.')+'</div>':'');
     const grid=$('#opgrid');grid.innerHTML='';
     const groups={},order=[];
     catalog().forEach(e=>{const g=c.group(e.path);if(!groups[g]){groups[g]=[];order.push(g)}groups[g].push(e)});
@@ -2025,12 +2054,13 @@ async function main(ROOT,HOST,GATEWAY){
     const danger=h.danger!==undefined?h.danger:e.method==='DELETE';
     // Cues that follow the mode bar through CSS (.mp-app.sbx / .nocard): the
     // Send label says "sandbox", Standard and Advanced calls say they need a
-    // card, and writes to an API with no test system say they're refused.
+    // card, and changes to an API without a test system say they only get a
+    // sample answer.
     const r=rateOf(e);
     html+='<div class="row"><button class="btn'+(danger?' danger':'')+'" data-send>'
       +'<span class="spin" aria-hidden="true"></span><span>'+esc(h.submitLabel||'Send request')+'</span><span class="sbx-tag"> · sandbox</span></button>'
       +(priced(e)?'<span class="needs-card" title="'+esc(r.name+' events ('+priceText(r.priceCents)+' CAD) need a card on file. Add one under Billing & usage, or switch on the sandbox.')+'">Needs a card</span>':'')
-      +(sandboxReadOnly(e)?'<span class="sbx-ro">Sandbox: this API has no test system, so a change is refused (409). Switch the sandbox off to send it live.</span>':'')
+      +(sandboxSample(e)?'<span class="sbx-ro">Sandbox: this API doesn\'t have a test system, so the gateway answers with sample data and nothing changes on a live system. Switch the sandbox off to send it live.</span>':'')
       +(opts.compact?'':'<span class="url" data-url></span>')+'</div>';
     return html;
   }
@@ -2099,7 +2129,11 @@ async function main(ROOT,HOST,GATEWAY){
   function snippetNote(e,sandbox){
     if(exempt())return '';
     const r=rateOf(e), mode=acctMode();
-    if(sandbox)return 'Sandbox call: never billed ('+num(sandboxLimit())+' a month). Drop the X-Marketplace-Mode header to send it live.';
+    if(sandbox)return 'Sandbox call: never billed, '
+      +(e.pid==='lnp-enterprise'?'runs on Espresso\'s test system.'
+        :ESPRESSO_IDS.includes(e.pid)?'Espresso\'s test system or sample data; never a live system.'
+        :'answered with sample data; never a live system.')
+      +' Drop the X-Marketplace-Mode header to send it live.';
     if(mode==='past_due'&&!(r&&r.id==='free'))return 'Payment past due: live, this answers 402 payment_required until the card is updated under Billing & usage.';
     if(!r)return 'Not in the rate card: never charged.';
     if(r.id==='service')return 'Service order: no API fee. '+TARIFF;
@@ -2237,7 +2271,8 @@ async function main(ROOT,HOST,GATEWAY){
       +'<p class="hint" style="margin:0 0 8px">Replace <code>'+KEY_PH+'</code> with your marketplace API key '
       +'(<b>Show my API key</b> on the Docs tab).</p>';
     if(a==='edid'){
-      html+='<p class="hint" style="margin:0 0 8px">Live calls go to Espresso\'s production system: orders and changes are real. Sandbox calls go to its test system.</p>';
+      html+='<p class="hint" style="margin:0 0 8px">Live calls go to Espresso\'s production system: orders and changes are real. Sandbox calls go to its test system'
+        +(e.pid==='lnp-enterprise'?'.':', or get sample data until that\'s connected.')+'</p>';
     }else if(productId==='e911'){
       html+='<p class="hint" style="margin:0 0 8px">The account code in <code>?code=</code> selects whose listings you touch.</p>';
     }
@@ -2318,9 +2353,11 @@ async function main(ROOT,HOST,GATEWAY){
       const txt=await r.text();
       const ms=performance.now()-t0;
       let parsed=null;try{parsed=JSON.parse(txt);}catch(_){/* not JSON */}
+      // Answered by the gateway with sample data (sandbox, API without a test system).
+      const sample=String(r.headers.get('X-Marketplace-Sample')||'').toLowerCase()==='true';
       noteCall(r,parsed);
-      showResult(e,vals,r.status,txt,ms,inlineEl);
-      recordLast(e,r.status,ms,txt,'',sentPath,{mode:r.headers.get('X-Marketplace-Mode'),price:r.headers.get('X-Marketplace-Price')});
+      showResult(e,vals,r.status,txt,ms,inlineEl,sample);
+      recordLast(e,r.status,ms,txt,'',sentPath,{mode:r.headers.get('X-Marketplace-Mode'),price:r.headers.get('X-Marketplace-Price'),sample});
       if(opts.onResult)opts.onResult(r.status,txt);
     }catch(err){
       const ms=performance.now()-t0;
@@ -2396,12 +2433,20 @@ async function main(ROOT,HOST,GATEWAY){
     payment_required:{status:402,title:'Your last payment didn\'t go through',
       text:'Free reads still work. Update your card and we\'ll retry the payment right away.',
       actions:()=>billingBtn('Update card in Billing &amp; usage')},
-    no_test_system:{status:409,title:'Read-only in the sandbox',
-      text:'This API has no test system, so the sandbox can\'t make changes. Send it live to make the change.',
+    // Fallback for an older gateway only: today the sandbox answers these
+    // calls with sample data instead.
+    no_test_system:{status:409,title:'This change wasn\'t made in the sandbox',
+      text:SANDBOX_HOW+' Send it live to make the change.',
       actions:()=>sandboxBtn(false)},
-    sandbox_limit:{status:429,title:'This month\'s sandbox calls are used up',
-      text:'The sandbox allowance resets on the 1st. Live calls aren\'t affected.',
+    // own: our text, not the gateway's message (which stays in the raw JSON).
+    sandbox_limit:{status:429,title:'This month\'s sandbox calls are used up',own:true,
+      text:'This month\'s sandbox calls for your account (shared by everyone on it) are used up. Ask Iristel for an extension, or send it live. '
+        +'The allowance resets on the 1st; live calls aren\'t affected.',
       actions:()=>sandboxBtn(false)},
+    // Coming soon (or not connected yet): live calls wait; the sandbox answers with sample data.
+    not_enabled:{status:503,title:'This API isn\'t switched on yet',
+      text:'Live calls answer this until Iristel switches the API on. Nothing is charged.',
+      actions:()=>exempt()||sandboxOn()?'':sandboxBtn(true)},
     sandbox_unavailable:{status:503,title:'The sandbox isn\'t switched on for this API yet',
       text:'Espresso\'s test system for this API isn\'t connected yet. Call it live instead.',
       actions:()=>sandboxBtn(false)},
@@ -2424,20 +2469,25 @@ async function main(ROOT,HOST,GATEWAY){
     if(code>=500)return 'Upstream service problem — try again shortly';
     return 'Request failed';
   }
-  function showResult(e,vals,code,body,ms,inlineEl){
+  // sample: the gateway answered with sample data (X-Marketplace-Sample: true),
+  // marked above the banner so a "saved" or "ordered" message isn't taken as real.
+  function showResult(e,vals,code,body,ms,inlineEl,sample){
     let parsed=null;
     try{ parsed=JSON.parse(body); }catch(_){ /* plain text */ }
     const good=code>=200&&code<300;
     const hint=hintFor(e);
     const title=good&&hint.successMsg?interp(hint.successMsg,vals):respTitle(code,parsed);
-    let h='<div class="resp-banner '+(good?'good':'bad')+'">'
+    let h=(sample?'<div class="resp-sample" role="note"><b>'+(good?'Sample data · sandbox':'Sandbox · not live')+'</b><span>'
+        +(good?'Answered by the gateway with sample data: nothing reached a live system.'
+          :'Checked by the gateway in the sandbox: nothing reached a live system.')+'</span></div>':'')
+      +'<div class="resp-banner '+(good?'good':'bad')+'">'
       +'<span class="icon">'+(good?'✓':'✕')+'</span>'
       +'<span>'+esc(title)+'</span></div>';
-    // Billing and sandbox refusals (lib/entitlements.js): the gateway's
-    // message is the banner; say what to do next instead of listing fields.
+    // Billing and sandbox refusals (lib/entitlements.js): a plain title, the
+    // gateway's message (or ours) and what to do next instead of listing fields.
     const gw=good?null:refusalOf(code,parsed);
     if(gw){
-      h+='<div class="resp-next"><span>'+esc(parsed.message||gw.text)+'</span>'+gw.actions(parsed)+'</div>';
+      h+='<div class="resp-next"><span>'+esc(gw.own?gw.text:parsed.message||gw.text)+'</span>'+gw.actions(parsed)+'</div>';
       h+='<details class="raw"><summary>View raw JSON</summary><pre class="out">'
         +esc(JSON.stringify(parsed,null,2))+'</pre></details>';
     }else if(parsed&&typeof parsed==='object'){
@@ -2502,23 +2552,23 @@ async function main(ROOT,HOST,GATEWAY){
   const grantedBundle=id=>{id=String(id||'').replace(/^bundle:/,'');return bundles.find(b=>b.id===id)||null;};
   // Changes real data: any write sent live. Staff Espresso calls go to its
   // test system when the Sandbox switch is on; sandbox calls go to Espresso's test system or
-  // are refused (no test system), so neither changes real data.
+  // get sample data from the gateway, so neither changes real data.
   const changesData=e=>!/^(GET|HEAD|OPTIONS)$/.test(e.method)&&!(exempt()&&cfgOf(e).auth==='edid'&&SANDBOX)&&!sandboxOn();
   const epTitle=e=>hintFor(e).title||autoTitle(e);
   const bodyModeOf=e=>e.upload?'upload':(e.fields&&e.fields.length)?(e.fields.some(f=>/[.\[]/.test(f.name))?'raw':'fields'):e.body?'raw':'none';
   const isDestructive=e=>{const h=hintFor(e);return (h.danger!==undefined?!!h.danger:e.method==='DELETE')||!!h.confirm;};
   // What a call costs the caller right now, for Iris (one or two sentences).
   function costNote(e){
-    const mode=acctMode(), r=rateOf(e);
-    if((products.find(p=>p.id===e.pid)||{}).status==='preview')
-      return 'Switching on soon: calls answer 503 until Iristel turns this API on. Nothing is charged.';
-    if(exempt())return 'Internal account: never billed'+(cfgOf(e).auth==='edid'?(SANDBOX?' (Espresso test system).':' (Espresso production system).'):'.');
-    if(sandboxOn()){
-      const sb=sandboxState();
-      return 'Sandbox call: never billed'+(sb&&sb.left!=null?' ('+sb.left+' of '+(sb.limit||sandboxLimit())+' sandbox calls left this month)':'')+'.'
-        +(ESPRESSO_IDS.includes(e.pid)?' Runs on Espresso\'s test system.'
-          :sandboxReadOnly(e)?' This API has no test system, so the change answers 409 no_test_system; switch the sandbox off to send it live.':' Reads live data.');
+    const mode=acctMode(), r=rateOf(e), sb=sandboxState();
+    const left=sb&&sb.left!=null?' ('+num(sb.left)+' of '+num(sb.limit||sandboxLimit())+' sandbox calls left this month, shared by everyone on the account)':'';
+    // Coming soon: live calls wait for Iristel; partners' sandbox calls get sample data.
+    if((products.find(p=>p.id===e.pid)||{}).status==='preview'){
+      if(exempt())return 'Switching on soon: calls answer 503 until Iristel turns this API on. Nothing is charged.';
+      return sandboxOn()?'Coming soon, but callable in the sandbox: never billed'+left+'. The gateway answers with sample data; nothing reaches a live system.'
+        :'Switching on soon: live calls answer 503 not_enabled until Iristel turns this API on. In the sandbox it can be sent now and answers with sample data. Nothing is charged.';
     }
+    if(exempt())return 'Internal account: never billed'+(cfgOf(e).auth==='edid'?(SANDBOX?' (Espresso test system).':' (Espresso production system).'):'.');
+    if(sandboxOn())return 'Sandbox call: never billed'+left+'. '+sandboxWhat(e.pid)+' Nothing reaches a live system.';
     if(mode==='past_due'&&!(r&&r.id==='free'))return 'Payment past due: only free reads work until the card is updated under Billing & usage (402 payment_required).';
     if(!r)return 'Not in the rate card: never charged.';
     if(r.id==='service')return 'Service order: no API fee; '+TARIFF.charAt(0).toLowerCase()+TARIFF.slice(1)+' Send asks the user to confirm first.';
@@ -2541,7 +2591,8 @@ async function main(ROOT,HOST,GATEWAY){
     ['sandboxCallsUsed','sandboxCallsLimit','sandboxCallsLeft','environment'].forEach(k=>{delete m[k];});
     if(ACCOUNT&&ACCOUNT.mode)m.mode=ACCOUNT.mode;
     // Billing's sandbox count is the freshest (updated after every call).
-    const sb=sandboxState();if(sb)m.sandbox={limit:sb.limit,used:sb.used,left:sb.left};
+    // The account's allowance, shared by every login on it; extra = staff extension.
+    const sb=sandboxState();if(sb)m.sandbox={limit:sb.limit,used:sb.used,left:sb.left,extra:Number(sb.extra)||0};
     m.callMode=callMode();
     m.rateCard=rateCardText();
     if(proposed())m.ratesStatus='proposed';
@@ -2560,7 +2611,7 @@ async function main(ROOT,HOST,GATEWAY){
       visibleEndpoints:eps.filter(e=>!hiddenFromIris(e)).slice(0,40)
         .map(e=>({productId:e.pid,method:e.method,path:e.path,title:clip(epTitle(e),80),rateClass:e.rateClass||null,priceCents:Number(e.priceCents)||0})),
       mode:acctMode(), callMode:callMode(),
-      sandbox:(s=>s?{limit:s.limit,used:s.used,left:s.left}:null)(sandboxState()),
+      sandbox:(s=>s?{limit:s.limit,used:s.used,left:s.left,extra:Number(s.extra)||0}:null)(sandboxState()),
     };
   }
   // { results: endpoints only (max 5), products (max 5), bundles (max 3) }.
@@ -2612,7 +2663,8 @@ async function main(ROOT,HOST,GATEWAY){
       costNote:costNote(e),live:changesData(e),destructive:isDestructive(e)};
     if(isService(e))out.serviceOrder='Orders telecom service: no API fee. '+TARIFF+' Send asks the user to confirm in the card first (not in the sandbox).';
     if(priced(e))out.billableEvent=BILLABLE_EVENT;
-    if(p.status==='preview')out.comingSoon='Not switched on yet: calls answer 503 not_enabled until Iristel turns this API on. Nothing is charged.';
+    if(p.status==='preview')out.comingSoon=exempt()?'Not switched on yet: calls answer 503 not_enabled until Iristel turns this API on. Nothing is charged.'
+      :'Not switched on yet: live calls answer 503 not_enabled until Iristel turns this API on; with the sandbox on, the user can Send now and gets sample data. Nothing is charged.';
     if(mode==='raw'&&e.body)out.bodyTemplate=clip(JSON.stringify(e.body),600);
     if(mode==='upload')out.upload={field:e.upload.field||'file',accept:e.upload.accept||''};
     if(e.precondition)out.precondition=clip(e.precondition,300);
@@ -2872,7 +2924,8 @@ async function main(ROOT,HOST,GATEWAY){
   // ---- last send attempt, summarised for Iris ----------------------------
   // path: the path actually requested (secret-named values masked), so the
   // summary never reports only the card's template for a different call.
-  // call: {mode, price} from the gateway's X-Marketplace-Mode / -Price.
+  // call: {mode, price, sample} from the gateway's X-Marketplace-Mode / -Price
+  // and X-Marketplace-Sample (true: sandbox sample data, not a live system).
   function recordLast(e,status,ms,txt,message,path,call){
     try{
       LAST={e,status,ms,txt:String(txt||''),message:message||'',path:path||'',call:call||{}};
@@ -2916,7 +2969,8 @@ async function main(ROOT,HOST,GATEWAY){
     return t;
   }
   // Each explanation stays under 80 characters (Iris reads it out).
-  function explainStatus(s,rows,err){
+  function explainStatus(s,rows,err,sample){
+    if(s>=200&&s<300&&sample)return 'Sandbox sample data, not live: OK'+(rows!=null?', '+rows+' row'+(rows===1?'':'s'):'')+'.';
     if(s>=200&&s<300)return 'OK: the call succeeded'+(rows!=null?' and returned '+rows+' row'+(rows===1?'':'s'):'')+'.';
     switch(s){
       case 0:return 'Not sent: a form check or the network failed. See message, then retry.';
@@ -2925,15 +2979,17 @@ async function main(ROOT,HOST,GATEWAY){
       case 402:return err==='payment_required'?'Payment past due: update the card under Billing & usage.'
         :'Card needed for Standard/Advanced calls: add one, or use the sandbox.';
       case 403:return err==='broadworks_not_linked'?'Account not linked to a BroadWorks enterprise: contact Iristel.'
+        :err==='staff_only'?'An Iristel staff operation: not open to partners, sandbox included.'
         :'This API product is not granted to this account.';
       case 404:return 'not_found: path not in the catalog, or no such record. Check the ID.';
-      case 409:return err==='no_test_system'?'No test system: read-only in the sandbox. Send it live to change it.'
+      case 409:return err==='no_test_system'?'Older gateway: change not made in the sandbox. Send it live.'
         :'Upstream rejected it (wrong state or invalid data). Fix the input.';
       case 422:return 'Upstream rejected it (wrong state or invalid data). Fix the input.';
-      case 429:return err==='sandbox_limit'?'This month\'s sandbox calls are used up. Send it live instead.'
+      case 429:return err==='sandbox_limit'?'Account sandbox calls used up: ask Iristel for an extension, or send live.'
         :'Too many requests: slow down and try again shortly.';
       case 502:return 'The upstream service is unavailable right now. Try again later.';
       case 503:return err==='sandbox_unavailable'?'Sandbox not switched on for this API yet. Send it live instead.'
+        :err==='not_enabled'?'Not switched on yet live; in the sandbox it answers with sample data.'
         :'A gateway dependency is unavailable right now. Try again later.';
     }
     return s>=500?'Server-side problem upstream. Try again later.':'The request failed (HTTP '+clip(s,6)+'). Read the message.';
@@ -2946,6 +3002,9 @@ async function main(ROOT,HOST,GATEWAY){
     // live | sandbox, and the call's rate ("standard 1"), as the gateway answered.
     if(call&&call.mode)out.callMode=clip(call.mode,10);
     if(call&&call.price)out.rate=clip(call.price,30);
+    // Sandbox sample data from the gateway (X-Marketplace-Sample), not a live
+    // system. Its own key: `sample` already holds the sample rows.
+    if(call&&call.sample)out.sampleData=true;
     if(path)out.path=clip(scrub(path),200);
     let parsed;try{parsed=txt?JSON.parse(txt):undefined;}catch(_){parsed=undefined;}
     if(message)out.message=clip(scrub(message),80);
@@ -2975,7 +3034,7 @@ async function main(ROOT,HOST,GATEWAY){
     }else if(!message&&txt){
       out.message=clip(scrub(txt.replace(/\s+/g,' ')),80);
     }
-    out.explanation=explainStatus(status,out.rows,!ok&&parsed&&typeof parsed==='object'?parsed.error:null);
+    out.explanation=explainStatus(status,out.rows,!ok&&parsed&&typeof parsed==='object'?parsed.error:null,!!(call&&call.sample));
     // Keep it under 4 KB: drop sample rows first, then columns.
     while(JSON.stringify(out).length>4096&&out.sample.length)out.sample.pop();
     if(JSON.stringify(out).length>4096)out.columns=out.columns.slice(0,10);
