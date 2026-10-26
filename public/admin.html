@@ -155,7 +155,7 @@
   /* feeds: calls and audit events */
   .feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .feed li{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0}
-  .feed .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .feed .fbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
   .feed .l1,.feed .l2{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
   .feed .l1 b{font:600 13px var(--sans)}
   .feed .ep{font:12px var(--mono);color:var(--ink);overflow-wrap:anywhere;min-width:0}
@@ -192,7 +192,7 @@
     .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .stats .stat:last-child{grid-column:1/-1}
     .mini{flex-wrap:wrap} .mini .id{flex-basis:calc(100% - 46px)} .mini .ctl{margin-left:44px}
     #audit-filter input,#audit-filter select{flex:1 1 140px;width:auto;max-width:none}
-    .feed li{gap:10px;padding:9px 10px;position:relative} .feed .body{padding-right:60px}
+    .feed li{gap:10px;padding:9px 10px;position:relative} .feed .fbody{padding-right:60px}
     .feed time{position:absolute;top:10px;right:10px;font-size:11px}
     .search{margin-left:0;width:100%}
   }

@@ -478,7 +478,7 @@
     const rows = d.usage, shown = rows.slice(0, usageShown);
     $('#t-usage').innerHTML = shown.length
       ? shown.map(u => '<li>' + bubble(statusTone(u.status), u.status == null ? '—' : esc(u.status), 'HTTP ' + (u.status == null ? 'no answer' : u.status)) +
-          '<div class="body"><div class="l1"><span class="pill method">' + esc(u.method || '?') + '</span><span class="ep">' + esc(u.endpoint || '') + '</span></div>' +
+          '<div class="fbody"><div class="l1"><span class="pill method">' + esc(u.method || '?') + '</span><span class="ep">' + esc(u.endpoint || '') + '</span></div>' +
           '<div class="l2">' + (u.product ? apiPill(u.product) : '') +
             (u.mode === 'sandbox' ? pill('staff', 'sandbox') : '') +
             (u.billable ? pill('yes', (u.rateClass || 'billed') + ' ' + (u.priceCents || 0) + '¢') : '') +
@@ -524,7 +524,7 @@
   };
   let auditRows = [], auditTotal = 0;
   const auditRow = a => '<li>' + eventBubble(a) +
-    '<div class="body"><div class="l1"><b>' + esc(a.event) + '</b>' +
+    '<div class="fbody"><div class="l1"><b>' + esc(a.event) + '</b>' +
       (a.outcome ? pill(OUTCOME_PILL[a.outcome] || 'pending', a.outcome) : '') + '</div>' +
     '<div class="l2"><span>' + esc(a.email || '—') + '</span>' +
       (a.ip ? '<span class="pill ip" title="' + esc(a.user_agent || '') + '">' + esc(a.ip) + '</span>' : '') + '</div>' +
