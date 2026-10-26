@@ -21,7 +21,7 @@
     --bg:#f8fafc; --bg2:#f1f5f9; --panel:#ffffff;
     --ink:#111827; --muted:#667085; --line:#e5e7eb; --line-strong:#cbd5e1;
     --accent:#2563eb; --accent-soft:#1d4ed8;
-    --ok:#15803d; --warn:#b45309; --err:#b91c1c;
+    --ok:#15803d; --warn:#b45309; --err:#b91c1c; --staff:#6d28d9;
     --shadow:0 8px 24px rgba(15,23,42,.08);
     /* chart roles — validated palette (light) */
     --surface-1:#ffffff;
@@ -36,7 +36,7 @@
     --bg:#01111E; --bg2:#050d16; --panel:#0a1628;
     --ink:#E8F1F8; --muted:#9fb8cc; --line:rgba(62,140,203,.18); --line-strong:rgba(62,140,203,.38);
     --accent:#3E8CCB; --accent-soft:#9CCBEF;
-    --ok:#a5d6a7; --warn:#f5d98a; --err:#ef9a9a;
+    --ok:#a5d6a7; --warn:#f5d98a; --err:#ef9a9a; --staff:#c4b5fd;
     --shadow:0 10px 30px rgba(62,140,203,.15);
     --surface-1:#0a1628;
     --series-1:#3987e5;
@@ -59,23 +59,34 @@
   .filters input,.filters select{font:13px var(--sans);padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink)}
   .filters button{height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:700 13px var(--sans);cursor:pointer}
   .chips{display:flex;gap:6px}
-  .chip{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);font:600 12px var(--sans);padding:7px 12px;border-radius:999px;cursor:pointer}
-  .chip[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:#fff}
+  .chip,.seg button{border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);font:600 12px var(--sans);padding:7px 12px;border-radius:999px;cursor:pointer}
+  .chip[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:#fff}
 
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
-  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
-  .kpi .k{font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  /* tones: one --tone per element, tinted backgrounds from it */
+  .bubble{--tone:var(--accent-soft);display:inline-grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;
+    color:var(--tone);background:color-mix(in srgb,var(--tone) 13%,transparent);border:1px solid color-mix(in srgb,var(--tone) 32%,transparent);
+    font:700 11px/1 var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .bubble.sm{width:28px;height:28px;font-size:10px}
+  .bubble svg{width:16px;height:16px}
+  .t-ok{--tone:var(--ok)} .t-warn{--tone:var(--warn)} .t-err{--tone:var(--err)}
+  .t-info{--tone:var(--accent-soft)} .t-staff{--tone:var(--staff)} .t-muted{--tone:var(--muted)}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:14px;margin-bottom:20px}
+  .kpi{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:var(--shadow);min-width:0}
+  .kpi .bubble{position:absolute;top:13px;right:13px}
+  .kpi .k{font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding-right:40px}
   .kpi .v{font:800 30px/1.1 var(--sans);margin:6px 0 2px;font-variant-numeric:tabular-nums}
   .kpi .d{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .kpi .d b{font-weight:700}
   .kpi .d.up b{color:var(--ok)} .kpi .d.down b{color:var(--err)}
-  .kpi svg{display:block;margin-top:8px}
+  .kpi svg.spark{display:block;margin-top:8px}
 
   .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:20px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);min-width:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);min-width:0}
   .card h2{font:700 14px var(--sans);margin:0 0 2px}
   .card .sub{font-size:12px;color:var(--muted);margin:0 0 12px}
   .card figure{margin:0}
+  .sect{margin-bottom:16px}
 
   table{border-collapse:collapse;width:100%;font-size:12.5px}
   th{text-align:left;font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
@@ -83,25 +94,84 @@
   tr:last-child td{border-bottom:0}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   td code{font:11.5px var(--mono);color:var(--accent-soft)}
-  .pill{display:inline-block;font:600 11px var(--sans);padding:2px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
-  .pill.yes{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
-  .pill.no{color:var(--muted);border-color:var(--line-strong);background:transparent}
-  .pill.pending{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
-  .pill.err{color:var(--err);border-color:color-mix(in srgb,var(--err) 45%,transparent);background:color-mix(in srgb,var(--err) 10%,transparent)}
-  .tablehead{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+
+  .pill{--tone:var(--muted);display:inline-flex;align-items:center;gap:5px;font:600 11px/1.2 var(--sans);padding:3px 9px;border-radius:999px;white-space:nowrap;
+    color:var(--tone);border:1px solid color-mix(in srgb,var(--tone) 42%,transparent);background:color-mix(in srgb,var(--tone) 9%,transparent)}
+  .pill.yes{--tone:var(--ok)} .pill.pending{--tone:var(--warn)} .pill.err{--tone:var(--err)} .pill.info{--tone:var(--accent-soft)} .pill.staff{--tone:var(--staff)}
+  .pill.no{--tone:var(--muted);background:transparent}
+  .pill.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .pill.api{--tone:var(--accent-soft);font:600 11px/1.2 var(--mono)}
+  .pill.method{--tone:var(--ink);font:700 10.5px/1.2 var(--mono);letter-spacing:.03em;padding:3px 7px}
+  .pill.ip{--tone:var(--muted);font:500 11px/1.2 var(--mono);background:var(--bg2)}
+  .pills{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+  .muted{color:var(--muted)}
+
+  .tablehead{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px}
   .tablehead h2{margin:0}
-  .csv{margin-left:auto;font:600 12px var(--sans);color:var(--accent-soft);text-decoration:none;border:1px solid var(--line-strong);border-radius:8px;padding:5px 11px}
+  .count{font:600 12px var(--sans);color:var(--muted)}
+  .csv{margin-left:auto;font:600 12px var(--sans);color:var(--accent-soft);text-decoration:none;border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px}
   .csv:hover{border-color:var(--accent)}
-  .ctl{font:700 12px var(--sans);padding:6px 13px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{padding:5px 11px}
+  .seg .n{font-variant-numeric:tabular-nums;opacity:.75;margin-left:3px}
+  .search,.toolbar input,.toolbar select{font:12px var(--sans);padding:6px 11px;border:1px solid var(--line-strong);border-radius:999px;background:var(--panel);color:var(--ink);min-width:0}
+  .search{margin-left:auto;width:min(260px,100%)}
+  #audit-filter input{width:160px} #audit-filter select{max-width:220px}
+
+  .ctl{font:700 12px var(--sans);padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;border:1px solid var(--line-strong);background:none;color:var(--ink)}
   .ctl.approve{border:0;background:var(--ok);color:#fff}
+  [data-theme="dark"] .ctl.approve{color:#01111E}
   .ctl.revoke{background:none;border:1px solid color-mix(in srgb,var(--err) 55%,transparent);color:var(--err)}
   .ctl:disabled{opacity:.55;cursor:progress}
-  .bw{display:flex;gap:6px;align-items:center}
-  .bw input{width:130px;font:12px var(--mono);padding:5px 8px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink)}
-  .ctl-err{display:block;color:var(--err);font-size:11px;margin-top:4px;max-width:160px}
-  .sx{margin-top:6px;justify-content:flex-end}.sx input{width:78px}
+  .bw{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .bw input{width:150px;min-width:0;font:12px var(--mono);padding:5px 10px;border:1px solid var(--line-strong);border-radius:999px;background:var(--panel);color:var(--ink)}
+  .sx input{width:90px}
+  .ctl-err{display:block;color:var(--err);font-size:11px;margin-top:4px}
+  .ctl-err:empty{display:none}
+
+  /* account and request cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
+  .acct,.req{display:flex;flex-direction:column;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+  .acct.waiting,.req.waiting{border-left:3px solid var(--warn)}
+  .acct.pastdue{border-left:3px solid var(--err)}
+  .ahead{display:flex;align-items:flex-start;gap:10px;min-width:0}
+  .ahead .id{flex:1;min-width:0}
+  .ahead b{display:block;font:700 14px/1.3 var(--sans);overflow-wrap:anywhere}
+  .ahead .muted{font-size:12px;overflow-wrap:anywhere}
+  .field{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .lbl{font:600 10.5px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .stat{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+  .stat .v{font:700 15px/1.3 var(--sans);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .stat .s{font-size:11px;color:var(--muted)}
+  .meter{height:6px;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden;margin-top:6px}
+  .meter i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
+  .meter.hot i{background:var(--warn)} .meter.full i{background:var(--err)}
+  .afoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+  .afoot .muted{flex:1;min-width:0;font-size:12px;overflow-wrap:anywhere}
+  .afoot time{font-size:12px;color:var(--muted);white-space:nowrap}
+
+  /* feeds: calls and audit events */
+  .feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .feed li{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0}
+  .feed .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .feed .l1,.feed .l2{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+  .feed .l1 b{font:600 13px var(--sans)}
+  .feed .ep{font:12px var(--mono);color:var(--ink);overflow-wrap:anywhere;min-width:0}
+  .feed .l2{font-size:12px;color:var(--muted)}
+  .feed .detail{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+  .feed time{flex:none;font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .morebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .morebar button{margin-left:auto}
+  .minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:10px;margin-bottom:16px}
+  .mini{display:flex;align-items:center;gap:10px;border:1px solid color-mix(in srgb,var(--err) 35%,var(--line));border-radius:12px;padding:10px 12px;min-width:0}
+  .mini .id{flex:1;min-width:0;font-size:12px}
+  .mini b{display:block;font-size:13px;overflow-wrap:anywhere}
+  .h3{font:700 13px var(--sans);margin:4px 0 8px}
+
   .scroll{overflow-x:auto}
-  .note{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 16px}
+  .note{font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:0 0 16px}
   .empty{color:var(--muted);font-size:13px;padding:14px 2px}
   .gate{max-width:560px;margin:90px auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:32px;text-align:center;box-shadow:var(--shadow)}
   .gate h2{margin:0 0 8px;font:700 19px var(--sans)}
@@ -116,6 +186,16 @@
   .catlabel{font:12px var(--sans);fill:var(--ink)}
   .tip{position:fixed;pointer-events:none;z-index:40;background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;box-shadow:var(--shadow);padding:7px 10px;font-size:12px;opacity:0;transition:opacity .1s}
   .tip b{font-variant-numeric:tabular-nums}
+  @media (max-width:560px){
+    header{padding:12px 16px} main{padding:16px 16px 60px}
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} .kpi{padding:13px 14px} .kpi .v{font-size:26px} .kpi .bubble{width:28px;height:28px;top:11px;right:11px}
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .stats .stat:last-child{grid-column:1/-1}
+    .mini{flex-wrap:wrap} .mini .id{flex-basis:calc(100% - 46px)} .mini .ctl{margin-left:44px}
+    #audit-filter input,#audit-filter select{flex:1 1 140px;width:auto;max-width:none}
+    .feed li{gap:10px;padding:9px 10px;position:relative} .feed .body{padding-right:60px}
+    .feed time{position:absolute;top:10px;right:10px;font-size:11px}
+    .search{margin-left:0;width:100%}
+  }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -179,604 +259,74 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:16px">
-      <div class="tablehead"><h2>Who has access</h2><a class="csv" id="csv-grants" href="#">Export CSV</a></div>
-      <div class="scroll"><table id="t-grants"></table></div>
-    </div>
+    <section class="card sect">
+      <div class="tablehead"><span class="bubble t-info" data-icon="building"></span><h2>Who has access</h2><span class="count" id="grants-count"></span><a class="csv" id="csv-grants" href="#">Export CSV</a></div>
+      <div class="toolbar">
+        <div class="seg" id="grants-seg" role="group" aria-label="Show accounts"></div>
+        <input type="search" class="search" id="grants-q" placeholder="Search organization or email" aria-label="Search accounts">
+      </div>
+      <div class="cards" id="grants"></div>
+    </section>
 
-    <div class="card" style="margin-bottom:16px">
-      <div class="tablehead" id="requests"><h2>Access requests</h2><a class="csv" id="csv-requests" href="#">Export CSV</a></div>
-      <div class="scroll"><table id="t-requests"></table></div>
-    </div>
+    <section class="card sect">
+      <div class="tablehead" id="requests"><span class="bubble t-warn" data-icon="inbox"></span><h2>Access requests</h2><span class="count" id="requests-count"></span><a class="csv" id="csv-requests" href="#">Export CSV</a></div>
+      <div class="cards" id="t-requests"></div>
+    </section>
 
-    <div class="card" style="margin-bottom:16px">
-      <div class="tablehead"><h2>Recent API calls</h2><a class="csv" id="csv-usage" href="#">Export CSV</a></div>
-      <div class="scroll"><table id="t-usage"></table></div>
-    </div>
+    <section class="card sect">
+      <div class="tablehead"><span class="bubble t-ok" data-icon="activity"></span><h2>Recent API calls</h2><a class="csv" id="csv-usage" href="#">Export CSV</a></div>
+      <ul class="feed" id="t-usage"></ul>
+      <div class="morebar" id="usage-more"></div>
+    </section>
 
-    <div class="card" id="billing-card">
-      <div class="tablehead"><h2>Billing</h2>
-        <input type="month" id="bill-month" style="margin-left:auto;font:600 12px var(--sans);padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
-        <button type="button" class="ctl revoke" id="bill-invoices" style="color:var(--ink)">Send invoices</button>
+    <section class="card sect" id="billing-card">
+      <div class="tablehead"><span class="bubble t-ok" data-icon="card"></span><h2>Billing</h2>
+        <input type="month" id="bill-month" style="margin-left:auto;font:600 12px var(--sans);padding:5px 10px;border-radius:999px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
+        <button type="button" class="ctl" id="bill-invoices">Send invoices</button>
         <button type="button" class="ctl approve" id="bill-run">Run charges</button>
       </div>
       <p id="bill-note" style="color:var(--muted);font-size:12px;margin:0 0 8px"></p>
       <div class="scroll"><table id="t-billing"></table></div>
-      <form id="bill-account" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:12px;color:var(--muted)">
+      <form id="bill-account" class="toolbar" style="margin:12px 0 0;font-size:12px;color:var(--muted)">
         Link a partner to a MIND billing account:
-        <input name="email" type="email" placeholder="partner email" required style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
-        <input name="mindAccount" placeholder="MIND account #" required style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)">
-        <button type="submit" class="ctl revoke" style="color:var(--ink)">Save</button>
+        <input name="email" type="email" placeholder="partner email" required>
+        <input name="mindAccount" placeholder="MIND account #" required>
+        <button type="submit" class="ctl">Save</button>
         <span id="bill-account-msg"></span>
       </form>
-    </div>
+    </section>
 
-    <div class="card" id="audit-card" style="margin-top:16px">
-      <div class="tablehead"><h2>Security &amp; audit</h2><a class="csv" id="csv-audit" href="#">Export CSV</a></div>
-      <p class="sub">Sign-ins with IP address, sign-ups, API keys and staff actions, in the dates above. Kept for one year. An account locks for 30 minutes after 5 wrong passwords.</p>
+    <section class="card sect" id="audit-card">
+      <div class="tablehead"><span class="bubble t-staff" data-icon="shield"></span><h2>Security &amp; audit</h2><a class="csv" id="csv-audit" href="#">Export CSV</a></div>
+      <p class="sub">Sign-ins with IP address, sign-ups, API keys and staff actions, in the dates above, newest first. Kept for one year. An account locks for 30 minutes after 5 wrong passwords.</p>
       <div class="kpis" id="audit-kpis"></div>
-      <h2 style="font-size:13px;margin:6px 0 8px">Locked accounts</h2>
-      <div class="scroll" style="margin-bottom:14px"><table id="t-locked"></table></div>
-      <form id="audit-filter" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
-        <input name="email" placeholder="email contains" style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);font:12px var(--sans)">
-        <input name="ip" placeholder="IP contains" style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);font:12px var(--sans)">
-        <select name="event" id="audit-event" style="padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);font:12px var(--sans)">
+      <h3 class="h3">Locked accounts</h3>
+      <div id="t-locked"></div>
+      <form id="audit-filter" class="toolbar">
+        <div class="seg" id="audit-seg" role="group" aria-label="Event type"></div>
+        <input name="email" placeholder="email contains" aria-label="Email contains">
+        <input name="ip" placeholder="IP contains" aria-label="IP contains">
+        <select name="event" id="audit-event" aria-label="Event">
           <option value="">All events</option>
-          <option value="login.">Logins (all)</option>
-          <option value="signup.">Sign-ups (all)</option>
-          <option value="admin.">Staff actions (all)</option>
         </select>
         <button type="submit" class="ctl approve">Filter</button>
       </form>
-      <div class="scroll"><table id="t-audit"></table></div>
-    </div>
+      <ul class="feed" id="t-audit"></ul>
+      <div class="morebar" id="audit-more"></div>
+    </section>
   </div>
 </main>
 <div class="tip" id="tip" role="status"></div>
 
 <script>
-(async function(){
-  // Works served from the gateway AND copy-pasted into a Webflow embed: call
-  // the gateway absolutely unless this page is already running on it (same
-  // pattern as the landing page).
-  const GATEWAY = (location.hostname.endsWith('onrender.com') || location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-    ? '' : 'https://api-marketplace-1im9.onrender.com';
-  const $ = s => document.querySelector(s);
-  // Also used inside attribute values (data-*, title), so quotes are escaped.
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const fmt = n => Number(n || 0).toLocaleString('en-CA');
-  const cad = c => '$' + (Number(c || 0) / 100).toFixed(2);
-  const tip = $('#tip');
-
-  // ---- theme -------------------------------------------------------------
-  $('#theme-toggle').onclick = () => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('iristel-api-theme', next); } catch {}
-    if (last) render(last);           // re-draw charts with the new tokens
-  };
-
-  // ---- who is asking -----------------------------------------------------
-  const email = (window.MarketplaceAccess && window.MarketplaceAccess.email()) || '';
-  const session = (window.MarketplaceAccess && window.MarketplaceAccess.session()) || '';
-  const auth = session ? { Authorization: 'Bearer ' + session } : {};
-  $('#who').textContent = email || 'not signed in';
-
-  // ---- date range --------------------------------------------------------
-  const iso = d => d.toISOString().slice(0, 10);
-  function setDays(n){
-    const to = new Date();
-    const from = new Date(); from.setDate(from.getDate() - (n - 1));
-    $('#from').value = iso(from); $('#to').value = iso(to);
-  }
-  setDays(30);
-  document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
-    document.querySelectorAll('.chip').forEach(o => o.setAttribute('aria-pressed', String(o === c)));
-    setDays(+c.dataset.days); load();
-  });
-  $('#apply').onclick = load;
-  $('#product').onchange = load;
-
-  let last = null;
-
-  function query(extra){
-    const p = new URLSearchParams({ from: $('#from').value, to: $('#to').value });
-    if ($('#product').value) p.set('product', $('#product').value);
-    Object.entries(extra || {}).forEach(([k, v]) => p.set(k, v));
-    return p.toString();
-  }
-
-  async function load(){
-    try {
-      const r = await fetch(GATEWAY + '/marketplace/admin/summary?' + query(), { headers: auth });
-      if (r.status === 401 || r.status === 403) {
-        const body = await r.json().catch(() => ({}));
-        $('#gate').hidden = false; $('#board').hidden = true;
-        if (body.message) $('#gate-msg').textContent = body.message +
-          (email ? ' (signed in as ' + email + ')' : '');
-        return;
-      }
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const data = await r.json();
-      $('#gate').hidden = true; $('#board').hidden = false;
-      last = data;
-      render(data);
-      // The nav's "access requests waiting" row links here; the board is
-      // hidden until the first load, so the browser couldn't scroll to it.
-      if (location.hash === '#requests' && !load.scrolled) {
-        load.scrolled = true;
-        $('#requests').scrollIntoView({ block: 'start' });
-      }
-    } catch (err) {
-      $('#gate').hidden = false; $('#board').hidden = true;
-      $('#gate-msg').textContent = 'Could not load the dashboard: ' + err.message;
-    }
-  }
-
-  // ---- charts ------------------------------------------------------------
-  // Inline SVG, no libraries. One series per chart, so identity never depends
-  // on color; every bar carries its own value label.
-  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-
-  function showTip(ev, html){
-    tip.innerHTML = html; tip.style.opacity = '1';
-    const pad = 14;
-    tip.style.left = Math.min(ev.clientX + pad, innerWidth - tip.offsetWidth - 8) + 'px';
-    tip.style.top  = Math.max(ev.clientY - tip.offsetHeight - pad, 8) + 'px';
-  }
-  const hideTip = () => { tip.style.opacity = '0'; };
-
-  // Line + area over time, with a crosshair on hover.
-  function lineChart(el, days, values, color, label){
-    const W = 560, H = 190, L = 40, R = 12, T = 12, B = 26;
-    const max = Math.max(1, ...values);
-    const x = i => L + (values.length <= 1 ? 0 : i * (W - L - R) / (values.length - 1));
-    const y = v => T + (H - T - B) * (1 - v / max);
-    const pts = values.map((v, i) => x(i) + ',' + y(v));
-    const ticks = [0, Math.round(max / 2), max].filter((v, i, a) => a.indexOf(v) === i);
-    const short = d => d.slice(5).replace('-', '/');
-
-    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(label) + '">';
-    ticks.forEach(t => {
-      s += '<line class="gridline" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '"/>' +
-           '<text class="axis" x="' + (L - 8) + '" y="' + (y(t) + 4) + '" text-anchor="end" style="font:11px var(--sans);fill:var(--muted)">' + fmt(t) + '</text>';
-    });
-    s += '<polygon points="' + L + ',' + y(0) + ' ' + pts.join(' ') + ' ' + x(values.length - 1) + ',' + y(0) +
-         '" fill="' + color + '" opacity=".13"/>';
-    s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-    // last point emphasised
-    if (values.length) {
-      s += '<circle cx="' + x(values.length - 1) + '" cy="' + y(values[values.length - 1]) +
-           '" r="4" fill="' + color + '" stroke="var(--surface-1)" stroke-width="2"/>';
-    }
-    [0, Math.floor(days.length / 2), days.length - 1].filter((v, i, a) => a.indexOf(v) === i && v >= 0).forEach(i => {
-      s += '<text class="axis" x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" style="font:11px var(--sans);fill:var(--muted)">' + esc(short(days[i])) + '</text>';
-    });
-    // invisible hover columns
-    const w = (W - L - R) / Math.max(1, values.length);
-    values.forEach((v, i) => {
-      s += '<rect x="' + (x(i) - w / 2) + '" y="' + T + '" width="' + w + '" height="' + (H - T - B) +
-           '" fill="transparent" data-i="' + i + '"/>';
-    });
-    s += '</svg>';
-    el.innerHTML = s;
-    el.querySelectorAll('rect[data-i]').forEach(rect => {
-      rect.addEventListener('mousemove', ev => {
-        const i = +rect.dataset.i;
-        showTip(ev, '<div>' + esc(days[i]) + '</div><b>' + fmt(values[i]) + '</b> ' + esc(label));
-      });
-      rect.addEventListener('mouseleave', hideTip);
-    });
-  }
-
-  // Horizontal bars: category on the left, value labelled at the end.
-  function barChart(el, rows, color, label){
-    if (!rows.length) { el.innerHTML = '<p class="empty">Nothing in this range yet.</p>'; return; }
-    const rowH = 30, W = 560, L = 150, R = 56, T = 4;
-    const H = T + rows.length * rowH;
-    const max = Math.max(1, ...rows.map(r => r.value));
-    const bw = v => Math.max(2, (W - L - R) * v / max);
-    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(label) + '">';
-    rows.forEach((r, i) => {
-      const y = T + i * rowH + 5;
-      s += '<text class="catlabel" x="' + (L - 10) + '" y="' + (y + 13) + '" text-anchor="end" style="font:12px var(--sans);fill:var(--ink)">' + esc(r.name) + '</text>';
-      // 4px rounded data-end, anchored to the baseline
-      s += '<rect x="' + L + '" y="' + y + '" width="' + bw(r.value) + '" height="18" rx="4" fill="' + color + '" data-i="' + i + '"/>';
-      s += '<text class="barlabel" x="' + (L + bw(r.value) + 8) + '" y="' + (y + 13) + '" style="font:600 11px var(--sans);fill:var(--ink)">' + fmt(r.value) + '</text>';
-    });
-    s += '</svg>';
-    el.innerHTML = s;
-    el.querySelectorAll('rect[data-i]').forEach(rect => {
-      rect.addEventListener('mousemove', ev => {
-        const r = rows[+rect.dataset.i];
-        showTip(ev, '<div>' + esc(r.name) + '</div><b>' + fmt(r.value) + '</b> ' + esc(label) +
-          (r.extra ? '<div style="color:var(--muted)">' + esc(r.extra) + '</div>' : ''));
-      });
-      rect.addEventListener('mouseleave', hideTip);
-    });
-  }
-
-  function sparkline(values, color){
-    if (!values || values.length < 2) return '';
-    const W = 130, H = 26, max = Math.max(1, ...values);
-    const pts = values.map((v, i) => (i * W / (values.length - 1)) + ',' + (H - (H - 3) * v / max)).join(' ');
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true">' +
-      '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  }
-
-  // ---- render ------------------------------------------------------------
-  function kpiCard(k, label, spark, color, showDelta){
-    const d = showDelta && k.prev !== k.value
-      ? '<div class="d ' + (k.change >= 0 ? 'up' : 'down') + '"><b>' + (k.change >= 0 ? '+' : '') + fmt(k.change) +
-        '</b> vs previous period</div>'
-      : '<div class="d">' + (showDelta ? 'no change vs previous period' : 'current total') + '</div>';
-    return '<div class="kpi"><div class="k">' + esc(label) + '</div><div class="v">' + fmt(k.value) + '</div>' +
-      d + (spark ? sparkline(spark, color) : '') + '</div>';
-  }
-
-  function render(d){
-    const c1 = css('--series-1'), c2 = css('--series-2');
-
-    // product filter options (once)
-    const sel = $('#product');
-    if (sel.options.length <= 1 && d.products) {
-      d.products.forEach(p => {
-        const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o);
-      });
-    }
-
-    $('#source-note').innerHTML = (d.sources.crm.available
-      ? 'Access data comes from Dynamics 365 and is permanent. '
-      : '<b>Dynamics is not configured on this gateway</b> — the access table is empty until the D365 environment variables are set. ') +
-      (d.sources.local.durable
-        ? 'Requests, usage and billing are stored on the persistent disk (<code>' + esc(d.sources.local.dataDir) + '</code>) and survive redeploys.'
-        : '<b>Requests, usage and billing are NOT on a persistent disk</b> (<code>' + esc(d.sources.local.dataDir) + '</code>' +
-          (d.sources.local.fromEnv ? ' is not a mounted disk' : ', DATA_DIR is not set') +
-          ') — they are wiped on every deploy. Set DATA_DIR on Render to the disk\'s mount path.') +
-      (d.sources.crm.error ? ' CRM error: ' + esc(d.sources.crm.error) : '');
-
-    $('#kpis').innerHTML =
-      kpiCard(d.kpis.approvedAccounts, 'Accounts with access', null, c1, false) +
-      kpiCard(d.kpis.productsGranted, 'APIs granted', null, c1, false) +
-      kpiCard(d.kpis.pendingRequests, 'Requests awaiting review', null, c1, false) +
-      kpiCard(d.kpis.requests, 'Requests in range', d.series.requests, c1, true) +
-      kpiCard(d.kpis.calls, 'API calls in range', d.series.calls, c2, true) +
-      kpiCard(d.kpis.activeUsers, 'People calling APIs', null, c2, true);
-
-    $('#req-sub').textContent = d.range.from + ' to ' + d.range.to;
-    $('#calls-sub').textContent = d.range.from + ' to ' + d.range.to;
-    lineChart($('#chart-requests'), d.series.days, d.series.requests, c1, 'requests');
-    lineChart($('#chart-calls'), d.series.days, d.series.calls, c2, 'calls');
-
-    barChart($('#chart-accounts'),
-      d.byProduct.filter(p => p.accounts > 0).sort((a, b) => b.accounts - a.accounts)
-        .map(p => ({ name: p.name, value: p.accounts })), c1, 'accounts');
-    barChart($('#chart-product-calls'),
-      d.byProduct.filter(p => p.calls > 0).map(p => ({
-        name: p.name, value: p.calls,
-        extra: p.errors ? p.errors + ' failed' : 'all succeeded'
-      })), c2, 'calls');
-
-    // This month, per partner: card on file (Standard and Advanced live calls
-    // need one), sandbox calls, billed events and the amount so far.
-    const none = '<span style="color:var(--muted)">—</span>';
-    const card = p => !p ? none : p.pastDue ? '<span class="pill err">past due</span>'
-      : '<span class="pill ' + (p.cardOnFile ? 'yes">on file' : 'no">none') + '</span>';
-    // Sandbox: the account's calls / limit (+ext: extended); Extend if approved.
-    const sbx = g => !g.plan ? none : esc(fmt(g.plan.sandboxCalls)) + (g.plan.sandboxLimit ? ' / ' + esc(fmt(g.plan.sandboxLimit)) : '') +
-      (g.plan.sandboxExtra > 0 ? ' <span class="pill pending" title="Includes an extension of ' + esc(fmt(g.plan.sandboxExtra)) + ' calls">+ext</span>' : '') +
-      (g.approved ? '<form class="bw sx" data-account="' + esc(g.accountId) + '"><input name="sx" type="number" min="1" max="100000" step="1" required placeholder="+calls" aria-label="Extra sandbox calls for ' + esc(g.organization) + '"><button type="submit" class="ctl revoke" style="color:var(--ink)">Grant</button></form><span class="ctl-err"></span>' : '');
-    // BroadWorks: the one enterprise this account's users reach through the
-    // BroadWorks API (empty unlinks). Shown when the account holds or asked
-    // for that product, or is already linked.
-    const bw = g => (g.products.concat(g.requested || []).includes('broadworks') || g.broadworksEnterprise)
-      ? '<form class="bw" data-account="' + esc(g.accountId) + '"><input name="bw" value="' + esc(g.broadworksEnterprise || '') +
-        '" placeholder="not linked" aria-label="BroadWorks enterprise for ' + esc(g.organization) + '">' +
-        '<button type="submit" class="ctl revoke" style="color:var(--ink)">Save</button></form><span class="ctl-err"></span>'
-      : none;
-    // Access table — the Control column flips the CRM approved switch.
-    const crmOk = d.sources.crm.available;
-    $('#t-grants').innerHTML = d.grants.length
-      ? '<thead><tr><th>Control</th><th>Organization</th><th>Type</th><th>Primary contact</th><th>Access</th><th>Bundle</th><th>APIs in bundle</th><th>APIs granted</th>' +
-        '<th>Card</th><th class="num">Sandbox</th><th>Events</th><th class="num">This month</th><th>BroadWorks enterprise</th><th>Reg #</th><th>Application</th></tr></thead><tbody>' +
-        d.grants.map(g => '<tr>' +
-          '<td>' + (crmOk
-            ? '<button type="button" class="ctl ' + (g.approved ? 'revoke' : 'approve') +
-              '" data-account="' + esc(g.accountId) + '" data-next="' + (!g.approved) + '">' +
-              (g.approved ? 'Revoke' : 'Approve') + '</button><span class="ctl-err"></span>'
-            : '<span style="color:var(--muted);font-size:11px">CRM offline</span>') + '</td>' +
-          '<td>' + esc(g.organization) + '</td><td>' + (g.accountType ? esc(g.accountType) : none) + '</td><td>' + esc(g.email) + '</td>' +
-          '<td><span class="pill ' + (g.approved ? 'yes' : 'no') + '">' + (g.approved ? 'Approved' : 'No access') + '</span></td>' +
-          '<td>' + ((g.bundles || []).length ? g.bundles.map(b => esc(b.name)).join('<br>') : none) + '</td>' +
-          '<td>' + ((g.bundles || []).length ? g.bundles.map(b => b.apis.map(a => '<code>' + esc(a) + '</code>').join(' ') || none).join('<br>') : none) + '</td>' +
-          '<td>' + (g.products.length ? g.products.map(p => '<code>' + esc(p) + '</code>').join(' ') : none) + '</td>' +
-          '<td>' + card(g.plan) + '</td>' +
-          '<td class="num" title="Sandbox calls this month, shared by the account">' + sbx(g) + '</td>' +
-          '<td style="white-space:nowrap">' + (g.plan ? esc(fmt(g.plan.standardEvents)) + ' Std · ' + esc(fmt(g.plan.advancedEvents)) + ' Adv' : none) + '</td>' +
-          '<td class="num">' + (g.plan ? esc(cad(g.plan.cents)) : none) + '</td>' +
-          '<td>' + bw(g) + '</td>' +
-          '<td>' + (g.businessRegNumber ? esc(g.businessRegNumber) : g.department ? esc(g.department) + ' <span style="color:var(--muted)">(dept.)</span>' : none) +
-            (g.regCheck ? ' <span class="pill ' + (/^verified/.test(g.regCheck) ? 'yes' : /^invalid/.test(g.regCheck) ? 'no' : 'pending') + '" title="' + esc(g.regCheck) + '">' +
-              esc(g.regCheck.split(' · ')[0]) + '</span>' : '') + '</td>' +
-          '<td>' + esc(g.application) + '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No accounts have been through the marketplace flow yet.</td></tr></tbody>';
-
-    $('#t-grants').querySelectorAll('[data-next]').forEach(btn => {
-      btn.onclick = async () => {
-        const approve = btn.dataset.next === 'true';
-        if (!approve && !confirm('Revoke marketplace access for this account? Their console closes on their next visit.')) return;
-        btn.disabled = true; const label = btn.textContent; btn.textContent = 'Saving…';
-        try {
-          const r = await fetch(GATEWAY + '/marketplace/admin/access', {
-            method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accountId: btn.dataset.account, approved: approve })
-          });
-          const body = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
-          await load();                       // pill, KPIs and charts move together
-        } catch (err) {
-          btn.disabled = false; btn.textContent = label;
-          const e = btn.closest('td').querySelector('.ctl-err');
-          if (e) e.textContent = err.message;
-        }
-      };
-    });
-    // BroadWorks link: same route, { accountId, broadworksEnterprise }.
-    $('#t-grants').querySelectorAll('form.bw').forEach(f => {
-      f.onsubmit = async (ev) => {
-        ev.preventDefault();
-        const inp = f.elements.bw, v = inp.value.trim(), btn = f.querySelector('button');
-        const e = f.closest('td').querySelector('.ctl-err');
-        if (!v && inp.defaultValue && !confirm('Unlink this account from BroadWorks enterprise ' + inp.defaultValue + '?')) return;
-        if (e) e.textContent = '';
-        btn.disabled = true;
-        try {
-          const r = await fetch(GATEWAY + '/marketplace/admin/access', {
-            method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accountId: f.dataset.account, broadworksEnterprise: v })
-          });
-          const body = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
-          await load();                       // shows the saved link
-          if (body.warning) {                 // e.g. the enterprise is linked to another account too
-            const nf = [...$('#t-grants').querySelectorAll('form.bw')].find(x => x.dataset.account === f.dataset.account);
-            const ne = nf && nf.closest('td').querySelector('.ctl-err');
-            if (ne) ne.textContent = body.warning;
-          }
-        } catch (err) {
-          btn.disabled = false;
-          if (e) e.textContent = err.message;
-        }
-      };
-    });
-
-    // Sandbox extension for this month, then reload.
-    $('#t-grants').querySelectorAll('form.sx').forEach(f => {
-      f.onsubmit = async (ev) => {
-        ev.preventDefault();
-        const n = Number(f.elements.sx.value), btn = f.querySelector('button'), e = f.nextElementSibling;
-        e.textContent = '';
-        if (!Number.isInteger(n) || n < 1 || n > 100000) { e.textContent = 'Enter 1 to 100,000 calls'; return; }
-        if (!confirm('Grant ' + fmt(n) + ' extra sandbox calls this month? A grant can\'t be taken back.')) return;
-        btn.disabled = true;
-        try {
-          const r = await fetch(GATEWAY + '/marketplace/admin/sandbox-extension', {
-            method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accountId: f.dataset.account, extraCalls: n })
-          });
-          const body = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(body.error || 'HTTP ' + r.status);
-          await load();
-        } catch (err) { btn.disabled = false; e.textContent = err.message; }
-      };
-    });
-
-    // Requests table
-    $('#t-requests').innerHTML = d.requests.length
-      ? '<thead><tr><th>Received</th><th>Organization</th><th>Type</th><th>Email</th><th>Application</th><th>Bundles</th><th>APIs</th><th>Status</th></tr></thead><tbody>' +
-        d.requests.map(r => '<tr><td>' + esc(String(r.receivedAt).slice(0, 16).replace('T', ' ')) + '</td>' +
-          '<td>' + esc(r.organization) + '</td><td>' + (r.accountType ? esc(r.accountType) : '<span style="color:var(--muted)">—</span>') + '</td><td>' + esc(r.email) + '</td><td>' + esc(r.applicationName) + '</td>' +
-          '<td>' + ((r.bundles || []).length || r.other
-            ? (r.bundles || []).map(b => esc(b.name)).join('<br>') + (r.other ? (r.bundles && r.bundles.length ? '<br>' : '') + 'Other: <span style="color:var(--muted)">' + esc(r.other) + '</span>' : '')
-            : '<span style="color:var(--muted)">—</span>') + '</td>' +
-          '<td>' + (r.products || []).map(p => '<code>' + esc(p) + '</code>').join(' ') + '</td>' +
-          '<td><span class="pill ' + (r.status === 'pending-review' ? 'pending' : 'yes') + '">' + esc(r.status) + '</span>' +
-          ((r.reasons || []).length ? '<div style="color:var(--muted);font-size:11.5px;margin-top:3px">' + esc(r.reasons.join('; ')) + '</div>' : '') +
-          '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No access requests in this range.</td></tr></tbody>';
-
-    // Usage table
-    $('#t-usage').innerHTML = d.usage.length
-      ? '<thead><tr><th>When</th><th>Who</th><th>IP</th><th>API</th><th>Endpoint</th><th>Status</th><th class="num">ms</th></tr></thead><tbody>' +
-        d.usage.map(u => '<tr><td>' + esc(String(u.at).slice(0, 19).replace('T', ' ')) + '</td>' +
-          '<td>' + esc(u.email || '—') + '</td>' +
-          '<td title="' + esc(u.userAgent || '') + '">' + (u.ip ? '<code>' + esc(u.ip) + '</code>' : '<span style="color:var(--muted)">—</span>') + '</td>' +
-          '<td><code>' + esc(u.product || '—') + '</code></td>' +
-          '<td><code>' + esc((u.method || '') + ' ' + (u.endpoint || '')) + '</code></td>' +
-          '<td>' + (u.status == null ? '—' : '<span class="pill ' + (u.status >= 200 && u.status < 300 ? 'yes' : 'pending') + '">' + u.status + '</span>') + '</td>' +
-          '<td class="num">' + (u.ms == null ? '—' : fmt(u.ms)) + '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No API calls recorded in this range. Every call through the gateway is counted, from the console or a partner\'s own app.</td></tr></tbody>';
-
-    // Downloads go through fetch so the session token rides in a header.
-    ['grants', 'requests', 'usage', 'audit'].forEach(view => {
-      $('#csv-' + view).onclick = async (ev) => {
-        ev.preventDefault();
-        const r = await fetch(GATEWAY + '/marketplace/admin/export.csv?' + query(view === 'audit' ? { view, ...auditFilter() } : { view }), { headers: auth });
-        if (!r.ok) { alert('Export failed: HTTP ' + r.status); return; }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(await r.blob());
-        a.download = 'marketplace-' + view + '.csv';
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      };
-    });
-  }
-
-  load();
-
-  // ---- security & audit ----------------------------------------------------
-  const OUTCOME_PILL = { ok: 'yes', denied: 'no', locked: 'no', rejected: 'no', error: 'no', partial: 'pending', declined: 'pending' };
-  const when = t => esc(String(t || '').slice(0, 19).replace('T', ' '));
-  const auditFilter = () => {
-    const f = Object.fromEntries(new FormData($('#audit-filter')).entries());
-    Object.keys(f).forEach(k => { if (!f[k]) delete f[k]; });
-    return f;
-  };
-  async function loadAudit(){
-    const [ra, rl] = await Promise.all([
-      fetch(GATEWAY + '/marketplace/admin/audit?' + query(auditFilter()), { headers: auth }),
-      fetch(GATEWAY + '/marketplace/admin/locked', { headers: auth }),
-    ]);
-    if (!ra.ok || !rl.ok) { $('#audit-card').hidden = true; return; }
-    const d = await ra.json(), locked = (await rl.json()).rows;
-    const k = d.kpis;
-    const tile = (label, v, note) => '<div class="kpi"><div class="k">' + esc(label) + '</div><div class="v">' + fmt(v) + '</div><div class="d">' + esc(note) + '</div></div>';
-    $('#audit-kpis').innerHTML =
-      tile('Sign-ins', k.logins24h, 'last 24 hours') + tile('Wrong passwords', k.failed24h, 'last 24 hours') +
-      tile('Locked now', k.lockedNow, 'auto-unlock after 30 min') + tile('Sign-ups', k.signups24h, 'last 24 hours') +
-      tile('Rate-limited', k.rateLimited24h, 'last 24 hours');
-    const sel = $('#audit-event');
-    d.events.forEach(ev => {
-      if (![...sel.options].some(o => o.value === ev)) {
-        const o = document.createElement('option'); o.value = ev; o.textContent = ev; sel.appendChild(o);
-      }
-    });
-    $('#t-locked').innerHTML = locked.length
-      ? '<thead><tr><th>Email</th><th>Last IP</th><th class="num">Wrong passwords</th><th>Locked until</th><th></th></tr></thead><tbody>' +
-        locked.map(x => '<tr><td>' + esc(x.email) + '</td><td>' + (x.lastIp ? '<code>' + esc(x.lastIp) + '</code>' : '—') + '</td>' +
-          '<td class="num">' + fmt(x.failures) + '</td><td>' + when(x.lockedUntil) + ' UTC</td>' +
-          '<td><button type="button" class="ctl approve" data-unlock="' + esc(x.email) + '">Unlock</button></td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No accounts are locked.</td></tr></tbody>';
-    $('#t-audit').innerHTML = d.rows.length
-      ? '<thead><tr><th>When (UTC)</th><th>Event</th><th>Email</th><th>IP</th><th>Outcome</th><th>Detail</th></tr></thead><tbody>' +
-        d.rows.map(a => '<tr><td>' + when(a.at) + '</td><td><code>' + esc(a.event) + '</code></td>' +
-          '<td>' + esc(a.email || '—') + '</td>' +
-          '<td title="' + esc(a.user_agent || '') + '">' + (a.ip ? '<code>' + esc(a.ip) + '</code>' : '—') + '</td>' +
-          '<td>' + (a.outcome ? '<span class="pill ' + (OUTCOME_PILL[a.outcome] || 'pending') + '">' + esc(a.outcome) + '</span>' : '—') + '</td>' +
-          '<td style="color:var(--muted)">' + esc(a.detail || '') + '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No events match in this range.</td></tr></tbody>';
-  }
-  $('#t-locked').onclick = async (ev) => {
-    const btn = ev.target.closest('[data-unlock]');
-    if (!btn) return;
-    if (!confirm('Unlock ' + btn.dataset.unlock + ' now?')) return;
-    btn.disabled = true;
-    const r = await fetch(GATEWAY + '/marketplace/admin/unlock', {
-      method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: btn.dataset.unlock }) });
-    if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'HTTP ' + r.status); }
-    loadAudit();
-  };
-  $('#audit-filter').onsubmit = (ev) => { ev.preventDefault(); loadAudit(); };
-  $('#apply').addEventListener('click', loadAudit);
-  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', loadAudit));
-  loadAudit();
-
-  // ---- billing ------------------------------------------------------------
-  const billMonth = $('#bill-month');
-  billMonth.value = new Date().toISOString().slice(0, 7);
-  const STATUS_PILL = { paid: 'yes', declined: 'pending', unknown: 'pending', pending: 'pending', no_card: 'no', no_account: 'no' };
-  async function loadBilling(){
-    const r = await fetch(GATEWAY + '/marketplace/admin/billing?month=' + encodeURIComponent(billMonth.value), { headers: auth });
-    if (!r.ok) { $('#billing-card').hidden = true; return; }
-    const d = await r.json();
-    $('#bill-note').textContent = 'Billed for ' + d.month + ': ' + cad(d.totalCents) + ' CAD before tax — successful live Standard and Advanced events at the proposed per-event rates. Free reads, service orders and sandbox calls are never billed. ' +
-      'Invoices go out automatically on the 1st and are charged on the 5th (both buttons do it now). Only emailed invoices are charged, tax included. ' +
-      'Running charges again retries declined ones but never repeats a paid or unknown one — for unknown, check the payment in MIND, then Retry or Mark paid.';
-    // Months billed per call (before rate classes): keep that column for them.
-    const perCall = d.rows.some(x => x.billableCalls > (x.standardEvents || 0) + (x.advancedEvents || 0));
-    $('#t-billing').innerHTML = d.rows.length
-      ? '<thead><tr><th>Partner</th><th>MIND account</th><th class="num">Calls</th><th class="num">Standard events</th><th class="num">Advanced events</th><th class="num">Sandbox calls</th>' + (perCall ? '<th class="num">Billed calls</th>' : '') +
-        '<th class="num">Amount</th><th>Invoice</th><th>Card</th><th>Charge</th></tr></thead><tbody>' +
-        d.rows.map(x => '<tr><td>' + esc(x.email) + (x.pastDue ? ' <span class="pill pending">past due</span>' : '') + '</td>' +
-          '<td>' + (x.mindAccount ? '<code>' + esc(x.mindAccount) + '</code>' : '<span style="color:var(--muted)">not linked</span>') + '</td>' +
-          '<td class="num">' + fmt(x.calls) + '</td><td class="num">' + esc(fmt(x.standardEvents)) + '</td><td class="num">' + esc(fmt(x.advancedEvents)) + '</td><td class="num">' + esc(fmt(x.sandboxCalls)) + '</td>' + (perCall ? '<td class="num">' + fmt(x.billableCalls) + '</td>' : '') + '<td class="num">' + cad(x.cents) + '</td>' +
-          '<td>' + (x.invoice
-            ? '<code>' + esc(x.invoice.number) + '</code> ' + cad(x.invoice.cents) + (x.invoice.sent ? '' : ' <span class="pill pending">not sent</span>') +
-              (x.invoice.taxReview ? ' <span class="pill pending" title="No province on file: GST only">check tax</span>' : '') +
-              ' <button type="button" class="ctl" data-inv="' + esc(x.invoice.number) + '">View</button>'
-            : '<button type="button" class="ctl" data-preview="' + esc(x.email) + '">Preview</button>') + '</td>' +
-          '<td>' + (x.card ? '<code>' + esc(x.card) + '</code>' : '<span style="color:var(--muted)">none</span>') + '</td>' +
-          '<td>' + (x.charge ? '<span class="pill ' + (STATUS_PILL[x.charge.status] || 'no') + '">' + esc(x.charge.status.replace('_', ' ')) + '</span> ' + cad(x.charge.cents) +
-            (['declined', 'unknown'].includes(x.charge.status) ? ' <button type="button" class="ctl approve" data-bill="retry" data-email="' + esc(x.email) + '">Retry</button>' : '') +
-            (x.charge.status === 'unknown' ? ' <button type="button" class="ctl" data-bill="mark-paid" data-email="' + esc(x.email) + '">Mark paid</button>' : '')
-            : '<span style="color:var(--muted)">—</span>') + '</td></tr>').join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">No usage recorded for this month.</td></tr></tbody>';
-  }
-  // Invoices are served as HTML behind the staff session: fetch, then open.
-  async function openHtml(url){
-    const w = window.open('', '_blank');
-    const r = await fetch(url, { headers: auth });
-    const html = await r.text();
-    if (!r.ok) { if (w) w.close(); alert(html || 'HTTP ' + r.status); return; }
-    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
-  }
-  $('#t-billing').onclick = async (ev) => {
-    const inv = ev.target.closest('[data-inv]'), pre = ev.target.closest('[data-preview]');
-    if (inv) return openHtml(GATEWAY + '/marketplace/invoices/' + encodeURIComponent(inv.dataset.inv));
-    if (pre) return openHtml(GATEWAY + '/marketplace/admin/invoices/preview?email=' + encodeURIComponent(pre.dataset.preview) + '&month=' + encodeURIComponent(billMonth.value));
-    const btn = ev.target.closest('[data-bill]');
-    if (!btn) return;
-    const action = btn.dataset.bill, email = btn.dataset.email, m = billMonth.value;
-    const ask = action === 'mark-paid'
-      ? 'Mark ' + email + '\'s ' + m + ' charge as paid? Only do this after confirming the payment in MIND.'
-      : 'Charge ' + email + ' for ' + m + ' again? For an unknown charge, first confirm in MIND that the earlier attempt did not go through.';
-    if (!confirm(ask)) return;
-    btn.disabled = true;
-    try {
-      const r = await fetch(GATEWAY + '/marketplace/admin/billing/' + action, {
-        method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, month: m }) });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
-      if (action === 'retry') alert('Result: ' + d.status);
-    } catch (err) { alert(err.message); }
-    loadBilling();
-  };
-  billMonth.onchange = loadBilling;
-  $('#bill-run').onclick = async () => {
-    const m = billMonth.value;
-    if (!confirm('Charge every emailed ' + m + ' invoice now? Paid charges are never repeated.')) return;
-    const btn = $('#bill-run'); btn.disabled = true; btn.textContent = 'Charging…';
-    try {
-      const r = await fetch(GATEWAY + '/marketplace/admin/billing/run', {
-        method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ month: m }) });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
-      const errs = (d.results || []).filter(x => x.status === 'error');
-      const noInv = (d.results || []).filter(x => x.status === 'no_invoice');
-      alert((d.results || []).length - noInv.length + ' invoice(s) processed.' +
-        (noInv.length ? '\n' + noInv.length + ' partner(s) have no emailed invoice yet — send invoices first.' : '') +
-        (errs.length ? '\n' + errs.map(x => x.email + ': ' + x.error).join('\n') : ''));
-    } catch (err) { alert('Charge run failed: ' + err.message); }
-    btn.disabled = false; btn.textContent = 'Run charges';
-    loadBilling();
-  };
-  $('#bill-invoices').onclick = async () => {
-    const m = billMonth.value;
-    if (!confirm('Issue and email the ' + m + ' invoices now? Partners already invoiced for ' + m + ' are not emailed again.')) return;
-    const btn = $('#bill-invoices'); btn.disabled = true; btn.textContent = 'Sending…';
-    try {
-      const r = await fetch(GATEWAY + '/marketplace/admin/billing/invoices', {
-        method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ month: m }) });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
-      const sent = (d.results || []).filter(x => x.status === 'sent').length;
-      const errs = (d.results || []).filter(x => x.status === 'error');
-      alert(sent + ' invoice(s) emailed.' + (errs.length ? '\n' + errs.map(x => x.email + ': ' + x.error).join('\n') : ''));
-    } catch (err) { alert('Sending invoices failed: ' + err.message); }
-    btn.disabled = false; btn.textContent = 'Send invoices';
-    loadBilling();
-  };
-  $('#bill-account').onsubmit = async (ev) => {
-    ev.preventDefault();
-    const body = Object.fromEntries(new FormData(ev.target).entries());
-    const r = await fetch(GATEWAY + '/marketplace/admin/billing/account', {
-      method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json().catch(() => ({}));
-    $('#bill-account-msg').textContent = r.ok ? 'Saved.' : (d.error || 'HTTP ' + r.status);
-    if (r.ok) { ev.target.reset(); loadBilling(); }
-  };
-  loadBilling();
-})();
+  // The dashboard's code is served by the gateway (admin-app.js), so this page
+  // stays small enough for a Webflow embed.
+  (() => {
+    const local = /onrender\.com$/.test(location.hostname) || ['localhost', '127.0.0.1'].includes(location.hostname);
+    const s = document.createElement('script');
+    s.src = (local ? '' : 'https://api-marketplace-1im9.onrender.com') + '/admin-app.js';
+    document.body.appendChild(s);
+  })();
 </script>
 </body>
 </html>

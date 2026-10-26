@@ -87,6 +87,8 @@ app.get('/iris-console.js', (req, res) => res.sendFile(path.join(__dirname, 'pub
   (err) => { if (err && !res.headersSent) res.status(404).json({ error: 'not_found', message: 'No route GET /iris-console.js' }); }));
 // The marketplace page's script (the page and its Webflow copy load it from here).
 app.get('/marketplace-page.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'marketplace-page.js')));
+// The staff dashboard's code (public/admin.html, also pasted into Webflow).
+app.get('/admin-app.js', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin-app.js')));
 // v2: the console in the Iristel portal brand, light by default, theme taken
 // from the page that hosts it (public/v2/). New paths only: the routes above
 // keep serving today's console unchanged. Same headers as their v1 routes.
