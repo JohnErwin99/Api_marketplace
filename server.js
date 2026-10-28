@@ -50,6 +50,8 @@ app.get('/healthz', (req, res) => res.json({
   ok: true, startedAt: STARTED_AT,
   persistentDisk: require('./lib/db').storage.persistent,
   ledgerCalls: qLedgerCalls.get().n,
+  // Business sign-ups need it (lib/portal.js); only whether it is set.
+  signupKey: !!process.env.MIND_EXLNP_KEY,
 }));
 
 // Test console (single static page) at /console

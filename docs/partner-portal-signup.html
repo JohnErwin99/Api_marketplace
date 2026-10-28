@@ -14,7 +14,7 @@
       2. Creates the MIND billing account (POST /accounts). The key used is
          chosen by the account type, because it sets the providerCode:
            reseller / white-label -> RESELL key
-           everything else        -> agent-side key
+           everything else        -> EXLNP key
          If MIND rejects the details, NOTHING has been created.
       3. Only then creates the login (auth0 unified/sign-up). If a login
          already existed, the user gets a password reset email instead.
