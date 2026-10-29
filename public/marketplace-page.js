@@ -193,12 +193,14 @@ fetch(GATEWAY + "/marketplace/authorizations?email=" + encodeURIComponent(email)
 
 (async () => {
 // The bundles grid (older copies of this page, like the live Webflow embed
-// until it is pasted again, still call it packages-grid).
+// until it is pasted again, still call it packages-grid). The portal page
+// dropped the Bundles section on 2026-10-29: with no grid, only the grid
+// drawing is skipped.
 const grid = document.getElementById("bundles-grid") || document.getElementById("packages-grid");
 let reg;
 try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
 catch {
-  grid.innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
+  if (grid) grid.innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
   renderAccountTypes({ accountTypes: FALLBACK_ACCOUNT_TYPES });
   return;
 }
@@ -229,6 +231,7 @@ const categories = reg.categories || [];
 const catLabel = (id) => (categories.find((c) => c.id === id) || {}).label || "";
 let activeCat = "";
 const drawBundles = () => {
+  if (!grid) return;
   const filter = categories.length
     ? `<div class="pk-filter" role="group" aria-label="Filter bundles">` +
       [{ id: "", label: "All" }, ...categories].map((c) =>
