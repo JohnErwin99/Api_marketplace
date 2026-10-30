@@ -69,6 +69,108 @@
       </ol>
     </section>
 
+    <section class="form-section" id="pricing">
+      <style>
+#pricing .pr-head{margin:0 0 28px}
+#pricing .pr-head h2{margin:0 0 14px;font-size:clamp(1.6rem,2.6vw,2.2rem);line-height:1.15;letter-spacing:-.03em}
+#pricing .pr-head>p{max-width:780px;margin:0;color:var(--muted)}
+#pricing .pr-tags{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+#pricing .pr-tags span{padding:3px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.78rem;font-weight:700;color:var(--ink)}
+#pricing .pr-tags .pr-prop{border-color:var(--orange);color:var(--orange)}
+#pricing .pr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:900px){#pricing .pr-grid{grid-template-columns:1fr}}
+#pricing .pr-card{display:flex;flex-direction:column;padding:20px;border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface)}
+#pricing .pr-card h3{margin:0;font-size:1.05rem;color:var(--ink)}
+#pricing .pr-price{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
+#pricing .pr-price strong{margin-right:4px;font-size:2.2rem;line-height:1.1;letter-spacing:-.03em;color:var(--ink)}
+#pricing .pr-unit{margin:2px 0 14px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#pricing .pr-card>p:not([class]){margin:0 0 10px;font-size:.9rem;color:var(--muted)}
+#pricing .pr-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
+#pricing .pr-foot{margin:auto 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+#pricing .pr-svc{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:14px 0 0;padding:14px 20px;border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:12px;background:var(--surface);color:var(--ink)}
+#pricing .pr-svc span{flex:1 1 320px;font-size:.88rem;color:var(--muted)}
+#pricing h3.pr-h{margin:40px 0 8px;font-size:1.1rem;color:var(--ink)}
+#pricing .pr-ent{margin:28px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+#pricing details{padding:14px 0;border-bottom:1px solid var(--line)}
+#pricing summary{cursor:pointer;font-weight:750;color:var(--ink)}
+#pricing details p{margin:8px 0 0;color:var(--muted)}
+#pricing .pr-lead{max-width:780px;margin:0 0 14px;color:var(--muted)}
+#pricing .pr-total{display:inline-flex;gap:8px;align-items:baseline;margin:0 0 16px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.85rem;color:var(--muted)}
+#pricing .pr-total strong{font-size:1.1rem;color:var(--ink)}
+#pricing .pr-fams{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:900px){#pricing .pr-fams{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){#pricing .pr-fams{grid-template-columns:1fr}}
+#pricing .pr-fam{display:flex;flex-direction:column;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+#pricing .pr-fam header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+#pricing .pr-fam h4{margin:0;font-size:1rem;line-height:1.3;color:var(--ink)}
+#pricing .pr-ops{flex:none;padding:2px 10px;border:1px solid var(--blue);border-radius:999px;background:var(--surface-soft);color:var(--blue);font-size:.78rem;font-weight:800;white-space:nowrap}
+#pricing .pr-use{margin:6px 0 12px;font-size:.85rem;color:var(--muted)}
+#pricing .pr-fam dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0;padding-top:12px;border-top:1px solid var(--line);font-size:.84rem}
+#pricing .pr-fam dt{font-weight:800;white-space:nowrap;color:var(--ink)}
+#pricing .pr-fam dt:before{content:"";display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:var(--c,var(--muted))}
+#pricing .pr-fam dd{margin:0;color:var(--ink)}
+#pricing .pr-fam .f{--c:var(--green)}#pricing .pr-fam .s{--c:var(--blue)}#pricing .pr-fam .a{--c:var(--orange)}
+      </style>
+      <div class="pr-head">
+        <p class="eyebrow">Pricing</p>
+        <h2>Build directly on Iristel’s network. Start free. Pay only for valuable automation and telecom services.</h2>
+        <p>Access our API families and explore a free developer sandbox with 1,000 calls a month per account. Basic reads and status operations are free. Eligible Standard automation is 1¢ CAD per successful operation; qualified Advanced workflows are 2.5¢ CAD. Telecom products and services are priced separately and shown before you order.</p>
+        <div class="pr-tags" id="pr-tags"><span class="pr-prop">Proposed rates, subject to approval · taxes extra</span><span>Effective date: to be announced</span></div>
+      </div>
+      <div class="pr-grid" id="pr-grid">
+<article class="pr-card" style="--tc:var(--green)"><h3>Free</h3><p class="pr-price"><strong>$0</strong></p><p class="pr-unit">No charge</p><p>Basic reads and status: view, list, get, search and status requests, including routine tracking and polling. Commission reports. Single 911 listing updates.</p><ul><li>No subscription or platform fee</li><li>Developer sandbox: 1,000 calls a month per account</li><li>Port status</li><li>List SIM cards</li><li>Search available numbers</li><li>Update a 911 listing</li></ul><p class="pr-foot">No card needed. Sandbox calls are never billed.</p></article>
+<article class="pr-card" style="--tc:var(--blue)"><h3>Standard</h3><p class="pr-price"><strong>1¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Standalone administrative or configuration changes: account, plan and service updates, voicemail and forwarding, SIM reservations, PON corrections.</p><ul><li>Update voicemail</li><li>Change a due date</li><li>Reserve a SIM</li><li>Basic LRN lookup</li></ul><p class="pr-foot">Billed only when the call succeeds. Needs a card on file.</p></article>
+<article class="pr-card" style="--tc:var(--orange)"><h3>Advanced</h3><p class="pr-price"><strong>2.5¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Bulk or orchestration requests, priced per completed request rather than per item inside it.</p><ul><li>Bulk LRN lookup (50 numbers)</li><li>LRN with porting history</li><li>Bulk 911 upload</li></ul><p class="pr-foot">One request is one event, however many items it carries. Needs a card on file.</p></article>
+      </div>
+      <p class="pr-svc" id="pr-svc"><strong>Service order</strong><b>No API fee</b><span>Requests that order telecom service: phone numbers, port-ins, SIP trunks, SIM and eSIM activation. The service is billed under the published tariff; the API call itself adds nothing.</span></p>
+      <h3 class="pr-h">One simple commercial model</h3>
+      <p class="pr-lead">Free platform access. Free developer sandbox (1,000 calls per month). Free basic reads and status operations. We charge only for eligible completed Standard (CAD $0.01) or Advanced (CAD $0.025) API automation events. Separately priced telecom products and services remain billable under the approved service tariff.</p>
+      <div><table class="mp-rt"><thead><tr><th>Charge category</th><th>Proposed public rate (CAD)</th><th>What it covers</th></tr></thead><tbody>
+<tr><td>Platform access</td><td>$0</td><td>No subscription, registration or platform fee.</td></tr>
+<tr><td>Developer sandbox</td><td>$0 — 1,000 calls/month</td><td>Non-production only; reset monthly; rate limits and anti-abuse controls; no actual telecom fulfillment.</td></tr>
+<tr><td>Basic reads and status</td><td>$0</td><td>Eligible view/list/get/search/status requests are free, including routine tracking and polling.</td></tr>
+<tr><td>Standard automation</td><td>$0.01 / successful billable event</td><td>Only explicitly classified standalone administrative or configuration changes.</td></tr>
+<tr><td>Advanced automation</td><td>$0.025 / successful billable event</td><td>Only explicitly classified higher-value bulk or orchestration workflows; not every family has one.</td></tr>
+<tr><td>Core telecom services</td><td>Approved published tariff</td><td>Rentals, SIP minutes, mobile plans and regulated services are separately billed. The rate is shown before you order.</td></tr>
+      </tbody></table></div>
+      <p class="mp-note"><strong>No double charge:</strong> if an API request simply triggers an already priced telecom service order, no Standard or Advanced operation fee is added, unless a separately disclosed, independently valuable automation service is purchased.</p>
+      <h3 class="pr-h">API families: what’s free, Standard or Advanced</h3>
+      <p class="pr-total"><strong>116</strong> operations across <strong>9</strong> API families</p>
+      <div class="pr-fams">
+<article class="pr-fam"><header><h4>IristelX — Accounts &amp; Services</h4><span class="pr-ops">30 operations</span></header><p class="pr-use">Manage service accounts, plans and usage</p><dl><dt class="f">Free</dt><dd>View accounts, plans, usage</dd><dt class="s">Standard 1¢</dt><dd>Eligible account/plan changes</dd><dt class="a">Advanced 2.5¢</dt><dd>—</dd><dt>Core telecom</dt><dd>Plan/service charges</dd></dl></article>
+<article class="pr-fam"><header><h4>IristelX — Mobile App</h4><span class="pr-ops">16 operations</span></header><p class="pr-use">Subscriber plans, usage, eSIM QR codes, port-in, notifications and support</p><dl><dt class="f">Free</dt><dd>View subscribers, usage, QR information, support status</dd><dt class="s">Standard 1¢</dt><dd>Eligible admin updates</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified bulk subscriber management*</dd><dt>Core telecom</dt><dd>Mobile plans/activation</dd></dl></article>
+<article class="pr-fam"><header><h4>Number Porting — Enterprise (LNP)</h4><span class="pr-ops">15 operations</span></header><p class="pr-use">Create, correct, track and activate wireline port requests</p><dl><dt class="f">Free</dt><dd>Check port status, retrieve details</dd><dt class="s">Standard 1¢</dt><dd>Eligible standalone corrections*</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified complex bulk workflows*</dd><dt>Core telecom</dt><dd>Port/service charges if applicable</dd></dl></article>
+<article class="pr-fam"><header><h4>Phone Numbers (DIDs)</h4><span class="pr-ops">14 operations</span></header><p class="pr-use">Search, order and manage telephone numbers</p><dl><dt class="f">Free</dt><dd>Search availability, list inventory</dd><dt class="s">Standard 1¢</dt><dd>Eligible independent configuration changes</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified bulk changes*</dd><dt>Core telecom</dt><dd>Number rental/purchases</dd></dl></article>
+<article class="pr-fam"><header><h4>IristelX — SIM &amp; eSIM</h4><span class="pr-ops">14 operations</span></header><p class="pr-use">SIM inventory, reservations and eSIM provisioning</p><dl><dt class="f">Free</dt><dd>View inventory and provisioning status</dd><dt class="s">Standard 1¢</dt><dd>Eligible reservations or management</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified bulk provisioning*</dd><dt>Core telecom</dt><dd>SIM/eSIM activation and plans</dd></dl></article>
+<article class="pr-fam"><header><h4>Number Porting — Wireless (WLNP)</h4><span class="pr-ops">12 operations</span></header><p class="pr-use">Canadian wireless porting workflows</p><dl><dt class="f">Free</dt><dd>Track requests, get port details</dd><dt class="s">Standard 1¢</dt><dd>Eligible standalone admin changes*</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified complex bulk workflows*</dd><dt>Core telecom</dt><dd>Port/service charges if applicable</dd></dl></article>
+<article class="pr-fam"><header><h4>Provisioning (uBoss)</h4><span class="pr-ops">7 operations</span></header><p class="pr-use">SIP trunk provisioning, job status and welcome letters</p><dl><dt class="f">Free</dt><dd>Track jobs, retrieve documents</dd><dt class="s">Standard 1¢</dt><dd>Eligible provisioning management</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified bulk orchestration*</dd><dt>Core telecom</dt><dd>SIP service and usage</dd></dl></article>
+<article class="pr-fam"><header><h4>911 &amp; E911 Listings</h4><span class="pr-ops">5 operations</span></header><p class="pr-use">Add, update, delete and bulk-upload emergency listings</p><dl><dt class="f">Free</dt><dd>View listing details</dd><dt class="s">Standard 1¢</dt><dd>Eligible administrative listing updates*</dd><dt class="a">Advanced 2.5¢</dt><dd>Qualified bulk listing automation*</dd><dt>Core telecom</dt><dd>Applicable regulatory/service charges</dd></dl></article>
+<article class="pr-fam"><header><h4>IristelX — Commissions</h4><span class="pr-ops">3 operations</span></header><p class="pr-use">Agent commission summaries and details</p><dl><dt class="f">Free</dt><dd>View summaries and detail</dd><dt class="s">Standard 1¢</dt><dd>—</dd><dt class="a">Advanced 2.5¢</dt><dd>—</dd><dt>Core telecom</dt><dd>No charge</dd></dl></article>
+      </div>
+      <p class="mp-note">*Provisional classification, subject to Product, Engineering and Legal/Regulatory confirmation. The full list of individual operations and their billing events is still being confirmed.</p>
+      <h3 class="pr-h">Telecom services</h3>
+      <div><table class="mp-rt"><thead><tr><th>Service</th><th>Proposed rate</th><th>Billing / qualification</th></tr></thead><tbody id="pr-tel">
+<tr><td>Local phone number</td><td>$1.00 / number / month</td><td>Recurring on active assigned numbers.</td></tr>
+<tr><td>Local numbers, 1,000+</td><td>$0.75 / number / month</td><td>Eligible active number inventory.</td></tr>
+<tr><td>Toll-free number</td><td>$1.50 / number / month</td><td>Recurring on active assigned numbers.</td></tr>
+<tr><td>Wireline or wireless port-in</td><td>$0</td><td>The port request is free; separately ordered service is billed.</td></tr>
+<tr><td>911 / E911 listing</td><td>$1.00 / number / month</td><td>No setup charge.</td></tr>
+<tr><td>SIP trunk setup</td><td>$0</td><td>No setup fee.</td></tr>
+<tr><td>SIP outbound</td><td>From $0.0100 / minute</td><td>Eligible routes.</td></tr>
+<tr><td>SIP inbound</td><td>From $0.0085 / minute</td><td>Eligible routes and numbers.</td></tr>
+<tr><td>SIM / eSIM activation</td><td>$0 with an eligible line</td><td>The mobile plan applies.</td></tr>
+<tr><td>Active mobile line</td><td>Iristel plan rate</td><td>Per the approved plan.</td></tr>
+<tr><td>Commission reporting</td><td>$0</td><td>Free reports and lookups.</td></tr>
+<tr><td>Partner / enterprise</td><td>Contracted pricing</td><td>Credit terms and contracted rates override public rates.</td></tr>
+      </tbody></table></div>
+      <p class="mp-note" id="pr-note">Proposed rates, subject to Product, Finance and Legal/Regulatory approval. Taxes extra.</p>
+      <p class="pr-ent"><strong>Partner and enterprise pricing:</strong> contracted rates and credit terms; contact your Iristel representative.</p>
+      <h3 class="pr-h">Pricing questions</h3>
+      <details><summary>Is there a free sandbox?</summary><p>Yes. Every account gets 1,000 developer sandbox calls a month, shared by everyone on the account. They’re non-production only: sandbox calls get sample data, or Espresso’s test system for enterprise porting, and never reach a live system. They reset on the 1st and are never billed; past the allowance they’re refused, not charged, and we can extend it on request.</p></details>
+      <details><summary>When do I need a card?</summary><p>Only for Standard and Advanced live calls. Free reads and status, service orders and the sandbox need no card. Add one in the API console before your first billable call; the same key keeps working.</p></details>
+      <details><summary>What’s billed?</summary><p>Successful live Standard (1¢) and Advanced (2.5¢) events, invoiced in CAD on the 1st of the next month and charged to your card on the 5th, taxes extra. Failed calls, free reads, sandbox calls and service orders carry no API fee. Telecom services you order are billed under the tariff, at the rates shown before you order, never twice.</p></details>
+    </section>
+
     <section id="bundles">
       <style>
 #bundles .bx-filter{display:inline-flex;flex-wrap:wrap;gap:4px;margin:0 0 28px}
@@ -119,67 +221,6 @@
       </div>
       <div id="bundles-grid"><p>Loading bundles…</p></div>
       <div class="bx-costs" id="bundle-costs"></div>
-    </section>
-
-    <section class="form-section" id="pricing">
-      <style>
-#pricing .pr-head{margin:0 0 28px}
-#pricing .pr-head h2{margin:0 0 14px;font-size:clamp(1.6rem,2.6vw,2.2rem);line-height:1.15;letter-spacing:-.03em}
-#pricing .pr-head>p{max-width:780px;margin:0;color:var(--muted)}
-#pricing .pr-tags{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
-#pricing .pr-tags span{padding:3px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.78rem;font-weight:700;color:var(--ink)}
-#pricing .pr-tags .pr-prop{border-color:var(--orange);color:var(--orange)}
-#pricing .pr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-@media (max-width:900px){#pricing .pr-grid{grid-template-columns:1fr}}
-#pricing .pr-card{display:flex;flex-direction:column;padding:20px;border:1px solid var(--line);border-top:3px solid var(--tc,var(--blue));border-radius:12px;background:var(--surface)}
-#pricing .pr-card h3{margin:0;font-size:1.05rem;color:var(--ink)}
-#pricing .pr-price{margin:6px 0 0;font-size:.9rem;color:var(--muted)}
-#pricing .pr-price strong{margin-right:4px;font-size:2.2rem;line-height:1.1;letter-spacing:-.03em;color:var(--ink)}
-#pricing .pr-unit{margin:2px 0 14px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-#pricing .pr-card>p:not([class]){margin:0 0 10px;font-size:.9rem;color:var(--muted)}
-#pricing .pr-card ul{margin:0 0 12px;padding-left:18px;font-size:.85rem;color:var(--ink)}
-#pricing .pr-foot{margin:auto 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
-#pricing .pr-svc{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:14px 0 0;padding:14px 20px;border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:12px;background:var(--surface);color:var(--ink)}
-#pricing .pr-svc span{flex:1 1 320px;font-size:.88rem;color:var(--muted)}
-#pricing h3.pr-h{margin:40px 0 8px;font-size:1.1rem;color:var(--ink)}
-#pricing .pr-ent{margin:28px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
-#pricing details{padding:14px 0;border-bottom:1px solid var(--line)}
-#pricing summary{cursor:pointer;font-weight:750;color:var(--ink)}
-#pricing details p{margin:8px 0 0;color:var(--muted)}
-      </style>
-      <div class="pr-head">
-        <p class="eyebrow">Pricing</p>
-        <h2>Build directly on Iristel’s network. Start free. Pay only for valuable automation and telecom services.</h2>
-        <p>Access our API families and explore a free developer sandbox with 1,000 calls a month per account. Basic reads and status operations are free. Eligible Standard automation is 1¢ CAD per successful operation; qualified Advanced workflows are 2.5¢ CAD. Telecom products and services are priced separately and shown before you order.</p>
-        <div class="pr-tags" id="pr-tags"><span class="pr-prop">Proposed rates, subject to approval · taxes extra</span><span>Effective date: to be announced</span></div>
-      </div>
-      <div class="pr-grid" id="pr-grid">
-<article class="pr-card" style="--tc:var(--green)"><h3>Free</h3><p class="pr-price"><strong>$0</strong></p><p class="pr-unit">No charge</p><p>Basic reads and status: view, list, get, search and status requests, including routine tracking and polling. Commission reports. Single 911 listing updates.</p><ul><li>No subscription or platform fee</li><li>Developer sandbox: 1,000 calls a month per account</li><li>Port status</li><li>List SIM cards</li><li>Search available numbers</li><li>Update a 911 listing</li></ul><p class="pr-foot">No card needed. Sandbox calls are never billed.</p></article>
-<article class="pr-card" style="--tc:var(--blue)"><h3>Standard</h3><p class="pr-price"><strong>1¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Standalone administrative or configuration changes: account, plan and service updates, voicemail and forwarding, SIM reservations, PON corrections.</p><ul><li>Update voicemail</li><li>Change a due date</li><li>Reserve a SIM</li><li>Basic LRN lookup</li></ul><p class="pr-foot">Billed only when the call succeeds. Needs a card on file.</p></article>
-<article class="pr-card" style="--tc:var(--orange)"><h3>Advanced</h3><p class="pr-price"><strong>2.5¢</strong>CAD</p><p class="pr-unit">Per successful event</p><p>Bulk or orchestration requests, priced per completed request rather than per item inside it.</p><ul><li>Bulk LRN lookup (50 numbers)</li><li>LRN with porting history</li><li>Bulk 911 upload</li></ul><p class="pr-foot">One request is one event, however many items it carries. Needs a card on file.</p></article>
-      </div>
-      <p class="pr-svc" id="pr-svc"><strong>Service order</strong><b>No API fee</b><span>Requests that order telecom service: phone numbers, port-ins, SIP trunks, SIM and eSIM activation. The service is billed under the published tariff; the API call itself adds nothing.</span></p>
-      <h3 class="pr-h">Telecom services</h3>
-      <div><table class="mp-rt"><thead><tr><th>Service</th><th>Proposed rate</th><th>Billing / qualification</th></tr></thead><tbody id="pr-tel">
-<tr><td>Local phone number</td><td>$1.00 / number / month</td><td>Recurring on active assigned numbers.</td></tr>
-<tr><td>Local numbers, 1,000+</td><td>$0.75 / number / month</td><td>Eligible active number inventory.</td></tr>
-<tr><td>Toll-free number</td><td>$1.50 / number / month</td><td>Recurring on active assigned numbers.</td></tr>
-<tr><td>Wireline or wireless port-in</td><td>$0</td><td>The port request is free; separately ordered service is billed.</td></tr>
-<tr><td>911 / E911 listing</td><td>$1.00 / number / month</td><td>No setup charge.</td></tr>
-<tr><td>SIP trunk setup</td><td>$0</td><td>No setup fee.</td></tr>
-<tr><td>SIP outbound</td><td>From $0.0100 / minute</td><td>Eligible routes.</td></tr>
-<tr><td>SIP inbound</td><td>From $0.0085 / minute</td><td>Eligible routes and numbers.</td></tr>
-<tr><td>SIM / eSIM activation</td><td>$0 with an eligible line</td><td>The mobile plan applies.</td></tr>
-<tr><td>Active mobile line</td><td>Iristel plan rate</td><td>Per the approved plan.</td></tr>
-<tr><td>Commission reporting</td><td>$0</td><td>Free reports and lookups.</td></tr>
-<tr><td>Partner / enterprise</td><td>Contracted pricing</td><td>Credit terms and contracted rates override public rates.</td></tr>
-      </tbody></table></div>
-      <p class="mp-note" id="pr-note">Proposed rates, subject to Product, Finance and Legal/Regulatory approval. Taxes extra.</p>
-      <p class="pr-ent"><strong>Partner and enterprise pricing:</strong> contracted rates and credit terms; contact your Iristel representative.</p>
-      <h3 class="pr-h">Pricing questions</h3>
-      <details><summary>Is there a free sandbox?</summary><p>Yes. Every account gets 1,000 developer sandbox calls a month, shared by everyone on the account. They’re non-production only: sandbox calls get sample data, or Espresso’s test system for enterprise porting, and never reach a live system. They reset on the 1st and are never billed; past the allowance they’re refused, not charged, and we can extend it on request.</p></details>
-      <details><summary>When do I need a card?</summary><p>Only for Standard and Advanced live calls. Free reads and status, service orders and the sandbox need no card. Add one in the API console before your first billable call; the same key keeps working.</p></details>
-      <details><summary>What’s billed?</summary><p>Successful live Standard (1¢) and Advanced (2.5¢) events, invoiced in CAD on the 1st of the next month and charged to your card on the 5th, taxes extra. Failed calls, free reads, sandbox calls and service orders carry no API fee. Telecom services you order are billed under the tariff, at the rates shown before you order, never twice.</p></details>
     </section>
 
     <section id="identity">
@@ -275,210 +316,7 @@
   </main>
 
   <script>
-
-const themeToggle = document.getElementById("theme-toggle");
-
-function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  const isDark = theme === "dark";
-  themeToggle.setAttribute("aria-pressed", String(isDark));
-  themeToggle.setAttribute("aria-label", `Switch to ${isDark ? "light" : "dark"} mode`);
-  themeToggle.querySelector(".theme-label").textContent = isDark ? "Dark" : "Light";
-}
-
-applyTheme(document.documentElement.dataset.theme || "light");
-
-themeToggle.addEventListener("click", () => {
-  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  try { localStorage.setItem("iristel-api-theme", next); } catch {}
-  applyTheme(next);
-});
-
-// Built-in copy of the account types (same text as ACCOUNT_TYPES in
-// lib/catalogs/bundles.js) so "Choose your path" still renders when the
-// catalog can't be loaded.
-const FALLBACK_ACCOUNT_TYPES = [
-  { id: "business", label: "Business customer", short: "Your business uses Iristel services for itself.",
-    description: "Cloud calling, SIP trunks, phone numbers, toll-free, Teams and Webex calling, SMS and 911 for your own organization. Iristel bills you directly.",
-    build: ["Order SIP trunks and phone numbers", "Keep your numbers when you move to Iristel", "Keep your 911 addresses up to date"] },
-  { id: "partner", label: "Iristel partner", short: "You resell Iristel services to your own customers.",
-    description: "Carriers, ISPs, MSPs, VARs, UCaaS providers, white-label and co-branded partners who sell Iristel services and bill their own customers.",
-    build: ["Activate subscribers end to end", "Order numbers at scale", "Port your customers onto the network"] },
-  { id: "agent", label: "Agent", short: "You sign customers up for Iristel and earn commission.",
-    description: "Iristel owns billing and support; you sign customers up in the field and earn commission on their recurring revenue.",
-    build: ["Sign customers up from your own tools", "Assign SIMs and eSIMs", "Track your commissions"] },
-  { id: "internal", label: "Internal employee", short: "You work at Iristel and need API access for your team.",
-    description: "Iristel staff building internal tools, reports or integrations. Use your @iristel.com email and tell us your department — no business registration needed, and internal usage isn't billed.",
-    build: ["Automate provisioning and porting tasks", "Build reports on numbers and subscribers", "Integrate Iristel systems with your team's tools"] },
-];
-
-// ---- "Choose your path": the account types from the catalog
-function renderAccountTypes(reg) {
-  const types = reg.accountTypes || [];
-  const bundles = reg.bundles || [];
-  const products = reg.products || [];
-  const buttons = document.getElementById("at-buttons");
-  const card = document.getElementById("at-card");
-  if (!types.length) { card.innerHTML = "<p>Account types unavailable.</p>"; return; }
-  const esc = escHtml;
-  const show = (id) => {
-    const t = types.find((x) => x.id === id) || types[0];
-    buttons.querySelectorAll("button").forEach((b) => {
-      b.classList.toggle("active", b.dataset.type === t.id);
-      b.setAttribute("aria-pressed", b.dataset.type === t.id ? "true" : "false");
-    });
-    const picks = [
-      ...bundles.filter((b) => (t.audiences || []).includes(b.audience)).map((b) => "📦 " + b.name),
-      ...products.filter((p) => (t.products || []).includes(p.id)).map((p) => p.name),
-    ];
-    card.innerHTML =
-      `<div class="tag external">${esc(t.label.toUpperCase())}</div>` +
-      `<h3>${esc(t.short)}</h3><p>${esc(t.description)}</p>` +
-      `<dl><div><dt>What you can build</dt><dd><ul>${(t.build || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></dd></div>` +
-      (picks.length ? `<div><dt>Suggested for you</dt><dd><div class="at-bundles">${picks.map((x) => `<span>${esc(x)}</span>`).join("")}</div></dd></div>` : "") +
-      `</dl>` + ACCOUNT_TYPE_CTA(t);
-  };
-  buttons.innerHTML = types.map((t) =>
-    `<button type="button" data-type="${esc(t.id)}" aria-pressed="false">${esc(t.label)}</button>`).join("");
-  buttons.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => show(b.dataset.type)));
-  show(types[0].id);
-}
-const ACCOUNT_TYPE_CTA = (t) =>
-  t.id === "internal"
-    ? `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/">Log in with your Iristel account →</a></p>` +
-      `<p style="font-size:.85rem;opacity:.75">Iristel employees already have a portal login — open API Marketplace from the menu to request access.</p>`
-    : `<p style="margin-top:18px"><a class="console-cta" href="https://www.iristelpartnerportal.com/sign-up?type=${encodeURIComponent(t.id)}&from=marketplace">Sign up as ${escHtml(t.label)} →</a></p>`;
-
-// ---- Pricing, from the catalog: per-event rate classes, the sandbox and the
-// telecom rates, PROPOSED until approved. The static #pricing markup is the
-// same render, kept for when the catalog is down.
-const centsLabel = (c) => (c < 100 ? c + "¢" : "$" + (c / 100).toFixed(2));
-const CLASS_COLOR = { free: "var(--green)", standard: "var(--blue)", advanced: "var(--orange)" };
-const CLASS_FOOT = {
-  free: "No card needed. Sandbox calls are never billed.",
-  standard: "Billed only when the call succeeds. Needs a card on file.",
-  advanced: "One request is one event, however many items it carries. Needs a card on file.",
-};
-function renderPricing(p) {
-  const cls = (p && p.classes) || [];
-  if (!cls.length) return;
-  const $ = (id) => document.getElementById(id);
-  $("pr-tags").innerHTML = `<span class="pr-prop">${p.status === "proposed" ? "Proposed rates, subject to approval" : "Rates in CAD"} · taxes extra</span>` +
-    `<span>Effective date: ${p.effective ? escHtml(p.effective) : "to be announced"}</span>`;
-  const free = ["No subscription or platform fee"].concat(p.sandboxCalls ? [`Developer sandbox: ${Number(p.sandboxCalls).toLocaleString("en-CA")} calls a month per account`] : []);
-  $("pr-grid").innerHTML = cls.filter((c) => c.id !== "service").map((c) =>
-    `<article class="pr-card" style="--tc:${CLASS_COLOR[c.id] || "var(--blue)"}"><h3>${escHtml(c.name)}</h3>` +
-    `<p class="pr-price"><strong>${c.priceCents ? escHtml(centsLabel(c.priceCents)) : "$0"}</strong>${c.priceCents ? "CAD" : ""}</p>` +
-    `<p class="pr-unit">${escHtml(c.billingUnit || "")}</p><p>${escHtml(c.whatsIn || "")}</p>` +
-    `<ul>${(c.id === "free" ? free : []).concat(c.examples || []).map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>` +
-    (CLASS_FOOT[c.id] ? `<p class="pr-foot">${CLASS_FOOT[c.id]}</p>` : "") + `</article>`).join("");
-  const svc = cls.find((c) => c.id === "service");
-  $("pr-svc").hidden = !svc;
-  if (svc) $("pr-svc").innerHTML = `<strong>${escHtml(svc.name)}</strong><b>${escHtml(svc.billingUnit || "")}</b><span>${escHtml(svc.whatsIn || "")}</span>`;
-  if ((p.telecomRates || []).length) $("pr-tel").innerHTML = p.telecomRates.map((r) =>
-    `<tr><td>${escHtml(r.service)}</td><td>${escHtml(r.rate)}</td><td>${escHtml(r.note || "")}</td></tr>`).join("");
-  if (p.note) $("pr-note").textContent = p.note;
-}
-
-// ---- Bundles, from the catalog: one card per bundle, grouped by audience,
-// steps folded away; a step that isn't free shows its rate. apiCents = the API
-// cost of one run, serviceSteps = steps that order telecom service.
-const CATEGORY_ICON = {
-  voice: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
-  numbers: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
-  mobile: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
-  partner: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
-};
-const categoryIcon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
-  (CATEGORY_ICON[id] || '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/>') + `</svg>`;
-const runCost = (b) => (b.apiCents == null ? "" : b.apiCents ? escHtml(centsLabel(b.apiCents)) : "Free");
-function renderBundles(reg) {
-  const grid = document.getElementById("bundles-grid");
-  const bundles = reg.bundles || [];
-  const audiences = (reg.audiences || []).filter((a) => bundles.some((b) => b.audience === a.id));
-  const catLabel = (id) => ((reg.categories || []).find((c) => c.id === id) || {}).label || "";
-  const productName = (id) => ((reg.products || []).find((p) => p.id === id) || { name: id }).name;
-  const rateName = Object.fromEntries(((reg.pricing || {}).classes || []).map((c) => [c.id, c.name]));
-  const ep = {};   // "product METHOD /path" -> catalog endpoint (rateClass, priceCents)
-  (reg.products || []).forEach((p) => (p.endpoints || []).forEach((e) => { ep[p.id + " " + e.method + " " + e.path] = e; }));
-  const stepRate = (s) => {
-    const e = ep[s.product + " " + s.endpoint];
-    const t = !e ? "" : e.rateClass === "service" ? rateName.service || "Service order" : e.priceCents ? (rateName[e.rateClass] || "") + " " + centsLabel(e.priceCents) : "";
-    return t ? `<span class="bx-rt">${escHtml(t.trim())}</span>` : "";
-  };
-  const card = (b) => {
-    const steps = b.steps || [];
-    return `<article class="bx-card">` +
-      `<span class="bx-cat">${categoryIcon(b.category)}${escHtml(catLabel(b.category))}</span>` +
-      `<h4>${escHtml(b.name)}</h4><p class="bx-lead">${escHtml(b.useCase || "")}</p>` +
-      (b.summary ? `<p class="bx-sum">${escHtml(b.summary)}</p>` : "") +
-      (runCost(b) ? `<p class="bx-cost">API cost per run: <strong>${runCost(b)}</strong>${b.serviceSteps ? " + service charges" : ""}</p>` : "") +
-      `<ul class="bx-apis" aria-label="APIs used">${[...new Set(steps.map((s) => s.product))]
-        .map((id) => `<li>${escHtml(productName(id))}</li>`).join("")}</ul>` +
-      (steps.length ? `<details><summary>See the ${steps.length} steps</summary><ol class="bx-steps">` + steps.map((s, i) =>
-        `<li><span class="bx-n" aria-hidden="true">${i + 1}</span><div><p>${escHtml(s.note || s.endpoint)}</p>` +
-        `<code>${escHtml(s.endpoint)}</code>${stepRate(s)}</div></li>`).join("") + `</ol></details>` : "") +
-      `</article>`;
-  };
-  let active = "";
-  const draw = () => {
-    const filter = audiences.length > 1
-      ? `<div class="segmented bx-filter" role="group" aria-label="Who it’s for">` +
-        [{ id: "", label: "All" }, ...audiences].map((a) =>
-          `<button type="button" data-aud="${escHtml(a.id)}" class="${a.id === active ? "active" : ""}" aria-pressed="${a.id === active}">` +
-          `${escHtml(a.label)}<span class="bx-count">${bundles.filter((b) => !a.id || b.audience === a.id).length}</span></button>`).join("") +
-        `</div>`
-      : "";
-    grid.innerHTML = filter + (audiences.filter((a) => !active || a.id === active).map((a) =>
-      `<div class="bx-group">${active ? "" : `<h3 class="bx-aud">${escHtml(a.label)}</h3>`}<div class="bx-grid">` +
-      bundles.filter((b) => b.audience === a.id).map(card).join("") + `</div></div>`).join("") || "<p>No bundles published yet.</p>");
-    grid.querySelectorAll("[data-aud]").forEach((btn) => btn.addEventListener("click", () => {
-      active = btn.dataset.aud;
-      draw();
-      grid.querySelector(`[data-aud="${active}"]`).focus();   // keep keyboard focus on the filter
-    }));
-  };
-  draw();
-
-  // What one run of each bundle costs in API fees.
-  const priced = bundles.filter((b) => runCost(b));
-  if (priced.length) document.getElementById("bundle-costs").innerHTML =
-    `<h3>What one run costs</h3><table class="mp-rt"><thead><tr><th>Bundle</th><th>API cost per run</th><th>Service orders included</th></tr></thead><tbody>` +
-    priced.map((b) => `<tr><td>${escHtml(b.name)}</td><td>${runCost(b)}</td><td>${b.serviceSteps ? escHtml(b.serviceSteps) + " service order" + (b.serviceSteps > 1 ? "s" : "") : "None"}</td></tr>`).join("") +
-    `</tbody></table><p class="mp-note">Proposed rates, subject to approval · taxes extra. Service orders add no API fee: the services they order are billed under the tariff.</p>`;
-}
-
-// ---- Catalog
-const escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-// When this page is copied into Webflow, relative fetches would hit the
-// Webflow domain (404) — call the gateway absolutely unless we ARE the gateway.
-const GATEWAY = (location.hostname.endsWith("onrender.com") || location.hostname === "localhost" || location.hostname === "127.0.0.1")
-  ? "" : "https://api-marketplace-1im9.onrender.com";
-(async () => {
-  let reg;
-  try { reg = await (await fetch(GATEWAY + "/catalog.json")).json(); }
-  catch {
-    document.getElementById("bundles-grid").innerHTML = "<p>Catalog unavailable — is the gateway running?</p>";
-    renderAccountTypes({ accountTypes: FALLBACK_ACCOUNT_TYPES });
-    return;
-  }
-  renderAccountTypes(reg);
-  renderBundles(reg);
-  renderPricing(reg.pricing);
-})();
-
-document.getElementById("copy-code").addEventListener("click", async (event) => {
-  // currentTarget is gone once the handler awaits: keep the button.
-  const btn = event.currentTarget;
-  try {
-    await navigator.clipboard.writeText(document.getElementById("auth-code").innerText);
-    btn.textContent = "Copied";
-    setTimeout(() => { btn.textContent = "Copy"; }, 1600);
-  } catch {
-    btn.textContent = "Select text";
-  }
-});
-
+(function(){if(window.iristelMarketplacePublic)return window.iristelMarketplacePublic();var s=document.createElement("script");s.src="https://api-marketplace-1im9.onrender.com/marketplace-public.js";document.body.appendChild(s);})();
   </script>
 </body>
 </html>
