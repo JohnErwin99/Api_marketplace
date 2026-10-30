@@ -56,8 +56,8 @@ auto-generating the console UI.
 - **Iristel's own services** can send `X-API-Key: <GATEWAY_API_KEY>`.
 
 The product the path belongs to must be one the caller's CRM account is
-approved for (`cr57d_apimarketplaceapproved` plus the product fields); staff
-(`ADMIN_EMAILS`) may call everything. Otherwise the gateway answers 401 (no or
+approved for (`cr57d_apimarketplaceapproved` plus the product fields); admins
+(the admin list, `lib/admins.js`) may call everything. Otherwise the gateway answers 401 (no or
 bad key) or 403 (not approved for that product). Revoking access in CRM
 disables the key within a minute.
 
@@ -139,7 +139,7 @@ curl -s https://api-marketplace-1im9.onrender.com/api/lnp/routing-profiles \
 | `ESPRESSO_SANDBOX_REST_USER` / `_REST_PASS` | Only if the sandbox login differs from production's. |
 | `BROADWORKS_OCI_URL` / `BROADWORKS_USER` / `BROADWORKS_PASS` | BroadWorks OCI-P over SOAP (`https://<xsp>/webservice/services/ProvisioningService`) and the gateway's admin login (`lib/broadworks.js`). Until all three are set, BroadWorks is published as "soon" and calls answer `503 not_enabled`. |
 | `D365_*` | Dynamics 365 (approvals are read from here) |
-| `ADMIN_EMAILS` | Optional staff list override |
+| `ADMIN_EMAILS` | Optional extra admin owners (comma-separated); owners can't be removed on the dashboard. The admin list itself lives in the database (`lib/admins.js`), managed on the staff dashboard's Admins card |
 | `GATEWAY_API_KEY` | Optional internal override key |
 | `DATA_DIR` | Folder for the SQLite ledger (usage, cards on file, charges) and `access-requests.json`. **Set to the Render persistent disk's mount path exactly, e.g. `/var/data`** — otherwise everything is wiped on every deploy. The startup log warns, and the `/admin` dashboard says so, when it isn't a mounted disk. |
 | `PAYMENT_API_KEY` | IristelX payment key used to charge saved cards (`POST /bot/{account}/payment`) |

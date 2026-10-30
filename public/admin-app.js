@@ -1,6 +1,6 @@
 /**
  * Staff dashboard (/dashboards/api-marketplace, or /admin on the gateway):
- * access, requests, calls, billing, and the security & audit trail.
+ * access, requests, calls, billing, the security & audit trail and the admin list.
  *
  * Loaded by public/admin.html. That page is also pasted into a Webflow embed,
  * which is limited to 50,000 characters, so the code lives here. Every call
@@ -721,4 +721,69 @@
     if (r.ok) { ev.target.reset(); loadBilling(); }
   };
   loadBilling();
+
+  // ---- admins ------------------------------------------------------------
+  // The one admin list for the portal and the marketplace (lib/admins.js):
+  // every portal page asks the gateway, so a change here applies everywhere.
+  // The card is built here, not in admin.html, so the Webflow copy of the
+  // page needs no new paste.
+  const adminsCard = document.createElement('section');
+  adminsCard.className = 'card sect';
+  adminsCard.id = 'admins-card';
+  adminsCard.hidden = true;
+  adminsCard.innerHTML =
+    '<div class="tablehead">' + bubble('staff', svg('shield')) + '<h2>Admins</h2><span class="count" id="admins-count"></span></div>' +
+    '<p class="sub">Admins get every admin view in the partner portal (Dashboards, Team Overview, certificates, commissions, Presidents Club) and this dashboard. ' +
+      'Every portal page checks this list; a change shows up within about 10 minutes, or at the person\'s next login. Owners can\'t be removed.</p>' +
+    '<div id="t-admins"></div>' +
+    '<form id="admin-add" class="toolbar" style="margin:12px 0 0;font-size:12px;color:var(--muted)">' +
+      'Add an admin: <input name="email" type="email" placeholder="name@iristel.com" required aria-label="New admin email">' +
+      '<button type="submit" class="ctl approve">Add</button><span id="admin-add-msg"></span></form>';
+  $('#audit-card').after(adminsCard);
+
+  const adminRow = a => '<div class="mini" style="border-color:var(--line)">' + bubble(a.owner ? 'staff' : 'info', svg(a.owner ? 'shield' : 'user')) +
+    '<div class="id"><b>' + esc(a.email) + '</b><span class="muted">' +
+      (a.owner ? 'Owner' : a.addedBy === 'seed' ? 'On the original list' : 'Added ' + (a.addedBy ? 'by ' + esc(a.addedBy) + ' ' : '') + timeEl(a.addedAt)) + '</span></div>' +
+    (a.owner ? pill('staff', 'Owner') : '<button type="button" class="ctl" data-remove-admin="' + esc(a.email) + '">Remove</button>') + '</div>';
+  function renderAdmins(rows){
+    $('#admins-count').textContent = fmt(rows.length) + ' admins';
+    $('#t-admins').innerHTML = '<div class="minis">' + rows.map(adminRow).join('') + '</div>';
+  }
+  async function loadAdmins(){
+    const r = await fetch(GATEWAY + '/marketplace/admin/admins', { headers: auth });
+    if (!r.ok) return;                // older gateway, or not an admin
+    adminsCard.hidden = false;
+    renderAdmins((await r.json()).rows);
+  }
+  $('#t-admins').onclick = async (ev) => {
+    const btn = ev.target.closest('[data-remove-admin]');
+    if (!btn) return;
+    const who = btn.dataset.removeAdmin;
+    const self = who === email.toLowerCase();
+    if (!confirm('Remove ' + who + ' as an admin?' + (self ? ' That\'s you: you lose access to this dashboard.' : ''))) return;
+    btn.disabled = true;
+    const r = await fetch(GATEWAY + '/marketplace/admin/admins/' + encodeURIComponent(who), { method: 'DELETE', headers: auth });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { btn.disabled = false; alert(d.error || 'HTTP ' + r.status); return; }
+    if (self) { load(); return; }
+    renderAdmins(d.rows);
+  };
+  $('#admin-add').onsubmit = async (ev) => {
+    ev.preventDefault();
+    const f = ev.target, msg = $('#admin-add-msg'), btn = f.querySelector('button');
+    const who = f.elements.email.value.trim().toLowerCase();
+    msg.textContent = '';
+    if (!/^[^@\s]+@(iristel|telehop)\.com$/.test(who)) { msg.textContent = 'Only @iristel.com or @telehop.com emails can be admins.'; return; }
+    if (!confirm('Make ' + who + ' an admin? They get every admin view in the portal and this dashboard.')) return;
+    btn.disabled = true;
+    const r = await fetch(GATEWAY + '/marketplace/admin/admins', {
+      method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: who }) });
+    const d = await r.json().catch(() => ({}));
+    btn.disabled = false;
+    if (!r.ok) { msg.textContent = d.error || 'HTTP ' + r.status; return; }
+    f.reset();
+    msg.textContent = who + ' is now an admin.';
+    renderAdmins(d.rows);
+  };
+  loadAdmins();
 })();
